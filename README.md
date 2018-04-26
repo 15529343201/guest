@@ -56,3 +56,275 @@ Python3.x， 因为 Python3.x 代表了 Python 发展的未来； 而且目前�
 下面。 如图 1.3 和 1.5 分别为我的 Python2.7.10 和 Python3.5 的安装目录， 并且将它分别添加到系统环境变量下
 面。 如图 1.8。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter1/image/1.8.PNG)<br>
+## 1.3 安装 Python 扩展库
+&emsp;&emsp;如果你只学习 Python 的基本语法的话， 那么安装好 Python 就可以开始找一本 Python 基础教程， 照着书
+中的例子一个一个地进行练习。 当然， 对于我们大多数人来说， 一开始学习 Python 可能就是为了使用它完成
+某项任务，这种情况下，就需要去安装第三方扩展库。比如，我在一开始学习 Python 的目的是为了使用 Selenium
+编写 UI 自动化测试脚本。 所以， 对我来说只安装好 Python 是不够的， 必须还要安装扩展库 Selenium。<br>
+&emsp;&emsp;所以， 接下来可以 Python 的第三方仓库 PyPI 中查找想要的库。<br>
+&emsp;&emsp;PyPI 地址： https://pypi.python.org/pypi<br>
+&emsp;&emsp;如果你知道你要找的库的名字， 那么只需要在右上角搜索栏查找即可。<br>
+### 1.3.1 pip 安装扩展库
+&emsp;&emsp;pip 是一个安装和管理 Python 包的工具， 通过 pip 来管理 Python 包非常简单， 我们将省去搜索→查找版
+本→下载→安装等烦琐的步骤。<br>
+&emsp;&emsp;当安装 Python 完成， 在 Windows 命令提示符下输入 pip 命令：<br>
+```
+>pip
+Usage:
+pip <command> [options]
+Commands:
+install Install packages.
+uninstall Uninstall packages.
+freeze Output installed packages in requirements format.
+list List installed packages.
+show Show information about installed packages.
+search Search PyPI for packages.
+wheel Build wheels from your requirements.
+zip DEPRECATED. Zip individual packages.
+unzip DEPRECATED. Unzip individual packages.
+bundle DEPRECATED. Create pybundles.
+help Show help for commands.
+General Options:
+-h, --help Show help.
+-v, --verbose Give more output. Option is additive, and can be
+used up to 3 times.
+-V, --version Show version and exit.
+-q, --quiet Give less output.
+--log-file <path> Path to a verbose non-appending log, that only
+……
+```
+&emsp;&emsp;如果出现 pip 命令的说明信息， 则说明 pip 可以正常使用。 如果提示“pip 不是内部或外部命令” ， 则表
+示 pip 的可执行文件所在的目录（例如， ...\Python35\Scripts\） 不在系统环境变量 Path 下面， 参考 1.2.3 小节，
+将目录添加到系统环境变量下的 Path 下面。<br>
+#### 1） 使用 pip 安装扩展库。
+`>pip install django`<br>
+&emsp;&emsp;Django 为 Python 下面开发 Web 项目非常强大的一个库， 也是本书学习的一个重点。<br>
+#### 2） 使用 pip 安装指定版本的扩展库。
+`>pip install django==1.9.7`<br>
+&emsp;&emsp;pip 默认会安装该库的最新版本， 如果我们知道该库的版本号， 也可以指定某个版本号安装。<br>
+#### 3） 使用 pip 查看当前安装的库。
+```
+>pip show django
+Requires:
+Classifiers:
+Development Status :: 5 - Production/Stable
+Environment :: Web Environment
+Framework :: Django
+Intended Audience :: Developers
+License :: OSI Approved :: BSD License
+Operating System :: OS Independent
+Programming Language :: Python
+Programming Language :: Python :: 2
+Programming Language :: Python :: 2.7
+Programming Language :: Python :: 3
+Programming Language :: Python :: 3.4
+Programming Language :: Python :: 3.5
+Topic :: Internet :: WWW/HTTP
+Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Topic :: Internet :: WWW/HTTP :: WSGI
+Topic :: Software Development :: Libraries :: Application Frameworks
+Topic :: Software Development :: Libraries :: Python Modules
+Entry-points:
+[console_scripts]
+django-admin = django.core.management:execute_from_command_line
+```
+&emsp;&emsp;不同的库显示的信息会有所不同， 比如有些库用 show 命令查看， 会显示当前的版本号， 以及它的安装
+路径等。<br>
+#### 4） 使用 pip 卸载库。
+`>pip uninstall django`<br>
+&emsp;&emsp;使用 uninstall 命令就可以将安装的库轻松卸载了。<br>
+#### 5） 如何区别 Python2 与 Python3 的 pip。
+&emsp;&emsp;这个问题也很简单， 首先“pip” 命令与前面提到的“python” 命令一样。 同样是一个可执行文件， 其文
+件名称也可以随意修改， 我们可以将她们分别修改为“pip2.exe” 和“pip3.exe” 分别表示两个版本的 Python
+下的“pip” 命令。 读者可找到 Python 的安装目录下查看 pip 的可执行文件叫具体什么。 查看目录， 例如：<br>
+`C:\Python27\Scripts\`<br>
+`C:\Python35\Scripts\`<br>
+### 1.3.2 tar.gz 文件安装
+&emsp;&emsp;并不是所有的扩展库都支持 pip 命令安装。 对于个别库来可能只提供了压缩包文件， 或者我们安装的环
+境并不能上网。 这个时候就不能 pip 命令安装了。<br>
+![image](https://github.com/15529343201/guest/blob/chapter1/image/1.10.PNG)<br>
+&emsp;&emsp;如图 1.10 所示， 点击 Django-1.10.2.tar.gz 文件进行下载， 然后进行解压， 进入解压目录， 通过“python”
+命令安装。<br>
+`...\Django-1.10.2>python setup.py install`<br>
+### 1.3.3 whl 文件安装
+&emsp;&emsp;wheel 本质上是一个 zip 包格式， 它使用 .whl 扩展名， 用于 Python 模块的安装。<br>
+&emsp;&emsp;如图 1.10， Django 提供了.whl 文件的安装包。 同样先下载 Django-1.10.2-py2.py3-none-any.whl 文件。 .whl
+文件的安装， 同样需要使用 pip 命令。<br>
+`...\pypackage>pip install Django-1.9.7-py2.py3-none-any.whl`<br>
+## 1.4 Python 开发工具选择
+&emsp;&emsp;开发工具的选择也是新手所面临的问题之一。 当然， 选择使用开发工具充满了个人偏好。 如果你已经自
+己熟悉的开发工具， 那么可以直接跳过这一小节， 如果还在为使用什么开发工具而纠结。 不如， 听一听我的
+建议。<br>
+### 1.4.1 Python IDLE
+&emsp;&emsp;如果读者初学 Python， 并且不精通其他编程语言及 IDE（Integrated Development Environment ） ， 则建议
+从这个款 IDE 入手， 它自带的 Shell 模式可以帮助我们快速练习 Python 语法， 笔者初学 Python 时用了半年左右。<br>
+&emsp;&emsp;打开 Python 自带的 IDLE， 就可以编写 Python 程序了， Python Shell 界面。 如图 1.11 所示。<br>
+![image](https://github.com/15529343201/guest/blob/chapter1/image/1.11.PNG)<br>
+&emsp;&emsp;启动 IDLE 时， 会显示“三个尖括号” 提示符（>>>） ， 可以在这里输入代码。 在 Python Shell 输入代码
+回车后会立即执行， 并直接在下面显示执行的结果。<br>
+&emsp;&emsp;在 Python Shell 模式下编写的代码只停留于内存当中， 当关闭 Python Shell 窗口后会自动消失， 那么如果，
+想把代码写到文件里保存起来， 则可以单击菜单栏 File→New File ， 或通过组合键 Ctrl+N 打开新的窗口， 在
+此文件中编写代码， 完成后单击菜单栏 File→Save 或通过组合键 Ctrl+S 保存， 如图 1.12 所示。<br>
+![image](https://github.com/15529343201/guest/blob/chapter1/image/1.12.PNG)<br>
+### 1.4.2 Sublime Text3
+&emsp;&emsp;Sublime Text 是一款通用型轻量级编辑器， 支持多种编程语言。 有许多功能强大的快捷键（如 Ctrl+d） ，
+支持丰富的插件扩展。 如果平时需要在不同编程语言间切换， 那么它将会是一个， 不错的选择。 这也是笔者
+最喜欢的编辑器之一。<br>
+![image](https://github.com/15529343201/guest/blob/chapter1/image/1.13.PNG)<br>
+&emsp;&emsp;如果读者安装了两个版本的 Python， 并且想用该编辑器分别运行两个版本的 Python， 那么需要添加配置
+文件来进行配置。 首先启动 Sublime Text3 工具。 菜单栏“Tool” -->“Build System” -->“New Build System...”。
+在打开的 untitled.sublime-build 文件中输入以下配置信息。<br>
+```
+{
+"cmd": ["python3", "-u", "$file"],
+"encoding": "cp936",
+"file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
+"selector": "source.python",
+}
+```
+&emsp;&emsp;其中“python3” 为执行 Python 的命令， 根据 1.2.2 小节的设置来修改这里的设置， 从而来实现的两个版
+本的 Python 之间的切换。<br>
+&emsp;&emsp;将 untitled.sublime-build 文件保存为： python3.sublime-build。<br>
+&emsp;&emsp;保存路径为...\Sublime Text 3\Packages\User\； 读者可以通过菜单栏“Preferences” -->“Browser Packages...”查看该目录。<br>
+&emsp;&emsp;切换到配置的 python3 版本， 通过菜单栏“Tool” -->“Build System” -->“python3” 。 （小提示： 这里的
+“python3” 与配置文件保存时的命名有关“python3.sublime-build” ）<br>
+![image](https://github.com/15529343201/guest/blob/chapter1/image/1.14.PNG)<br>
+&emsp;&emsp;最后， Python 程序的执行通过快捷键“Ctrl+B” 进行。<br>
+### 1.4.3 PyCharm
+&emsp;&emsp;PyCharm 是 Python 重量级 IDE， 功能强大， 自动检测语法， 可以帮助我们写出更规范的代码。 对于处女
+座的开发者来说是个不错的选择。 笔者使用半天过后果断拥抱之。<br>
+&emsp;&emsp;前面介绍的两款 IDE 适合编写一些简单的 Python 程序， 而如果想开发 Python 项目， 那么 PyCharm 会是
+很好的选择。<br>
+![image](https://github.com/15529343201/guest/blob/chapter1/image/1.15.PNG)<br>
+### 1.4.4 Atom
+&emsp;&emsp;Atom 由目前全球范围内影响力最大的代码仓库/开源社区 GitHub 开发。 它开源免费跨平台， 并且整合
+GIT 并提供类似 SublimeText 的包管理功能， 支持插件扩展， 可配置性非常高。<br>
+&emsp;&emsp;Atom 官方地址： https://atom.io/<br>
+![image](https://github.com/15529343201/guest/blob/chapter1/image/1.16.PNG)<br>
+&emsp;&emsp;Atom 与 Sublime Text 有很多相似之后， Atom 体积相对比较大， 启动速度略慢， 但它有两点是我非常喜
+欢的， 一是代码着色看上去很舒服， 二是插件的安装极其方便， 只需要在“Settings” 中搜索安装即可。<br>
+&emsp;&emsp;好吧！ 我已经介绍了四款自己比较熟悉的编辑器， 你可以根据自己的选择使用它们吧！ 但我这里的介绍
+过于简单， 你在使用过程中还要做一些额外的功课才能把它们用好。<br>
+## 1.5 Python 程序报错不要慌
+&emsp;&emsp;我是按照书上的例子一行一行敲出来的， 结果一运行出错了， 报错对于初学编程的同学都是恐惧的。 笔
+者就根据自己的经验谈谈如何应对程序的报错。<br>
+### 1.5.1 缩进错误
+&emsp;&emsp;Python 对程序中， 我们不需要“｛｝ ” 来表示一个语句体， 也不需要“;” 表示一个语句的结束。 这就要
+求我们对程序的缩进有着严格的要求。 但有时候， 看上去我们的程序格式没有问题， 但程序依旧报错。<br>
+![image](https://github.com/15529343201/guest/blob/chapter1/image/1.17.PNG)<br>
+&emsp;&emsp;如图 1.17 的程序， 看上去没有问题， 但运行的时候却提示： “IndentationError: unindent does not match any
+outer indentation level” 。 其实错误信息描述已经很清楚了， 但新手往往恐惧这样的错误。<br>
+![image](https://github.com/15529343201/guest/blob/chapter1/image/1.18.PNG)<br>
+&emsp;&emsp;如果将程序全选（Ctrl+a） ， 就会发现错误， 如图 1.18 所示。 在 add()函数的语句体中， “c = a + b” 前
+面是一个 Tab 的间距， 而“return c” 前面是四个空格的间距。 所以， 看上去他们的位置是对齐了， 但它们使
+用了不同的缩进方法， 从而会导致 Python 执行报错。<br>
+### 1.5.2 引包错误
+&emsp;&emsp;引包错误也是新手常常遇到的一类问题， 但这其中有一个大坑。<br>
+```
+import unittest
+class test(unittest.TestCase):
+    pass
+```
+&emsp;&emsp;运行程序：<br>
+```
+Traceback (most recent call last):
+File "D:\pydemo\unittest.py", line 1, in <module>
+import unittest
+File "C:\pydemo\unittest.py", line 3, in <module>
+class test(unittest.TestCase):
+AttributeError: module 'unittest' has no attribute 'TestCase'
+```
+&emsp;&emsp;我们明明要引用的是 Python 自带的 unittest 模块， 完全没有错误， 然而程序却提示“module 'unittest' has no
+attribute 'TestCase” 。 这个错误跟 Python 的引包机制有关， 当我们在“import” 一个模块或库时， Python 首先会查找当前目录下有没有这样名字的模块或库。<br>
+&emsp;&emsp;显然， 我把自己写的程序文件名也命名为了“unittest.py” ， 但我在程序中又引用“unittest” ， 那么这就
+相当于自引用了。 而我的真实意图是要引用 Python 的 unittest 模块。 当然， 有时也并不一定是自身被引用了，
+也可能是程序的当前目录下出现的重名文件或目录。 所以， 自己编写的程序文件命名一定要注意， 千万要避
+免与引用的模块或库重名。<br>
+### 1.5.3 编码错误
+在开发 Python 程序的过程中， 会涉及到三个方面的编码：
+- Python 程序文件的编码。
+
+&emsp;&emsp;我们在编写的程序本身也存在编码问题， 一般的解决方式是在程序的开头加上“#coding=utf-8” 或
+“#coding=gbk” 来使程序统一为 UTF-8 或 GBK 编码。<br>
+- Python 程序运行时环境（IDE） 的编码。
+
+&emsp;&emsp;不是管是 Sublime Text 或是 PyCharm 也它， 使用的 IDE 工具也存在编码问题。 如果你不确定是否是 IDE
+的编码引起程序出错的， 根据我的经验， 建议你切换回 Python IDLE 去执行程序。<br>
+- Python程序读取外部文件、 网页的编码。
+
+&emsp;&emsp;当然， 最容易出现编码问题应该是在读取外部数据或文件的时候。 首先要确定读取的数据或文件的编码，
+然后通过 decode()和 encode()方法来进行编码转换。<br>
+&emsp;&emsp;decode 的作用是将其他编码的字符串转换成 Unicode 编码。<br>
+&emsp;&emsp;encode 的作用是将 Unicode 编码转换成其他编码的字符串。<br>
+&emsp;&emsp;当我们在遇到 Python 的编码问题时， 从以上三个方法分析就会很容易找到解决编码问题的办法。<br>
+### 1.5.4 学会分析错误
+&emsp;&emsp;新手往往在面对程序抛出的一大堆报错时不知如何分析， 如果认真阅读报错信息， 你将很容易找到错误原
+因。 其实， 比起一大堆的报错， 最难解决的问题是没有任何报错信息， 而程序却无法正确的执行。<br>
+```
+from selenium import webdriver
+driver = webdriver.Chrome()
+driver.get("http://www.baidu.com")虫师原创----http://fnng.cnblogs.com
+24
+driver.find_element_by_id("kwsss").send_keys("Selenium2")
+driver.find_element_by_id("su").click()
+driver.quit()
+```
+```
+Traceback (most recent call last):
+File "D:\pydemo\pyse.py", line 8, in <module>
+driver.find_element_by_id("kwsss").send_keys("Selenium2")
+File "C:\Python35\lib\site-packages\selenium\webdriver\remote\webdriver.py",
+line 266, in find_element_by_id
+return self.find_element(by=By.ID, value=id_)
+File "C:\Python35\lib\site-packages\selenium\webdriver\remote\webdriver.py",
+line 744, in find_element
+{'using': by, 'value': value})['value']
+File "C:\Python35\lib\site-packages\selenium\webdriver\remote\webdriver.py",
+line 233, in execute
+self.error_handler.check_response(response)
+File "C:\Python35\lib\site-packages\selenium\webdriver\remote\errorhandler.py",
+line 194, in check_response
+raise exception_class(message, screen, stacktrace)
+selenium.common.exceptions.NoSuchElementException: Message: no such element
+(Session info: chrome=43.0.2357.134)
+(Driver info: chromedriver=2.10.267521,platform=Windows NT 6.3 x86_64)
+Traceback (most recent call last):
+```
+&emsp;&emsp;对上面这段报错， 我们要学会查看错误信息， 一般看错误信息开始和结束。<br>
+```
+Traceback (most recent call last):
+File "D:\pydemo\se_test.py", line 8, in <module>
+driver.find_element_by_id("kwsss").send_keys("Selenium2")
+……
+```
+&emsp;&emsp;一般在错误信息的开始位置会显示你的程序是从哪一行开始出错的。 比如， 这里就很清楚的告诉在我在
+se_test.py 文件的第 8 行。 这一行是用来定位百度首页上的输入框。<br>
+```
+……
+selenium.common.exceptions.NoSuchElementException: Message: no such element
+(Session info: chrome=43.0.2357.134)
+(Driver info: chromedriver=2.10.267521,platform=Windows NT 6.3 x86_64)
+Traceback (most recent call last):
+```
+&emsp;&emsp;错误信息的结尾部分会告诉你是错误的类型“NoSuchElementException” 以及错误信息“Message: no such
+element” 。 很显然， 这是由于元素的定位方式错误导致程序执行时“no such element” 。 这个时候只要修改我
+的定位方式即可。<br>
+&emsp;&emsp;如果你依然没明白“Message: no such element” 是什么意思， 那么接下来就通过搜索引擎来查找这段报错
+的提示吧！ 当你解决了一个类型的报错， 再遇到这样的问题就会很容易解决了， 学习的积累就是在解决一个
+又一个错误的过程中不断进步的。<br>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
