@@ -21,3 +21,12 @@ Python3.x， 因为 Python3.x 代表了 Python 发展的未来； 而且目前�
 如果 32 位系统是则选择 x86 版本； 如果是 64 位系统， 则选择 x86-64 版本。 选择“executable installer” 的连
 接进行下载， 下载完成后会得到一个以.msi 为后缀名的文件， 双击进行安装， 如图 1.1 所示。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter1/image/1.1.PNG)<br>
+&emsp;&emsp;安装过程与一般的 Windows 程序类似。 安装完成， 将在开始菜单中将看到安装好的 Python 目录， 如图 1.2
+所示。<br>
+![image](https://github.com/15529343201/guest/blob/chapter1/image/1.2.PNG)<br>
+在 Windows 系统中， 安装好的 Python 提供了四个选项。
+&emsp;&emsp;IDLE(Python 3.5 64-bit) ： 该选项为 Python 自带的 IDE， 推荐新手使用。
+&emsp;&emsp;Python 3.5 (64-bit)： 该选项会直接在 window 名称提示符下进入 Python Shell 模式。
+&emsp;&emsp;Python 3.5 Manuals(64-bit) ： 该选项为 Python 自带的官方文档。
+&emsp;&emsp;Python 3.5 Module Docs(64-bit)： 该选项为 Python 的模块文档。 它自动启动一个服务， 并打 Web 形式的文档。
+
