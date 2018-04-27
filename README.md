@@ -443,6 +443,62 @@ runserver
 &emsp;&emsp;对于新手来说， 我们不需要弄清楚每一个细节， 你只需要跟着我一步一步操作即可。 接下来， 使用
 “startapp” 命令创建应用。 一个项目可以包含多个应用， 而我们要开发的签到系统应该在具体应用下面完
 成。<br>
+`D:\pydj\guest>python3 manage.py startapp sign #创建 sign 项目`<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.1.PNG)<br>
+&emsp;&emsp;如图 2.1， Django 应用的目录（截图是通过 PyCharm 开发工具） 。<br>
+&emsp;&emsp;`migrations/`： 用于记录 models 中数据的变更。<br>
+&emsp;&emsp;`admin.py`： 映射 models 中的数据到 Django 自带的 admin 后台。<br>
+&emsp;&emsp;`apps.py`： 在新的 Django 版本中新增， 用于应用程序的配置。<br>
+&emsp;&emsp;`models.py`： 创建应用程序数据表模型（对应数据库的相关操作） 。<br>
+&emsp;&emsp;`tests.py`： 创建 Django 测试。<br>
+&emsp;&emsp;`views.py`： 控制向前端显示哪些数据。<br>
+### 2.2.2、 运行项目
+&emsp;&emsp;现在我们要把项目运行起来， Django 提供了 Web 容器， 只需要通过“runserver” 命令就可以把项目运行
+起来。<br>
+```
+D:\pydj\guest>python3 manage.py runserver
+Performing system checks...
+System check identified no issues (0 silenced).
+You have unapplied migrations; your app may not work properly until they are applied.
+Run 'python manage.py migrate' to apply them.
+July 30, 2016 - 22:37:53
+Django version 1.10.3, using settings 'guest.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+```
+&emsp;&emsp;Django 默认会通过本机的 8000 端口来启动项目， 如果你的当前环境该端口号被占用了， 也可以在启动
+时指定 IP 地址和端口号。<br>
+```
+D:\pydj\guest>python3 manage.py runserver 127.0.0.1:8001
+Performing system checks...
+System check identified no issues (0 silenced).
+You have unapplied migrations; your app may not work properly until they are applied.
+Run 'python manage.py migrate' to apply them.
+July 30, 2016 - 22:42:44
+Django version 1.10.3, using settings 'guest.settings'
+Starting development server at http://127.0.0.1:8001/
+Quit the server with CTRL-BREAK.
+```
+&emsp;&emsp;其中“127.0.0.1” 为指向本机的 IP 地址， “8001” 为设置的端口号。<br>
+&emsp;&emsp;打开浏览器， 访问： http://127.0.0.1:8001/<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.2.PNG)<br>
+### 2.2.3、 Hello Django！
+&emsp;&esmp;大多编程语言的教程， 第一个例子总是会教你如何打印“Hello xxx！ ” ， 我们也不免俗套， 接下来和我
+一起开发一个“Hello Django!” 的页面。<br>
+&emsp;&emsp;在此之前， 我们首先需要配置一下 guest/settings.py 文件， 将 sign 应用添加到项目中。<br>
+```
+# Application definition
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'sign',
+]
+```
 
 
 
