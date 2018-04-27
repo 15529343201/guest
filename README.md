@@ -559,6 +559,44 @@ def index(request):
 &emsp;&emsp;这里抛弃 HttpResponse 类， 转而使用 Django 的 render 函数。 该函数的第一个参数是请求对象的， 第二个参
 数返回一个 index.html 页面。<br>
 &emsp;&emsp;再次刷新页面， 查看 index.html 中所展示的内容。<br>
+## 2.3 Django 工作流
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.5.PNG)<br>
+&emsp;&emsp;需要说明的是， 这个处理流程并非 Django 的完整处理过程， 其中最主要的就是缺失了数据层（model）
+的操作， 但目前我们并没有涉及这数据层的操作， 所以先暂时忽略。<br>
+&emsp;&emsp;在学习更多 Django 开发知识之前， 希望你能把这个处理流程能记下来。 因为后续的 Django 开发都会是
+在此基础上对每一步骤的延伸笔扩展。 所以， 接下来进一步对每个步骤进行解释。<br>
+### 2.3.1、 URL 组成
+&emsp;&emsp;作为一个网站的用户， 我们首先会在浏览器的 URL 地栏输入： http://127.0.0.1:8000/index/<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.6.PNG)<br>
+&emsp;&emsp;URL 地址由以下几部分组成：<br>
+&emsp;&emsp;协议类型： HTTP/HTTPS<br>
+&emsp;&emsp;HTTP 协议（HyperText Transfer Protocol， 超文本传输协议） 是用于从 WWW 服务器传输超文本到
+本地浏览器的传送协议。 它可以使浏览器更加高效， 使网络传输减少。 它不仅保证计算机正确快速地传输超
+文本文档， 还确定传输文档中的哪一部分， 以及哪部分内容首先显示等 。<br>
+&emsp;&emsp;HTTPS（全称： Hyper Text Transfer Protocol over Secure Socket Layer） ， 是以安全为目标的
+HTTP 通道， 简单讲是 HTTP 的安全版。<br>
+&emsp;&emsp;主机地址： itest.info ， 127.0.0.1<br>
+&emsp;&emsp;itest.info 为一个网址， 网址通过域名解析服务器会找到对应的 IP 主机。<br>
+&emsp;&emsp;127.0.0.1 为一个 IP 地址， 不过， 该 IP 地址比较特殊， 用来指向的本机。<br>
+&emsp;&emsp;端口号： 8000<br>
+&emsp;&emsp;一台主机上有很多应用， 不同的应用占用不同的端口号， 除了要指定主机（网址或 IP 地址） 之外， 还要
+进一步指定相应的端口号才能访问到具体的应用。<br>
+&emsp;&emsp;前面在运行 Django 服务器， 默认使用 8000 的端口号， 所以， 在浏览器除了输入 IP 地址之后， 还要指向
+端口号， 才能访问到 Django 应用。<br>
+&emsp;&emsp;路径 ： /index/ 、 /admin<br>
+&emsp;&emsp;一般用来表示主机上的一个目录或文件地址。<br>
+### 2.3.2、 urls 的配置
+&emsp;&emsp;当 Django 拿到浏览器 URL 的地址之后， 取端口号后面的路径 “/index” 、 “/admin” 。 然后在 urls.py
+文件中匹配。<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.7.PNG)<br>
+&emsp;&emsp;这里使用了 Python 的正则表达式。<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.8.PNG)<br>
+&emsp;&emsp;通过^index/$ 匹配到/index/目录。 并且将处理指向 sign 应用的视图文件 views.py 的 index 函数。<br>
+
+
+
+
+
 
 
 
