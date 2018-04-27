@@ -312,17 +312,328 @@ element” 。 很显然， 这是由于元素的定位方式错误导致程序�
 &emsp;&emsp;如果你依然没明白“Message: no such element” 是什么意思， 那么接下来就通过搜索引擎来查找这段报错
 的提示吧！ 当你解决了一个类型的报错， 再遇到这样的问题就会很容易解决了， 学习的积累就是在解决一个
 又一个错误的过程中不断进步的。<br>
+# chapter2 Django 入门
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.0.PNG)<br>
+## 2.1 Django 开发环境
+&emsp;&emsp;Django 的版本大体分为三种： 一种是长时期支持版本（Long Term Support， 简称 LTS） ， 第二种是最新
+版本， 正式发布的稳定版本； 第三种是预览版（一般版本号中带 a1、 a2， b1， b2 的标识） ， 主要为愿意尝试
+新功能的用户使用。<br>
+### 2.1.1 Windows 安装 Django
+&emsp;&emsp;Django 官方网站： https://www.djangoproject.com/<br>
+&emsp;&emsp;Python 官方仓库下载地址： https://pypi.python.org/pypi/Django<br>
+`> pip install django==1.10.3`<br>
+或者：<br>
+`> pip3 install django==1.10.3`<br>
+或者：<br>
+`>python3 -m pip install django==1.10.3`<br>
+或者：<br>
+`pip install -i https://pypi.douban.com/simple/ django=1.10.3`<br>
+&emsp;&emsp;如果你只安装一个版本的 Python， 那么第一个命令即可成功安装 Django， 后两个命令是在你同时安装了
+Python2.x 和 Python3.x 两版本的情况下， 用于区别 Python2.x 时使用。 当然， 对于访问国外网站比较慢的读者
+也可以选择豆瓣源， 如第四行命令。<br>
+### 2.1.2 Ubuntu 下安装 Django
+&emsp;&emsp;Linux 操作系统的版本很多， 这里以流行的 Ubuntu 系统为例。<br>
+&emsp;&emsp;因为 Ubuntu 系统本身对 Python 有很强的依赖， 所以 Ubuntu 自带的就有 Python。<br>
+&emsp;&emsp;当前在 Ubuntu 系统中已经同时集成了 Python2 与 Python3， 打开终端， 输入“python” 或“Python3” 命
+令回车， 即可进入相应版本的 Shell 模式。<br>
+```
+fnngj@fnngj-PC:~$ python
+28
+Python 2.7.6 (default, Jun 22 2015, 17:58:13)
+[GCC 4.8.2] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> quit()
+fnngj@fnngj-PC:~$ python3
+Python 3.4.3 (default, Jul 28 2015, 18:20:59)
+[GCC 4.8.4] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> quit()
+```
+## 2.2 开始第一个 demo
+### 2.2.1、 创建项目与应用
+&emsp;&emsp;如果你已经成功的安装 Django， 在.../python35/Scripts/目录中将会多出一个 django-admin.exe 文件。 在
+Windows 命令提示符下输入“django-admin” 命令回车。<br>
+```
+D:\pydj>django-admin
+Type 'django-admin help <subcommand>' for help on a specific subcommand.
+Available subcommands:
+[django]
+check
+compilemessages
+createcachetable
+dbshell
+diffsettings
+dumpdata
+flush
+inspectdb
+loaddata
+makemessages
+makemigrations
+migrate
+runserver
+sendtestemail
+shell
+showmigrations
+sqlflush
+sqlmigrate
+sqlsequencereset
+squashmigrations
+startapp
+startproject
+test
+testserver
+```
+`D:\pydj>django-admin startproject guest #创建 guest 项目`<br>
+为该项目命名为“guest” 。 项目结构如下：<br>
+```
+guest/
+├── guest/
+│ ├── __init__.py
+│ ├── settings.py
+│ ├── urls.py
+│ └── wsgi.py
+└──manage.py
+```
+&emsp;&emsp;`guest/__init__.py`： 一个空的文件， 用它标识一个目录为 Python 的标准包。<br>
+&emsp;&emsp;`guest/settings.py`： Django 项目的配置文件， 包括 Django 模块应用配置， 数据库配置， 模板配置等。<br>
+&emsp;&emsp;`guest/urls.py`： Django 项目的 URL 声明。<br>
+&emsp;&emsp;`guest/wsgi.py`： 为 WSGI 兼容的 Web 服务器服务项目的切入点。<br>
+&emsp;&emsp;`manage.py`： 一个命令行工具， 可以让你在使用 Django 项目时以不同的方式进行交互。<br>
+```
+D:\pydj>cd guest # 进入 guest 项目目录
+D:\pydj\guest>python3 manage.py # 查看 manage 所提供的命令
+Type 'manage.py help <subcommand>' for help on a specific subcommand.
+Available subcommands:
+[auth]
+changepassword
+createsuperuser
+[django]
+check
+compilemessages
+createcachetable
+dbshell
+diffsettings
+flush
+inspectdb
+loaddata
+makemessages
+makemigrations
+migrate
+sendtestemail
+shell
+showmigrations
+sqlflush
+sqlmigrate
+sqlsequencereset
+squashmigrations
+startapp
+startproject
+test
+testserver
+[sessions]
+clearsessions
+[staticfiles]
+collectstatic
+findstatic
+runserver
+```
+&emsp;&emsp;你会发现 manage.py 所提供的许多命令与 django-admin 相同。如果想进一步了解它们的作用与区别
+可以查看 Django 的官方文档。<br>
+&emsp;&emsp;https://docs.djangoproject.com/en/1.10/ref/django-admin/<br>
+&emsp;&emsp;对于新手来说， 我们不需要弄清楚每一个细节， 你只需要跟着我一步一步操作即可。 接下来， 使用
+“startapp” 命令创建应用。 一个项目可以包含多个应用， 而我们要开发的签到系统应该在具体应用下面完
+成。<br>
+`D:\pydj\guest>python3 manage.py startapp sign #创建 sign 项目`<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.1.PNG)<br>
+&emsp;&emsp;如图 2.1， Django 应用的目录（截图是通过 PyCharm 开发工具） 。<br>
+&emsp;&emsp;`migrations/`： 用于记录 models 中数据的变更。<br>
+&emsp;&emsp;`admin.py`： 映射 models 中的数据到 Django 自带的 admin 后台。<br>
+&emsp;&emsp;`apps.py`： 在新的 Django 版本中新增， 用于应用程序的配置。<br>
+&emsp;&emsp;`models.py`： 创建应用程序数据表模型（对应数据库的相关操作） 。<br>
+&emsp;&emsp;`tests.py`： 创建 Django 测试。<br>
+&emsp;&emsp;`views.py`： 控制向前端显示哪些数据。<br>
+### 2.2.2、 运行项目
+&emsp;&emsp;现在我们要把项目运行起来， Django 提供了 Web 容器， 只需要通过“runserver” 命令就可以把项目运行
+起来。<br>
+```
+D:\pydj\guest>python3 manage.py runserver
+Performing system checks...
+System check identified no issues (0 silenced).
+You have unapplied migrations; your app may not work properly until they are applied.
+Run 'python manage.py migrate' to apply them.
+July 30, 2016 - 22:37:53
+Django version 1.10.3, using settings 'guest.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+```
+&emsp;&emsp;Django 默认会通过本机的 8000 端口来启动项目， 如果你的当前环境该端口号被占用了， 也可以在启动
+时指定 IP 地址和端口号。<br>
+```
+D:\pydj\guest>python3 manage.py runserver 127.0.0.1:8001
+Performing system checks...
+System check identified no issues (0 silenced).
+You have unapplied migrations; your app may not work properly until they are applied.
+Run 'python manage.py migrate' to apply them.
+July 30, 2016 - 22:42:44
+Django version 1.10.3, using settings 'guest.settings'
+Starting development server at http://127.0.0.1:8001/
+Quit the server with CTRL-BREAK.
+```
+&emsp;&emsp;其中“127.0.0.1” 为指向本机的 IP 地址， “8001” 为设置的端口号。<br>
+&emsp;&emsp;打开浏览器， 访问： http://127.0.0.1:8001/<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.2.PNG)<br>
+### 2.2.3、 Hello Django！
+&emsp;&esmp;大多编程语言的教程， 第一个例子总是会教你如何打印“Hello xxx！ ” ， 我们也不免俗套， 接下来和我
+一起开发一个“Hello Django!” 的页面。<br>
+&emsp;&emsp;在此之前， 我们首先需要配置一下 guest/settings.py 文件， 将 sign 应用添加到项目中。<br>
+```
+# Application definition
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'sign',
+]
+```
+&emsp;&emsp;接下来想一想， 我们应该用哪个路径来显示“Hello Django!” 。 命名一个/index/路径。 在浏览器地址栏输
+入： http://127.0.0.1:8001/index/<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.3.PNG)<br>
+&emsp;&emsp;显然， 我们访问的路径并不存在， 如图 2.3， Django 提示“Page not found(404)” ， 不要害怕， 这并不是
+一个严重的错误， 只是因为我们访问了一个不存在的路径而已， 认真读一下页面上的提示， 将会得到不少有
+用信息：<br>
+&emsp;&emsp;Django 在项目中的 guest 子目录下通过 urls.py 文件来定义 URLconf。<br>
+&emsp;&emsp;但是， 在 urls.py 文件中只找到了一个 admin/的路由配置。<br>
+&emsp;&emsp;当前网址 index/， 并没有匹配到。<br>
+&emsp;&emsp;根据本 Django 的提示， 再接下来打开 guest/urls.py 文件添加该目录。<br>
+```
+from django.conf.urls import url
+from django.contrib import admin
+from sign import views  # 导入 sign 应用 views 文件
+
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+    url(r'^index/$', views.index),  # 添加 index/路径配置
+]
+```
+views.py:<br>
+```
+from django.http import HttpResponse
 
 
+# Create your views here.
+def index(request):
+    return HttpResponse("Hello Django!")
+```
+&emsp;&emsp;定义 index 函数， 并通过 HttpResponse 类向页面返回字符串“Hello Django!” 。<br>
+&emsp;&emsp;HttpResponse 类存在 django.http.HttpResponse 中， 以字符串的形式传递给前端页面数据。<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.4.PNG)<br>
+### 2.2.4、 使用模板
+&emsp;&emsp;现在要用 HTML 页面来替代“Hello Django！ ” 字符串， 那么处理方式也会有所不同， 你可以认为这是
+一次重构。<br>
+&emsp;&emsp;在应用 sign/目录下创建 templates/index.html 文件。 （读者需要注意该 HTML 文件的所在路径， 不要弄错
+噢！ ）<br>
+index.html:<br>
+```
+<html>
+    <head>
+        <title>Django Page</title>
+    </head>
+    <body>
+        <h1>Hello Django!</h1>
+    </body>
+</html>
+```
+views.py:<br>
+```
+from django.shortcuts import render
 
 
-
-
-
-
-
-
-
+# Create your views here.
+def index(request):
+    return render(request, "index.html")
+```
+&emsp;&emsp;这里抛弃 HttpResponse 类， 转而使用 Django 的 render 函数。 该函数的第一个参数是请求对象的， 第二个参
+数返回一个 index.html 页面。<br>
+&emsp;&emsp;再次刷新页面， 查看 index.html 中所展示的内容。<br>
+## 2.3 Django 工作流
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.5.PNG)<br>
+&emsp;&emsp;需要说明的是， 这个处理流程并非 Django 的完整处理过程， 其中最主要的就是缺失了数据层（model）
+的操作， 但目前我们并没有涉及这数据层的操作， 所以先暂时忽略。<br>
+&emsp;&emsp;在学习更多 Django 开发知识之前， 希望你能把这个处理流程能记下来。 因为后续的 Django 开发都会是
+在此基础上对每一步骤的延伸笔扩展。 所以， 接下来进一步对每个步骤进行解释。<br>
+### 2.3.1、 URL 组成
+&emsp;&emsp;作为一个网站的用户， 我们首先会在浏览器的 URL 地栏输入： http://127.0.0.1:8000/index/<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.6.PNG)<br>
+&emsp;&emsp;URL 地址由以下几部分组成：<br>
+&emsp;&emsp;协议类型： HTTP/HTTPS<br>
+&emsp;&emsp;HTTP 协议（HyperText Transfer Protocol， 超文本传输协议） 是用于从 WWW 服务器传输超文本到
+本地浏览器的传送协议。 它可以使浏览器更加高效， 使网络传输减少。 它不仅保证计算机正确快速地传输超
+文本文档， 还确定传输文档中的哪一部分， 以及哪部分内容首先显示等 。<br>
+&emsp;&emsp;HTTPS（全称： Hyper Text Transfer Protocol over Secure Socket Layer） ， 是以安全为目标的
+HTTP 通道， 简单讲是 HTTP 的安全版。<br>
+&emsp;&emsp;主机地址： itest.info ， 127.0.0.1<br>
+&emsp;&emsp;itest.info 为一个网址， 网址通过域名解析服务器会找到对应的 IP 主机。<br>
+&emsp;&emsp;127.0.0.1 为一个 IP 地址， 不过， 该 IP 地址比较特殊， 用来指向的本机。<br>
+&emsp;&emsp;端口号： 8000<br>
+&emsp;&emsp;一台主机上有很多应用， 不同的应用占用不同的端口号， 除了要指定主机（网址或 IP 地址） 之外， 还要
+进一步指定相应的端口号才能访问到具体的应用。<br>
+&emsp;&emsp;前面在运行 Django 服务器， 默认使用 8000 的端口号， 所以， 在浏览器除了输入 IP 地址之后， 还要指向
+端口号， 才能访问到 Django 应用。<br>
+&emsp;&emsp;路径 ： /index/ 、 /admin<br>
+&emsp;&emsp;一般用来表示主机上的一个目录或文件地址。<br>
+### 2.3.2、 urls 的配置
+&emsp;&emsp;当 Django 拿到浏览器 URL 的地址之后， 取端口号后面的路径 “/index” 、 “/admin” 。 然后在 urls.py
+文件中匹配。<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.7.PNG)<br>
+&emsp;&emsp;这里使用了 Python 的正则表达式。<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.8.PNG)<br>
+&emsp;&emsp;通过^index/$ 匹配到/index/目录。 并且将处理指向 sign 应用的视图文件 views.py 的 index 函数。<br>
+### 2.3.3、 views 视图
+&emsp;&emsp;接下来请求的处理就到了.../sign/views.py 中的 index 视图函数。 如图 2.7<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.9.PNG)<br>
+&emsp;&emsp;视图在我看来， 它在 Django 中非常重要， 是连接页面与数据的中间纽带。 拿登录的例子来讲， 用户在页
+面上输入了用户名和密码点击登录。 那么 request 请求会由视图来接收， 如何提取出用户名和密码的数据， 如何用这些数据去查询数据库， 再如何将登录成功的页面返回给用户， 这些全部由视图层来完成。<br>
+### 2.3.4、 templates 模板
+&emsp;&emsp;打开.../sign/templates/index.html 文件。 如图 3.8。<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.10.PNG)<br>
+&emsp;&emsp;模板的载体就是我们所熟悉的 Web 页面了， Django 自带的有模板语言。 它的主要作用是如何展示数据，
+比如视图层返回的是一个字符串， 要如何显示在页面上； 返回的对象数组要如何显示等。 当然， 为了使页面
+更漂亮需要借助前端技术， 比如 CSS、 JavaScript 等。<br>
+## 2.4 MTV 开发模式
+&emsp;&emsp;进一步探讨一下 Django 的开发模式。<br>
+&emsp;&emsp;MTV 开发模式<br>
+&emsp;&emsp;在钻研更多代码之前， 让我们先花点时间考虑下 Django 数据驱动 Web 应用的总体设计。 Django 的设计
+鼓励松耦合及对应用程序中不同部分的严格分割。 遵循这个理念的话， 要想修改应用的某部分而不影响其它
+部分就比较容易了。 在视图函数中， 我们已经讨论了通过模板系统把业务逻辑和表现逻辑分隔开的重要性。 在
+数据库层中， 我们对数据访问逻辑也应用了同样的理念。 把数据存取逻辑、 业务逻辑和表现逻辑组合在一起
+的概念有时被称为软件架构的 Model-View-Controller（MVC） 模式。 在这个模式中， Model 代表数据存取层，
+View 代表的是系统中选择显示什么和怎么显示的部分， Controller 指的是系统中根据用户输入并视需要访问模
+型， 以决定使用哪个视图的那部分。<br>
+&emsp;&emsp;为什么用缩写？<br>
+&emsp;&emsp;像 MVC 这样的明确定义模式的主要用于改善开发人员之间的沟通。 比起告诉同事， “让我们采用抽象
+的数据存取方式， 然后单独划分一层来显示数据， 并且在中间加上一个控制它的层” ， 一个通用的说法会让
+你收益， 你只需要说： “我们在这里使用 MVC 模式吧。 ” 。 Django 紧紧地遵循这种 MVC 模式， 可以称得上
+是一种 MVC 框架。 以下是 Django 中 M、 V 和 C 各自的含义：<br>
+&emsp;&emsp;M ， 数据存取部分， 由 Django 数据库层处理， 本章要讲述的内容。<br>
+&emsp;&emsp;V ， 选择显示哪些数据要显示以及怎样显示的部分， 由视图和模板处理。<br>
+&emsp;&emsp;C ， 根据用户输入委派视图的部分， 由 Django 框架根据 URLconf 设置， 对给定 URL 调用适当的
+Python 函数。<br>
+&emsp;&emsp;由于 C 由框架自行处理， 而 Django 里更关注的是模型（Model） 、 模板(Template)和视图（Views） ，
+Django 也被称为 MTV 框架 。 在 MTV 开发模式中：<br>
+&emsp;&emsp;M 代表模型（Model） ， 即数据存取层。 该层处理与数据相关的所有事务： 如何存取、 如何验证有效<br>
+&emsp;&emsp;T 代表模板(Template)， 即表现层。 该层处理与表现相关的决定： 如何在页面或其他类型文档中进行显
+示。<br>
+&emsp;&emsp;V 代表视图（View） ， 即业务逻辑层。 该层包含存取模型及调取恰当模板的相关逻辑。 你可以把它看
+作模型与模板之间的桥梁。<br>
+&emsp;&emsp;如果你熟悉其它的 MVC Web 开发框架， 比方说 Ruby on Rails， 你可能会认为 Django 视图是控制器， 而
+Django 模板是视图。 很不幸， 这是对 MVC 不同诠释所引起的错误认识。 在 Django 对 MVC 的诠释中， 视图
+用来描述要展现给用户的数据； 不是数据 如何展现 ,而且展现 哪些 数据。 相比之下， Ruby on Rails 及一些同
+类框架提倡控制器负责决定向用户展现哪些数据， 而视图则仅决定 如何展现数据， 而不是展现 哪些 数据。<br>
+&emsp;&emsp;两种诠释中没有哪个更加正确一些。 重要的是要理解底层概念。<br>
 
 
 

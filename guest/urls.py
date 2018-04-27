@@ -15,7 +15,9 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from sign import views  # 导入 sign 应用 views 文件
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^index/$', views.index),  # 添加 index/路径配置
 ]
