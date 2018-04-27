@@ -531,9 +531,34 @@ def index(request):
 &emsp;&emsp;定义 index 函数， 并通过 HttpResponse 类向页面返回字符串“Hello Django!” 。<br>
 &emsp;&emsp;HttpResponse 类存在 django.http.HttpResponse 中， 以字符串的形式传递给前端页面数据。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter2/image/2.4.PNG)<br>
+### 2.2.4、 使用模板
+&emsp;&emsp;现在要用 HTML 页面来替代“Hello Django！ ” 字符串， 那么处理方式也会有所不同， 你可以认为这是
+一次重构。<br>
+&emsp;&emsp;在应用 sign/目录下创建 templates/index.html 文件。 （读者需要注意该 HTML 文件的所在路径， 不要弄错
+噢！ ）<br>
+index.html:<br>
+```
+<html>
+    <head>
+        <title>Django Page</title>
+    </head>
+    <body>
+        <h1>Hello Django!</h1>
+    </body>
+</html>
+```
+views.py:<br>
+```
+from django.shortcuts import render
 
 
-
+# Create your views here.
+def index(request):
+    return render(request, "index.html")
+```
+&emsp;&emsp;这里抛弃 HttpResponse 类， 转而使用 Django 的 render 函数。 该函数的第一个参数是请求对象的， 第二个参
+数返回一个 index.html 页面。<br>
+&emsp;&emsp;再次刷新页面， 查看 index.html 中所展示的内容。<br>
 
 
 
