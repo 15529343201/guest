@@ -312,13 +312,137 @@ element” 。 很显然， 这是由于元素的定位方式错误导致程序�
 &emsp;&emsp;如果你依然没明白“Message: no such element” 是什么意思， 那么接下来就通过搜索引擎来查找这段报错
 的提示吧！ 当你解决了一个类型的报错， 再遇到这样的问题就会很容易解决了， 学习的积累就是在解决一个
 又一个错误的过程中不断进步的。<br>
-
-
-
-
-
-
-
+# chapter2 Django 入门
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.0.PNG)<br>
+## 2.1 Django 开发环境
+&emsp;&emsp;Django 的版本大体分为三种： 一种是长时期支持版本（Long Term Support， 简称 LTS） ， 第二种是最新
+版本， 正式发布的稳定版本； 第三种是预览版（一般版本号中带 a1、 a2， b1， b2 的标识） ， 主要为愿意尝试
+新功能的用户使用。<br>
+### 2.1.1 Windows 安装 Django
+&emsp;&emsp;Django 官方网站： https://www.djangoproject.com/<br>
+&emsp;&emsp;Python 官方仓库下载地址： https://pypi.python.org/pypi/Django<br>
+`> pip install django==1.10.3`<br>
+或者：<br>
+`> pip3 install django==1.10.3`<br>
+或者：<br>
+`>python3 -m pip install django==1.10.3`<br>
+或者：<br>
+`pip install -i https://pypi.douban.com/simple/ django=1.10.3`<br>
+&emsp;&emsp;如果你只安装一个版本的 Python， 那么第一个命令即可成功安装 Django， 后两个命令是在你同时安装了
+Python2.x 和 Python3.x 两版本的情况下， 用于区别 Python2.x 时使用。 当然， 对于访问国外网站比较慢的读者
+也可以选择豆瓣源， 如第四行命令。<br>
+### 2.1.2 Ubuntu 下安装 Django
+&emsp;&emsp;Linux 操作系统的版本很多， 这里以流行的 Ubuntu 系统为例。<br>
+&emsp;&emsp;因为 Ubuntu 系统本身对 Python 有很强的依赖， 所以 Ubuntu 自带的就有 Python。<br>
+&emsp;&emsp;当前在 Ubuntu 系统中已经同时集成了 Python2 与 Python3， 打开终端， 输入“python” 或“Python3” 命
+令回车， 即可进入相应版本的 Shell 模式。<br>
+```
+fnngj@fnngj-PC:~$ python
+28
+Python 2.7.6 (default, Jun 22 2015, 17:58:13)
+[GCC 4.8.2] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> quit()
+fnngj@fnngj-PC:~$ python3
+Python 3.4.3 (default, Jul 28 2015, 18:20:59)
+[GCC 4.8.4] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> quit()
+```
+## 2.2 开始第一个 demo
+### 2.2.1、 创建项目与应用
+&emsp;&emsp;如果你已经成功的安装 Django， 在.../python35/Scripts/目录中将会多出一个 django-admin.exe 文件。 在
+Windows 命令提示符下输入“django-admin” 命令回车。<br>
+```
+D:\pydj>django-admin
+Type 'django-admin help <subcommand>' for help on a specific subcommand.
+Available subcommands:
+[django]
+check
+compilemessages
+createcachetable
+dbshell
+diffsettings
+dumpdata
+flush
+inspectdb
+loaddata
+makemessages
+makemigrations
+migrate
+runserver
+sendtestemail
+shell
+showmigrations
+sqlflush
+sqlmigrate
+sqlsequencereset
+squashmigrations
+startapp
+startproject
+test
+testserver
+```
+`D:\pydj>django-admin startproject guest #创建 guest 项目`<br>
+为该项目命名为“guest” 。 项目结构如下：<br>
+```
+guest/
+├── guest/
+│ ├── __init__.py
+│ ├── settings.py
+│ ├── urls.py
+│ └── wsgi.py
+└──manage.py
+```
+&emsp;&emsp;`guest/__init__.py`： 一个空的文件， 用它标识一个目录为 Python 的标准包。<br>
+&emsp;&emsp;`guest/settings.py`： Django 项目的配置文件， 包括 Django 模块应用配置， 数据库配置， 模板配置等。<br>
+&emsp;&emsp;`guest/urls.py`： Django 项目的 URL 声明。<br>
+&emsp;&emsp;`guest/wsgi.py`： 为 WSGI 兼容的 Web 服务器服务项目的切入点。<br>
+&emsp;&emsp;`manage.py`： 一个命令行工具， 可以让你在使用 Django 项目时以不同的方式进行交互。<br>
+```
+D:\pydj>cd guest # 进入 guest 项目目录
+D:\pydj\guest>python3 manage.py # 查看 manage 所提供的命令
+Type 'manage.py help <subcommand>' for help on a specific subcommand.
+Available subcommands:
+[auth]
+changepassword
+createsuperuser
+[django]
+check
+compilemessages
+createcachetable
+dbshell
+diffsettings
+flush
+inspectdb
+loaddata
+makemessages
+makemigrations
+migrate
+sendtestemail
+shell
+showmigrations
+sqlflush
+sqlmigrate
+sqlsequencereset
+squashmigrations
+startapp
+startproject
+test
+testserver
+[sessions]
+clearsessions
+[staticfiles]
+collectstatic
+findstatic
+runserver
+```
+&emsp;&emsp;你会发现 manage.py 所提供的许多命令与 django-admin 相同。如果想进一步了解它们的作用与区别
+可以查看 Django 的官方文档。<br>
+&emsp;&emsp;https://docs.djangoproject.com/en/1.10/ref/django-admin/<br>
+&emsp;&emsp;对于新手来说， 我们不需要弄清楚每一个细节， 你只需要跟着我一步一步操作即可。 接下来， 使用
+“startapp” 命令创建应用。 一个项目可以包含多个应用， 而我们要开发的签到系统应该在具体应用下面完
+成。<br>
 
 
 
