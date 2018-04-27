@@ -499,6 +499,40 @@ INSTALLED_APPS = [
     'sign',
 ]
 ```
+&emsp;&emsp;接下来想一想， 我们应该用哪个路径来显示“Hello Django!” 。 命名一个/index/路径。 在浏览器地址栏输
+入： http://127.0.0.1:8001/index/<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.3.PNG)<br>
+&emsp;&emsp;显然， 我们访问的路径并不存在， 如图 2.3， Django 提示“Page not found(404)” ， 不要害怕， 这并不是
+一个严重的错误， 只是因为我们访问了一个不存在的路径而已， 认真读一下页面上的提示， 将会得到不少有
+用信息：<br>
+&emsp;&emsp;Django 在项目中的 guest 子目录下通过 urls.py 文件来定义 URLconf。<br>
+&emsp;&emsp;但是， 在 urls.py 文件中只找到了一个 admin/的路由配置。<br>
+&emsp;&emsp;当前网址 index/， 并没有匹配到。<br>
+&emsp;&emsp;根据本 Django 的提示， 再接下来打开 guest/urls.py 文件添加该目录。<br>
+```
+from django.conf.urls import url
+from django.contrib import admin
+from sign import views  # 导入 sign 应用 views 文件
+
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+    url(r'^index/$', views.index),  # 添加 index/路径配置
+]
+```
+views.py:<br>
+```
+from django.http import HttpResponse
+
+
+# Create your views here.
+def index(request):
+    return HttpResponse("Hello Django!")
+```
+&emsp;&emsp;定义 index 函数， 并通过 HttpResponse 类向页面返回字符串“Hello Django!” 。<br>
+&emsp;&emsp;HttpResponse 类存在 django.http.HttpResponse 中， 以字符串的形式传递给前端页面数据。<br>
+![image](https://github.com/15529343201/guest/blob/chapter2/image/2.4.PNG)<br>
+
+
 
 
 
