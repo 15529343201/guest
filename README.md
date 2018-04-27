@@ -634,6 +634,41 @@ Django 模板是视图。 很不幸， 这是对 MVC 不同诠释所引起的错
 用来描述要展现给用户的数据； 不是数据 如何展现 ,而且展现 哪些 数据。 相比之下， Ruby on Rails 及一些同
 类框架提倡控制器负责决定向用户展现哪些数据， 而视图则仅决定 如何展现数据， 而不是展现 哪些 数据。<br>
 &emsp;&emsp;两种诠释中没有哪个更加正确一些。 重要的是要理解底层概念。<br>
+# chapter3 Django 视图
+## 3.1 来写个登录
+&emsp;&emsp;继续在上一章的基础上开发， 不过这一次， 我们先从前端页面写起。 打开.../sign/templates/index.html 文
+件， 修改代码如下。<br>
+```
+<html>
+    <head>
+        <title>Django Page</title>
+    </head>
+    <body>
+        <h1>发布会管理</h1>
+        <from>
+            <input name="username" type="text" placeholder="username"><br>
+            <input name="password" type="password" placeholder="password"><br>
+            <button id="btn" type="submit">登录</button>
+        </from>
+    </body>
+</html>
+```
+&emsp;&emsp;启动 Django 服务， 访问： http://127.0.0.1:8000/index/<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.1.PNG)<br>
+&emsp;&emsp;虽然在页面上已经看到了一个登录功能， 但它目前还并不可用。 要想真正实现登录还需要思考以一些问
+题。 当点输入用户名密码并点击“登录” 按钮之后， 表单（form） 中的数据要以什么方式（GET/POST） 提交
+系统？ 系统如何验证得到的用户名密码？ 如果验证成功应该跳转到什么页面？ 如果验证失败如何将错误提示
+返加给用户？<br>
+
+
+
+
+
+
+
+
+
+
 
 
 
