@@ -917,6 +917,35 @@ DATABASES = {
 &emsp;&emsp;另外， 在 guest 项目的根目录下会生成一个 db.sqlite3 文件。 关于数据的操作我们会放在下一章讨论。 此
 时， 先来验证 Session 功能是否生效， 重新登录。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter3/image/3.8.PNG)<br>
+## 3.3 Django 认证系统
+&emsp;&emsp;到目前为止， 虽然实现了登录， 但显然用户登录信息的验证并未真正实现， 目前的做法只是简单的用 if
+语句判断用户名和密码是否为“admin/admin123” ， 所以， 我们并没有完整的用户数据。<br>
+### 3.3.1、 登录 Admin 后台
+&emsp;&emsp;在上一小节执行 manage.py 的“migrate” 命令时， Django 同时也帮我们生成了 auth_user 表。 同时， 我们
+可以通过 URL 地址： http://127.0.0.1:8000/admin/ 来访问 Django 自带的 Admin 管理后台。 在此， 之前先来创
+建登录 Admin 后台的管理员账号。<br>
+```
+D:\pydj\guest>python3 manage.py createsuperuser
+Username (leave blank to use 'fnngj'): admin #输入用户名
+Email address: admin@mail.com #输入邮箱
+Password: #输入密码
+Password (again): #重复输入密码
+Superuser created successfully.
+```
+&emsp;&emsp;创建的超级管理员帐号/密码为： admin/admin123456<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.9.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.10.PNG)<br>
+&emsp;&emsp;如图 3.9、 3.10， 通过创建的管理员账号登录 Admin 后台， 尝试点击“Add” 链接添加新的用户， 并且用
+新创建的用户再次登录后台。 尝试一下吧！ 相信你可以做到。<br>
+
+
+
+
+
+
+
+
+
 
 
 
