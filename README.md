@@ -719,6 +719,98 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 ```
+### 3.1.2、 处理登录请求
+&emsp;&emsp;现在了解了将表单中的数据提交给服务器的方式（GET/POST） ， 那么将登录数据提交给 Django 服务器
+的谁来处理？ 可以通过 form 表单的 action 属性来指定提交的路径。<br>
+index.html:<br>
+```html
+<form method="post" action="/login_action/">
+```
+&emsp;&emsp;打开../guest/urls.py 文件添加 login_action/的路由。<br>
+urls.py:<br>
+```Python
+......
+from sign import views
+urlpatterns = [
+    ......
+    url(r'^login_action/$', views.login_action),
+]
+```
+&emsp;&emsp;打开 sign/views.py 文件， 创建 login_action 视图函数。<br>
+```Python
+from django.shortcuts import render
+from django.http import HttpResponse
+
+
+# Create your views here.
+def index(request):
+    return render(request, "index.html")
+
+
+# 登录动作
+def login_action(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
+        if username == 'admin' and password == 'admin123':
+            return HttpResponse('login success!')
+        else:
+            return render(request, 'index.html', {'error': 'username or password error!'})
+```
+&emsp;&emsp;通过 login_aciton 函数来处理登录请求。<br>
+&emsp;&emsp;客户端发送的请求信息全部包含在 request 中。 关于如何获取 request 中包含的信息， 参考 Django 文档。<br>
+&emsp;&emsp;https://docs.djangoproject.com/en/1.10/ref/request-response/<br>
+&emsp;&emsp;首先， 通过 request.method 方法得到客户发送的请求方式， 判断其是否为 POST 请求类型。<br>
+&emsp;&emsp;接着， 通过 request.POST 来获取 POST 请求。 通过.get()方法来寻找 name 为“username” 和“password”<br>
+的 POST 参数， 如果参数没有提交， 返回一个空的字符串。 此处的“username” 和“password” 对应 form 表
+单中<input> 标签的 name 属性， 可见这个属性的重要性。<br>
+&emsp;&emsp;再接下来， 判断 POST 请求得到的 username 和 password 是否为“admin/admin123” ， 如果是则通过
+HttpResponse 类返回“login success!” 字符串。 否则， 将通过 render 返回 index.html 登录页面， 并且顺带返回
+错误提示的字典“{'error': 'username or password error!'}” 。<br>
+&emsp;&emsp;但是， 显然 index.html 页面上并没有显示错误提示的地方， 所以， 需要在 index.html 页面中添加 Django
+模板。<br>
+index.html:<br>
+```html
+<form method="post" action="/login_action/">
+     <input name="username" type="text" placeholder="username" ><br>
+     <input name="password" type="password" placeholder="password"><br>
+     {{ error }}<br>
+     <button id="btn" type="submit">登录</button>
+     {% csrf_token %}
+</form>
+```
+&emsp;&emsp;此处又使用到了 Django 的模板语言， 添加{{ error }}， 它对应 render 返回字典中的 key， 并且在登录失败
+的页面中显示 value， 即“username or password error!” 信息。 好了， 现在来体验一下登录功能， 分别看看登录
+失败和成功的效果。 如图 3.4、 3.5。<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.4.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.5.PNG)<br>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
