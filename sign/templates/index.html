@@ -4,10 +4,11 @@
     </head>
     <body>
         <h1>发布会管理</h1>
-        <from>
-            <input name="username" type="text" placeholder="username"><br>
+        <form method="post">
+            <input name="username" type="text" placeholder="username" ><br>
             <input name="password" type="password" placeholder="password"><br>
             <button id="btn" type="submit">登录</button>
-        </from>
+            {% csrf_token %}
+        </form>
     </body>
 </html>

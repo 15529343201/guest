@@ -659,6 +659,80 @@ Django 模板是视图。 很不幸， 这是对 MVC 不同诠释所引起的错
 题。 当点输入用户名密码并点击“登录” 按钮之后， 表单（form） 中的数据要以什么方式（GET/POST） 提交
 系统？ 系统如何验证得到的用户名密码？ 如果验证成功应该跳转到什么页面？ 如果验证失败如何将错误提示
 返加给用户？<br>
+### 3.1.1、 GET 与 POST 请求
+&emsp;&emsp;当客户机通过 HTTP 协议向服务器提交请求时， 最常用到的方法是 GET 和 POST。<br>
+&emsp;&emsp;GET - 从指定的资源请求数据。<br>
+&emsp;&emsp;POST - 向指定的资源提交要被处理的数据<br>
+- GET 请求
+
+先来看看 GET 方法是如何传参数， 给 form 添加属性 method="get"。<br>
+index.html:<br>
+```html
+<from method="get">
+    <input name="username" type="text" placeholder="username"><br>
+    <input name="password" type="password" placeholder="password"><br>
+    <button id="btn" type="submit">登录</button>
+</from>
+```
+&emsp;&emsp;然后保存在 index.html 文件， 重新刷新页面。 输入用户名、 密码， 点击登录。<br>
+&emsp;&emsp;查看浏览器 URL 地址栏：<br>
+&emsp;&emsp;http://127.0.0.1:8000/index/?username=admin&password=admin123<br>
+&emsp;&emsp;GET 方法会将用户提交的数据添加到 URL 地址中， 路径后面跟问号“？ ” ， username 和 password 为
+HTML 代码中<input>标签的 name 属性值， username=admin 表示用户名输入框得到的输入数据为“admin” 。
+password=admin123 密码输入框得到的输入数据为“admin123” 。 多个参数之间用“&” 符号隔开。<br>
+- POST 请求
+&emsp;&emsp;同样是上面的代码， 再将 form 表单的中的属性改为 method="post" 。 重新刷新页面后， 再次输入用户名
+密码， 点击“登录” 。<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.2.PNG)<br>
+&emsp;&emsp;“CSRF verification failed. Request aborted.”<br>
+&emsp;&emsp;这个提示非常有意思， 而且被许多初学 Django 的同学问到。 如果你仔细阅读上面的帮助信息， 那么将会
+知道这个错误的原因， 并且找到解决办法。 然而， 新手往往面对错误提示时显得恐慌和手足无措， 从而忽略
+掉页面上的提示信息。<br>
+&emsp;&emsp;如果你从未听说过“跨站请求伪造” （Cross-Site Request Forgery， CSRF） 漏洞， 现在就去查资料吧。
+Django 针对 CSRF 的保护措施是在生成的每个表单中放置一个自动生成的令牌， 通过这个令牌判断 POST
+请求是否来自同一个网站。<br>
+&emsp;&emsp;之前的模板都是纯粹的 HTML， 在这里要首次使用到 Django 的模板， 使用“模板标签”（template tag）
+添加 CSRF 令牌。 在 from 表单中添加{% csrf_token %}。<br>
+```html
+<form method="post">
+     <input name="username" type="text" placeholder="username" ><br>
+     <input name="password" type="password" placeholder="password"><br>
+     <button id="btn" type="submit">登录</button>
+     {% csrf_token %}
+</form>
+```
+&emsp;&emsp;然后， 刷新页面并重新提交登录表单， 错误提示页面消失了。<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.3.PNG)<br>
+&emsp;&emsp;如图 3.3， 借助 Firebug 前端调试工具进行查看 POST 请求。 你会看到除了 usrname 和 password 参数外，
+还多了一个 csrfmiddlewaretoken 的参数。 当页面向 Django 服务器发送一个 POST 请求时， 服务器端要求客户
+端加上 csrfmiddlewaretoken 字段， 该字段的值为当前会话 ID 加上一个密钥的散列值。<br>
+&emsp;&emsp;如果想忽略掉该检查， 可以在.../guest/settings.py 文件中注释掉 csrf。<br>
+settings.py:<br>
+```html
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
