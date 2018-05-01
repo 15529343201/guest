@@ -634,6 +634,439 @@ Django 模板是视图。 很不幸， 这是对 MVC 不同诠释所引起的错
 用来描述要展现给用户的数据； 不是数据 如何展现 ,而且展现 哪些 数据。 相比之下， Ruby on Rails 及一些同
 类框架提倡控制器负责决定向用户展现哪些数据， 而视图则仅决定 如何展现数据， 而不是展现 哪些 数据。<br>
 &emsp;&emsp;两种诠释中没有哪个更加正确一些。 重要的是要理解底层概念。<br>
+# chapter3 Django 视图
+## 3.1 来写个登录
+&emsp;&emsp;继续在上一章的基础上开发， 不过这一次， 我们先从前端页面写起。 打开.../sign/templates/index.html 文
+件， 修改代码如下。<br>
+```
+<html>
+    <head>
+        <title>Django Page</title>
+    </head>
+    <body>
+        <h1>发布会管理</h1>
+        <from>
+            <input name="username" type="text" placeholder="username"><br>
+            <input name="password" type="password" placeholder="password"><br>
+            <button id="btn" type="submit">登录</button>
+        </from>
+    </body>
+</html>
+```
+&emsp;&emsp;启动 Django 服务， 访问： http://127.0.0.1:8000/index/<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.1.PNG)<br>
+&emsp;&emsp;虽然在页面上已经看到了一个登录功能， 但它目前还并不可用。 要想真正实现登录还需要思考以一些问
+题。 当点输入用户名密码并点击“登录” 按钮之后， 表单（form） 中的数据要以什么方式（GET/POST） 提交
+系统？ 系统如何验证得到的用户名密码？ 如果验证成功应该跳转到什么页面？ 如果验证失败如何将错误提示
+返加给用户？<br>
+### 3.1.1、 GET 与 POST 请求
+&emsp;&emsp;当客户机通过 HTTP 协议向服务器提交请求时， 最常用到的方法是 GET 和 POST。<br>
+&emsp;&emsp;GET - 从指定的资源请求数据。<br>
+&emsp;&emsp;POST - 向指定的资源提交要被处理的数据<br>
+- GET 请求
+
+先来看看 GET 方法是如何传参数， 给 form 添加属性 method="get"。<br>
+index.html:<br>
+```html
+<from method="get">
+    <input name="username" type="text" placeholder="username"><br>
+    <input name="password" type="password" placeholder="password"><br>
+    <button id="btn" type="submit">登录</button>
+</from>
+```
+&emsp;&emsp;然后保存在 index.html 文件， 重新刷新页面。 输入用户名、 密码， 点击登录。<br>
+&emsp;&emsp;查看浏览器 URL 地址栏：<br>
+&emsp;&emsp;http://127.0.0.1:8000/index/?username=admin&password=admin123<br>
+&emsp;&emsp;GET 方法会将用户提交的数据添加到 URL 地址中， 路径后面跟问号“？ ” ， username 和 password 为
+HTML 代码中<input>标签的 name 属性值， username=admin 表示用户名输入框得到的输入数据为“admin” 。
+password=admin123 密码输入框得到的输入数据为“admin123” 。 多个参数之间用“&” 符号隔开。<br>
+- POST 请求
+&emsp;&emsp;同样是上面的代码， 再将 form 表单的中的属性改为 method="post" 。 重新刷新页面后， 再次输入用户名
+密码， 点击“登录” 。<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.2.PNG)<br>
+&emsp;&emsp;“CSRF verification failed. Request aborted.”<br>
+&emsp;&emsp;这个提示非常有意思， 而且被许多初学 Django 的同学问到。 如果你仔细阅读上面的帮助信息， 那么将会
+知道这个错误的原因， 并且找到解决办法。 然而， 新手往往面对错误提示时显得恐慌和手足无措， 从而忽略
+掉页面上的提示信息。<br>
+&emsp;&emsp;如果你从未听说过“跨站请求伪造” （Cross-Site Request Forgery， CSRF） 漏洞， 现在就去查资料吧。
+Django 针对 CSRF 的保护措施是在生成的每个表单中放置一个自动生成的令牌， 通过这个令牌判断 POST
+请求是否来自同一个网站。<br>
+&emsp;&emsp;之前的模板都是纯粹的 HTML， 在这里要首次使用到 Django 的模板， 使用“模板标签”（template tag）
+添加 CSRF 令牌。 在 from 表单中添加{% csrf_token %}。<br>
+```html
+<form method="post">
+     <input name="username" type="text" placeholder="username" ><br>
+     <input name="password" type="password" placeholder="password"><br>
+     <button id="btn" type="submit">登录</button>
+     {% csrf_token %}
+</form>
+```
+&emsp;&emsp;然后， 刷新页面并重新提交登录表单， 错误提示页面消失了。<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.3.PNG)<br>
+&emsp;&emsp;如图 3.3， 借助 Firebug 前端调试工具进行查看 POST 请求。 你会看到除了 usrname 和 password 参数外，
+还多了一个 csrfmiddlewaretoken 的参数。 当页面向 Django 服务器发送一个 POST 请求时， 服务器端要求客户
+端加上 csrfmiddlewaretoken 字段， 该字段的值为当前会话 ID 加上一个密钥的散列值。<br>
+&emsp;&emsp;如果想忽略掉该检查， 可以在.../guest/settings.py 文件中注释掉 csrf。<br>
+settings.py:<br>
+```html
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+```
+### 3.1.2、 处理登录请求
+&emsp;&emsp;现在了解了将表单中的数据提交给服务器的方式（GET/POST） ， 那么将登录数据提交给 Django 服务器
+的谁来处理？ 可以通过 form 表单的 action 属性来指定提交的路径。<br>
+index.html:<br>
+```html
+<form method="post" action="/login_action/">
+```
+&emsp;&emsp;打开../guest/urls.py 文件添加 login_action/的路由。<br>
+urls.py:<br>
+```Python
+......
+from sign import views
+urlpatterns = [
+    ......
+    url(r'^login_action/$', views.login_action),
+]
+```
+&emsp;&emsp;打开 sign/views.py 文件， 创建 login_action 视图函数。<br>
+```Python
+from django.shortcuts import render
+from django.http import HttpResponse
+
+
+# Create your views here.
+def index(request):
+    return render(request, "index.html")
+
+
+# 登录动作
+def login_action(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
+        if username == 'admin' and password == 'admin123':
+            return HttpResponse('login success!')
+        else:
+            return render(request, 'index.html', {'error': 'username or password error!'})
+```
+&emsp;&emsp;通过 login_aciton 函数来处理登录请求。<br>
+&emsp;&emsp;客户端发送的请求信息全部包含在 request 中。 关于如何获取 request 中包含的信息， 参考 Django 文档。<br>
+&emsp;&emsp;https://docs.djangoproject.com/en/1.10/ref/request-response/<br>
+&emsp;&emsp;首先， 通过 request.method 方法得到客户发送的请求方式， 判断其是否为 POST 请求类型。<br>
+&emsp;&emsp;接着， 通过 request.POST 来获取 POST 请求。 通过.get()方法来寻找 name 为“username” 和“password”<br>
+的 POST 参数， 如果参数没有提交， 返回一个空的字符串。 此处的“username” 和“password” 对应 form 表
+单中<input> 标签的 name 属性， 可见这个属性的重要性。<br>
+&emsp;&emsp;再接下来， 判断 POST 请求得到的 username 和 password 是否为“admin/admin123” ， 如果是则通过
+HttpResponse 类返回“login success!” 字符串。 否则， 将通过 render 返回 index.html 登录页面， 并且顺带返回
+错误提示的字典“{'error': 'username or password error!'}” 。<br>
+&emsp;&emsp;但是， 显然 index.html 页面上并没有显示错误提示的地方， 所以， 需要在 index.html 页面中添加 Django
+模板。<br>
+index.html:<br>
+```html
+<form method="post" action="/login_action/">
+     <input name="username" type="text" placeholder="username" ><br>
+     <input name="password" type="password" placeholder="password"><br>
+     {{ error }}<br>
+     <button id="btn" type="submit">登录</button>
+     {% csrf_token %}
+</form>
+```
+&emsp;&emsp;此处又使用到了 Django 的模板语言， 添加{{ error }}， 它对应 render 返回字典中的 key， 并且在登录失败
+的页面中显示 value， 即“username or password error!” 信息。 好了， 现在来体验一下登录功能， 分别看看登录
+失败和成功的效果。 如图 3.4、 3.5。<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.4.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.5.PNG)<br>
+### 3.1.3、 登录成功页
+&emsp;&emsp;显然， 登录成功返回的“login success!” 字符串只是一种临时方案， 只是为了方便验证登录的处理逻辑，
+现在没有问题之后， 需要通过 HTML 页面来替换。<br>
+&emsp;&emsp;我们要开发的是发布会签到系统， 那么我希望登录之后默认显示发布会列表。 所以， 首先创
+建.../templates/event_manage.html 页面。<br>
+```
+<html>
+    <head>
+        <title>Event Manage Page</title>
+    </head>
+    <body>
+        <h1>Login Success!</h1>
+    </body>
+</html>
+```
+&emsp;&emsp;修改.../sign/views.py 中的 login_action 函数。<br>
+views.py:<br>
+```
+from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseRedirect
+......
+# 登录动作
+......
+if username == 'admin' and password == 'admin123':
+    return HttpResponseRedirect('/event_manage/')
+......
+# 发布会管理
+def event_manage(request):
+    return render(request,"event_manage.html")
+```
+&emsp;&emsp;此处又用到的一个新的类 HttpResponseRedirect， 它可以对路径进行重定向， 从而将登录成功之后的请求
+指向/event_manage/目录。<br>
+&emsp;&emsp;创建 event_manage 函数， 用于返回发布会管理 event_manage.html 面页。<br>
+&emsp;&emsp;最后， 不要忘记在../guest/urls.py 文件中添加路径 event_manage/的路由。<br>
+urls.py:<br>
+```Python
+from sign import views
+urlpatterns = [
+......
+    url(r'^event_manage/$', views.event_manage),
+]
+```
+## 3.2 Cookie 和 Session
+&emsp;&emsp;接下来继续另外一个有意思的话题， 在不考虑数据库验证的情况下， 假如用户通过“zhangsan” 登录，
+然后， 在登录成功页显示“嘿， zhangsan 你好！ ” ， 这是一般系统都会提供的一个小功能， 接下来我们将分别
+通过 Cookie 和 Session 来实现它。<br>
+&emsp;&emsp;Cookie 与 Session<br>
+&emsp;&emsp;Cookie 机制： 正统的 Cookie 分发是通过扩展 HTTP 协议来实现的， 服务器通过在 HTTP 的响应头中加上
+一行特殊的指示以提示浏览器按照指示生成相应的 Cookie。然而纯粹的客户端脚本如 JavaScript 或者 VBScript
+也可以生成 Cookie。 而 Cookie 的使用是由浏览器按照一定的原则在后台自动发送给服务器的。 浏览器检查所
+有存储的 Cookie， 如果某个 Cookie 所声明的作用范围大于等于将要请求的资源所在的位置， 则把该 cookie 附
+在请求资源的 HTTP 请求头上发送给服务器。<br>
+&emsp;&emsp;Session 机制： Session 机制是一种服务器端的机制， 服务器使用一种类似于散列表的结构（也可能就是
+使用散列表） 来保存信息。<br>
+### 3.2.1、 Cookie 的使用
+&emsp;&emsp;继续修改.../sign/views.py 文件：<br>
+views.py:<br>
+```Python
+# 登录动作
+def login_action(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
+        if username == 'admin' and password == 'admin123':
+            response = HttpResponseRedirect('/event_manage/')
+            response.set_cookie('user',username,3600) # 添加浏览器cookie
+            return response
+        else:
+            return render(request, 'index.html', {'error': 'username or password error!'})
+    else:
+        return render(request, 'index.html', {'error': 'username or password error!'})
+
+
+# 发布会管理
+def event_manage(request):
+    username = request.COOKIES.get('user','') # 读取浏览器cookie
+    return render(request, "event_manage.html",{"user":username})
+```
+&emsp;&emsp;当用户登录成功后， 在跳转到 event_manage 页面时， 通过 set_cookie()方法来添加浏览器 Cookie。<br>
+&emsp;&emsp;这里给 set_cookie()方法传了三个参数， 第一个参数“user” 是用于表示写入浏览器的 Cookie 名， 第二个
+参数 username 是由用户在登录页上输入的用户名， 第三个参数 3600 用于表示该 cookie 信息在浏览器中的停
+留时间， 默认以秒为单位。<br>
+&emsp;&emsp;而在 event_manage 视图函数中， 通过 request.COOKIES 来读取 Cookie 名为“user”的值。 并且通过 render
+将和 event_manage.html 页面一起返回给客户端浏览器。<br>
+&emsp;&emsp;修改.../templates/event_manage.html 页面， 添加<div>标签来显示用户登录的用户名。<br>
+event_manage.html:<br>
+```html
+<div style="float:right;">
+    <a>嘿! {{ user }} 欢迎</a><hr />
+</div>
+```
+&emsp;&emsp;重新再来登录一次,将会看到页面如图3.6.<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.6.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.7.PNG)<br>
+### 3.2.2、 Session 的使用
+&emsp;&emsp;Cookie 固然好， 但存在一定的安全隐患。 Cookie 像我们以前用的存折， 用户的存钱、 取钱都会记录在这
+张存折上（即浏览器中会保存所有用户信息） ， 那么对于有非分想法的人可能会去修改存折上的数据（这个
+比喻忽略掉银行同样会记录用户存取款的金额） 。<br>
+&emsp;&emsp;相对于存折， 银行卡要安全的得多， 客户拿到的只是一个银行卡号（即浏览器只保留一个 Sessionid） ，
+那么用户的存钱、 取钱都会记录在银行的系统里（即服务器端） ， 只得到一个 sessionid 是没有任何意义的，
+所以相对于 Cookie 来说就会安全很多。<br>
+&emsp;&emsp;在 Django 中使用 Session 和 Cookie 类似。 我们只用将 Cookie 的几步操作替换成 session 即可。<br>
+&emsp;&emsp;修改.../sign/views.py 文件， 在 login_action 函数中， 将：<br>
+&emsp;&emsp;`response.set_cookie('user', username, 3600)`<br>
+&emsp;&emsp;替换为：<br>
+&emsp;&emsp;`request.session['user'] = username # 将 session 信息记录到浏览器`
+&emsp;&emsp;在 event_manage 函数中， 将：<br>
+&emsp;&emsp;`username = request.COOKIES.get('user', '')`<br>
+&emsp;&emsp;替换为：<br>
+&emsp;&emsp;`username = request.session.get('user', '') # 读取浏览器 session`<br>
+&emsp;&emsp;再次尝试登录， 不出意外的话将会得到一个错误。<br>
+&emsp;&emsp;`“no such table: django_session”`<br>
+&emsp;&emsp;这个错误跟 Session 的机制有关， 既然要服务器端记录用户的数据， 那么一定要有地方来存放用户
+Sessionid 对应的信息才对。 所以， 我们需要创建 django_session 表。 别着急！ Django 已经帮我们准备好这些常
+用的表， 只需要将他们生成即可， 是不是很贴心。<br>
+`D:\pydj\guest>python3 manage.py migrate`<br>
+&emsp;&emsp;通过“migrate” 命令进行数据迁移。<br>
+&emsp;&emsp;等等， 我们好像并没配置数据库啊， 为什么数据库已经生成了表呢？ 这是因为 Django 已经默认帮我设置
+sqlite3 数据库。 打开.../settings.py 文件， 查看 sqlite3 数据库的配置。<br>
+```Python
+# Database
+# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
+```
+&emsp;&emsp;另外， 在 guest 项目的根目录下会生成一个 db.sqlite3 文件。 关于数据的操作我们会放在下一章讨论。 此
+时， 先来验证 Session 功能是否生效， 重新登录。<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.8.PNG)<br>
+## 3.3 Django 认证系统
+&emsp;&emsp;到目前为止， 虽然实现了登录， 但显然用户登录信息的验证并未真正实现， 目前的做法只是简单的用 if
+语句判断用户名和密码是否为“admin/admin123” ， 所以， 我们并没有完整的用户数据。<br>
+### 3.3.1、 登录 Admin 后台
+&emsp;&emsp;在上一小节执行 manage.py 的“migrate” 命令时， Django 同时也帮我们生成了 auth_user 表。 同时， 我们
+可以通过 URL 地址： http://127.0.0.1:8000/admin/ 来访问 Django 自带的 Admin 管理后台。 在此， 之前先来创
+建登录 Admin 后台的管理员账号。<br>
+```
+D:\pydj\guest>python3 manage.py createsuperuser
+Username (leave blank to use 'fnngj'): admin #输入用户名
+Email address: admin@mail.com #输入邮箱
+Password: #输入密码
+Password (again): #重复输入密码
+Superuser created successfully.
+```
+&emsp;&emsp;创建的超级管理员帐号/密码为： admin/admin123456<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.9.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.10.PNG)<br>
+&emsp;&emsp;如图 3.9、 3.10， 通过创建的管理员账号登录 Admin 后台， 尝试点击“Add” 链接添加新的用户， 并且用
+新创建的用户再次登录后台。 尝试一下吧！ 相信你可以做到。<br>
+### 3.3.2、 引用 Django 认证登录
+&emsp;&emsp;既然 Django 已经帮我们做好用户体系， 那么就直接拿来使用好了。<br>
+&emsp;&emsp;打开.../sign/views.py 文件修改 login_action 函数。<br>
+views.py:<br>
+```Python
+from django.contrib import auth
+def login_action(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
+        user = auth.authenticate(username=username, password=password)
+        if user is not None:
+            auth.login(request,user) # 登录
+            request.session['user']=username # 将session信息记录到浏览器
+            response = HttpResponseRedirect('/event_manage/')
+            return response
+        else:
+            return render(request, 'index.html', {'error': 'username or password error!'})
+    else:
+        return render(request, 'index.html', {'error': 'username or password error!'})
+```
+&emsp;&emsp;使用 authenticate()函数认证给出的用户名和密码。 它接受两个参数， 用户名 username 和密码 password，
+并在用户名密码正确的情况下返回一个 user 对象。 如果用户名密码不正确， 则 authenticate()返回 None。<br>
+&emsp;&emsp;通过 if 语句判断 authenticate()返回如果不为 None， 说明用户认证通过。 那么接下来调用 login()函数进行
+登录。 login()函数接收 HttpRequest 对象和一个 user 对象。<br>
+&emsp;&emsp;重新使用 admin 管理后台创建用户账户来验证登录功能吧！<br>
+### 3.3.3、 关上窗户
+&emsp;&emsp;“上帝为你关上了一扇门， 也一定会为你打开一扇窗户” ， 我们为系统开发了一个需要用户认证的登录，
+然而， 我们不需要通过登录也可以直接访问到登录成功的页面。<br>
+&emsp;&emsp;现在， 尝试直接访问： http://127.0.0.1:8000/event_manage/<br>
+&emsp;&emsp;看！ 是不是直接打开了登录成功页， 那为什么还需要通过登录来访问这个页面呢？ 所以， 我们要把这些
+“窗户” 都关上， 使用户只能通过登录来访问系统。<br>
+&emsp;&emsp;再来感受一下 Django 的强大之处吧！ 一秒钟让你关好窗户。<br>
+views.py:<br>
+```
+from django.contrib.auth.decorators import login_required
+......
+# 发布会管理
+@login_required
+def event_manage(request):
+    username= request.session.get('user','') # 读取浏览器session
+    return render(request, "event_manage.html",{"user":username})
+```
+&emsp;&emsp;是的， 就是这么简单， 如果想限制某个视图函数必须登录才能访问， 只需要在这个函数的前面加上
+@login_required 即可。<br>
+&emsp;&emsp;你可以再次尝试访问/event_manage/目录（千万不要忘记清理浏览器缓存再试！ ） ， 看看还能否直接访问
+到.<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.11.PNG)<br>
+&emsp;&emsp;如图 3.11， Django 会告诉访问的路径并不存在（404） 。<br>
+&emsp;&emsp;如 果 你 细 心 ， 会 发 布 在 访 问 被 @login_required 装 饰 的 视 图 时 ， 默 认 会 跳 转 的 URL 中 会 包 含
+“/accounts/login/” ， 为什么不让它直接跳转到登录页面呢？ 不但要告诉你窗户是关着的， 还要帮你指引到门
+的位置。<br>
+&emsp;&emsp;接下来修改.../urls.py 文件， 添加以下路径。<br>
+urls.py:<br>
+```
+......
+from sign import views
+urlpatterns = [
+    url(r'^$', views.index),
+    url(r'^index/$', views.index),
+    url(r'^accounts/login/$', views.index),
+......
+]
+```
+&emsp;&emsp;当用户访问：<br>
+&emsp;&emsp;http://127.0.0.1:8000/<br>
+&emsp;&emsp;http://127.0.0.1:8000/index/<br>
+&emsp;&emsp;http://127.0.0.1:8000/event_manage/<br>
+&emsp;&emsp;默认， 都会跳转到登录页面。 但是， 如果你访问的是其它不存的路径， 比如/abc/， 依然会显示图 3.11 的
+页面。 这个时候需要设置默认的 404 页面<br>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
