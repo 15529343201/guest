@@ -13,7 +13,9 @@ def login_action(request):
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')
         if username == 'admin' and password == 'admin123':
-            return HttpResponseRedirect('/event_manage/')
+            response = HttpResponseRedirect('/event_manage/')
+            response.set_cookie('user',username,3600) # 添加浏览器cookie
+            return response
         else:
             return render(request, 'index.html', {'error': 'username or password error!'})
     else:
@@ -22,4 +24,5 @@ def login_action(request):
 
 # 发布会管理
 def event_manage(request):
-    return render(request, "event_manage.html")
+    username = request.COOKIES.get('user','') # 读取浏览器cookie
+    return render(request, "event_manage.html",{"user":username})

@@ -826,6 +826,80 @@ urlpatterns = [
     url(r'^event_manage/$', views.event_manage),
 ]
 ```
+## 3.2 Cookie 和 Session
+&emsp;&emsp;接下来继续另外一个有意思的话题， 在不考虑数据库验证的情况下， 假如用户通过“zhangsan” 登录，
+然后， 在登录成功页显示“嘿， zhangsan 你好！ ” ， 这是一般系统都会提供的一个小功能， 接下来我们将分别
+通过 Cookie 和 Session 来实现它。<br>
+&emsp;&emsp;Cookie 与 Session<br>
+&emsp;&emsp;Cookie 机制： 正统的 Cookie 分发是通过扩展 HTTP 协议来实现的， 服务器通过在 HTTP 的响应头中加上
+一行特殊的指示以提示浏览器按照指示生成相应的 Cookie。然而纯粹的客户端脚本如 JavaScript 或者 VBScript
+也可以生成 Cookie。 而 Cookie 的使用是由浏览器按照一定的原则在后台自动发送给服务器的。 浏览器检查所
+有存储的 Cookie， 如果某个 Cookie 所声明的作用范围大于等于将要请求的资源所在的位置， 则把该 cookie 附
+在请求资源的 HTTP 请求头上发送给服务器。<br>
+&emsp;&emsp;Session 机制： Session 机制是一种服务器端的机制， 服务器使用一种类似于散列表的结构（也可能就是
+使用散列表） 来保存信息。<br>
+### 3.2.1、 Cookie 的使用
+&emsp;&emsp;继续修改.../sign/views.py 文件：<br>
+views.py:<br>
+```Python
+# 登录动作
+def login_action(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
+        if username == 'admin' and password == 'admin123':
+            response = HttpResponseRedirect('/event_manage/')
+            response.set_cookie('user',username,3600) # 添加浏览器cookie
+            return response
+        else:
+            return render(request, 'index.html', {'error': 'username or password error!'})
+    else:
+        return render(request, 'index.html', {'error': 'username or password error!'})
+
+
+# 发布会管理
+def event_manage(request):
+    username = request.COOKIES.get('user','') # 读取浏览器cookie
+    return render(request, "event_manage.html",{"user":username})
+```
+&emsp;&emsp;当用户登录成功后， 在跳转到 event_manage 页面时， 通过 set_cookie()方法来添加浏览器 Cookie。<br>
+&emsp;&emsp;这里给 set_cookie()方法传了三个参数， 第一个参数“user” 是用于表示写入浏览器的 Cookie 名， 第二个
+参数 username 是由用户在登录页上输入的用户名， 第三个参数 3600 用于表示该 cookie 信息在浏览器中的停
+留时间， 默认以秒为单位。<br>
+&emsp;&emsp;而在 event_manage 视图函数中， 通过 request.COOKIES 来读取 Cookie 名为“user”的值。 并且通过 render
+将和 event_manage.html 页面一起返回给客户端浏览器。<br>
+&emsp;&emsp;修改.../templates/event_manage.html 页面， 添加<div>标签来显示用户登录的用户名。<br>
+event_manage.html:<br>
+```html
+<div style="float:right;">
+    <a>嘿! {{ user }} 欢迎</a><hr />
+</div>
+```
+&emsp;&emsp;重新再来登录一次,将会看到页面如图3.6.<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.6.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.7.PNG)<br>
+### 3.2.2、 Session 的使用
+&emsp;&emsp;Cookie 固然好， 但存在一定的安全隐患。 Cookie 像我们以前用的存折， 用户的存钱、 取钱都会记录在这
+张存折上（即浏览器中会保存所有用户信息） ， 那么对于有非分想法的人可能会去修改存折上的数据（这个
+比喻忽略掉银行同样会记录用户存取款的金额） 。<br>
+&emsp;&emsp;相对于存折， 银行卡要安全的得多， 客户拿到的只是一个银行卡号（即浏览器只保留一个 Sessionid） ，
+那么用户的存钱、 取钱都会记录在银行的系统里（即服务器端） ， 只得到一个 sessionid 是没有任何意义的，
+所以相对于 Cookie 来说就会安全很多。<br>
+&emsp;&emsp;在 Django 中使用 Session 和 Cookie 类似。 我们只用将 Cookie 的几步操作替换成 session 即可。<br>
+&emsp;&emsp;修改.../sign/views.py 文件， 在 login_action 函数中， 将：<br>
+&emsp;&emsp;`response.set_cookie('user', username, 3600)`<br>
+&emsp;&emsp;替换为：<br>
+&emsp;&emsp;`request.session['user'] = username # 将 session 信息记录到浏览器`
+&emsp;&emsp;在 event_manage 函数中， 将：<br>
+&emsp;&emsp;`username = request.COOKIES.get('user', '')`<br>
+&emsp;&emsp;替换为：<br>
+&emsp;&emsp;`username = request.session.get('user', '') # 读取浏览器 session`<br>
+&emsp;&emsp;再次尝试登录， 不出意外的话将会得到一个错误。<br>
+&emsp;&emsp;`“no such table: django_session”`<br>
+&emsp;&emsp;这个错误跟 Session 的机制有关， 既然要服务器端记录用户的数据， 那么一定要有地方来存放用户
+Sessionid 对应的信息才对。 所以， 我们需要创建 django_session 表。 别着急！ Django 已经帮我们准备好这些常
+用的表， 只需要将他们生成即可， 是不是很贴心。<br>
+
 
 
 
