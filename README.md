@@ -784,6 +784,60 @@ index.html:<br>
 失败和成功的效果。 如图 3.4、 3.5。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter3/image/3.4.PNG)<br>
 ![image](https://github.com/15529343201/guest/blob/chapter3/image/3.5.PNG)<br>
+### 3.1.3、 登录成功页
+&emsp;&emsp;显然， 登录成功返回的“login success!” 字符串只是一种临时方案， 只是为了方便验证登录的处理逻辑，
+现在没有问题之后， 需要通过 HTML 页面来替换。<br>
+&emsp;&emsp;我们要开发的是发布会签到系统， 那么我希望登录之后默认显示发布会列表。 所以， 首先创
+建.../templates/event_manage.html 页面。<br>
+```
+<html>
+    <head>
+        <title>Event Manage Page</title>
+    </head>
+    <body>
+        <h1>Login Success!</h1>
+    </body>
+</html>
+```
+&emsp;&emsp;修改.../sign/views.py 中的 login_action 函数。<br>
+views.py:<br>
+```
+from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseRedirect
+......
+# 登录动作
+......
+if username == 'admin' and password == 'admin123':
+    return HttpResponseRedirect('/event_manage/')
+......
+# 发布会管理
+def event_manage(request):
+    return render(request,"event_manage.html")
+```
+&emsp;&emsp;此处又用到的一个新的类 HttpResponseRedirect， 它可以对路径进行重定向， 从而将登录成功之后的请求
+指向/event_manage/目录。<br>
+&emsp;&emsp;创建 event_manage 函数， 用于返回发布会管理 event_manage.html 面页。<br>
+&emsp;&emsp;最后， 不要忘记在../guest/urls.py 文件中添加路径 event_manage/的路由。<br>
+urls.py:<br>
+```Python
+from sign import views
+urlpatterns = [
+......
+    url(r'^event_manage/$', views.event_manage),
+]
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
