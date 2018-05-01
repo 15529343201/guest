@@ -937,15 +937,76 @@ Superuser created successfully.
 ![image](https://github.com/15529343201/guest/blob/chapter3/image/3.10.PNG)<br>
 &emsp;&emsp;如图 3.9、 3.10， 通过创建的管理员账号登录 Admin 后台， 尝试点击“Add” 链接添加新的用户， 并且用
 新创建的用户再次登录后台。 尝试一下吧！ 相信你可以做到。<br>
-
-
-
-
-
-
-
-
-
+### 3.3.2、 引用 Django 认证登录
+&emsp;&emsp;既然 Django 已经帮我们做好用户体系， 那么就直接拿来使用好了。<br>
+&emsp;&emsp;打开.../sign/views.py 文件修改 login_action 函数。<br>
+views.py:<br>
+```Python
+from django.contrib import auth
+def login_action(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
+        user = auth.authenticate(username=username, password=password)
+        if user is not None:
+            auth.login(request,user) # 登录
+            request.session['user']=username # 将session信息记录到浏览器
+            response = HttpResponseRedirect('/event_manage/')
+            return response
+        else:
+            return render(request, 'index.html', {'error': 'username or password error!'})
+    else:
+        return render(request, 'index.html', {'error': 'username or password error!'})
+```
+&emsp;&emsp;使用 authenticate()函数认证给出的用户名和密码。 它接受两个参数， 用户名 username 和密码 password，
+并在用户名密码正确的情况下返回一个 user 对象。 如果用户名密码不正确， 则 authenticate()返回 None。<br>
+&emsp;&emsp;通过 if 语句判断 authenticate()返回如果不为 None， 说明用户认证通过。 那么接下来调用 login()函数进行
+登录。 login()函数接收 HttpRequest 对象和一个 user 对象。<br>
+&emsp;&emsp;重新使用 admin 管理后台创建用户账户来验证登录功能吧！<br>
+### 3.3.3、 关上窗户
+&emsp;&emsp;“上帝为你关上了一扇门， 也一定会为你打开一扇窗户” ， 我们为系统开发了一个需要用户认证的登录，
+然而， 我们不需要通过登录也可以直接访问到登录成功的页面。<br>
+&emsp;&emsp;现在， 尝试直接访问： http://127.0.0.1:8000/event_manage/<br>
+&emsp;&emsp;看！ 是不是直接打开了登录成功页， 那为什么还需要通过登录来访问这个页面呢？ 所以， 我们要把这些
+“窗户” 都关上， 使用户只能通过登录来访问系统。<br>
+&emsp;&emsp;再来感受一下 Django 的强大之处吧！ 一秒钟让你关好窗户。<br>
+views.py:<br>
+```
+from django.contrib.auth.decorators import login_required
+......
+# 发布会管理
+@login_required
+def event_manage(request):
+    username= request.session.get('user','') # 读取浏览器session
+    return render(request, "event_manage.html",{"user":username})
+```
+&emsp;&emsp;是的， 就是这么简单， 如果想限制某个视图函数必须登录才能访问， 只需要在这个函数的前面加上
+@login_required 即可。<br>
+&emsp;&emsp;你可以再次尝试访问/event_manage/目录（千万不要忘记清理浏览器缓存再试！ ） ， 看看还能否直接访问
+到.<br>
+![image](https://github.com/15529343201/guest/blob/chapter3/image/3.11.PNG)<br>
+&emsp;&emsp;如图 3.11， Django 会告诉访问的路径并不存在（404） 。<br>
+&emsp;&emsp;如 果 你 细 心 ， 会 发 布 在 访 问 被 @login_required 装 饰 的 视 图 时 ， 默 认 会 跳 转 的 URL 中 会 包 含
+“/accounts/login/” ， 为什么不让它直接跳转到登录页面呢？ 不但要告诉你窗户是关着的， 还要帮你指引到门
+的位置。<br>
+&emsp;&emsp;接下来修改.../urls.py 文件， 添加以下路径。<br>
+urls.py:<br>
+```
+......
+from sign import views
+urlpatterns = [
+    url(r'^$', views.index),
+    url(r'^index/$', views.index),
+    url(r'^accounts/login/$', views.index),
+......
+]
+```
+&emsp;&emsp;当用户访问：<br>
+&emsp;&emsp;http://127.0.0.1:8000/<br>
+&emsp;&emsp;http://127.0.0.1:8000/index/<br>
+&emsp;&emsp;http://127.0.0.1:8000/event_manage/<br>
+&emsp;&emsp;默认， 都会跳转到登录页面。 但是， 如果你访问的是其它不存的路径， 比如/abc/， 依然会显示图 3.11 的
+页面。 这个时候需要设置默认的 404 页面<br>
 
 
 

@@ -22,4 +22,5 @@ urlpatterns = [
     url(r'^index/$', views.index),  # 添加 index/路径配置
     url(r'^login_action/$', views.login_action),
     url(r'^event_manage/$',views.event_manage),
+    url(r'^accounts/login/$',views.index),
 ]
