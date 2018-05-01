@@ -1133,11 +1133,50 @@ class GuestAdmin(admin.ModelAdmin):
 &emsp;&emsp;查看 Event 列表与者 Guest 列表， 如图 4.5、 4.6。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter4/image/4.5.PNG)<br>
 ![image](https://github.com/15529343201/guest/blob/chapter4/image/4.6.PNG)<br>
-
-
-
-
-
+## 4.3 基本数据访问
+`D:\pydj\guest> python3 manage.py shell`<br>
+```
+>>> from sign.models import Event, Guest
+>>> Event.objects.all()
+<QuerySet [<Event: 小米 5 发布会>]>
+>>> Guest.objects.all()
+<QuerySet [<Guest: jack>]>
+```
+&emsp;&emsp;`from sign.models import Event, Guest`<br>
+&emsp;&emsp;导入 sign 应用下的 models.py 中的 Event 表和 Guest 表。<br>
+&emsp;&emsp;`table.objects.all()`<br>
+&emsp;&emsp;获得 table（Event、 Gues 表） 中的所有对象。<br>
+### 4.3.1、 插入数据
+```
+>>> from datetime import datetime
+>>> e1 = Event(id=2,name='红米 Pro 发布会',limit=2000,status=True,address='北京水立
+方',start_time=datetime(2016,8,10,14,0,0))
+>>> e1.save()
+C:\Python35\lib\site-packages\django\db\models\fields\__init__.py:1453:
+RuntimeWarning: DateTimeField Event.start_time received a naive datetime
+(2016-08-10 14:00:00) while time zone support is active.
+RuntimeWarning)
+```
+&emsp;&emsp;因为 start_time 字段需要设置日期时间， 所以导入和 datetime.datetime()方法。 但是， 我们收到了一行警告
+信息“RuntimeWarning: DateTimeField Event.start_time received a naive datetime (2016-08-10 14:00:00) while time
+zone support is active.”<br>
+&emsp;&emsp;这跟 UTC 有关， 如果读者感兴趣可以百度 UTC 是什么？ 这里， 我们暂时忽略掉这个问题， 最简单的方
+式就是在.../settings.py 文件中设置： USE_TZ = False。<br>
+&emsp;&emsp;修改 settings.py 文件保存后， 需要执行“quit()”命令退出 shell 模式， 并重新执行“Python3 manage.py shell”
+进入， 刚才的设置才会生效。<br>
+&emsp;&emsp;如果你觉得创建和保存分两步完成过于麻烦， 也可以通过 table.objects.create()方法将两步合为一步， 方
+法如下<br>
+```
+>>> Event.objects.create(id=3,name='红米 MAX 发布会',limit=2000,status=True,
+address='北京会展中心',start_time=datetime(2016,9,22,14,0,0))
+<Event: 红米 MAX 发布会>
+>>> Guest.objects.create(realname='andy',phone=13611001101,email=
+'andy@mail.com',sign=False,event_id=3)
+<Guest: andy>
+```
+&emsp;&emsp;需要说明的是， 表的 id 字段已经设置了自增， 所以， 该字段为空可以添加数据， 但在创建嘉宾时数据时
+需要指定关联的发布会 id。 Event 表指定了 id=3， Guest 表指定 event_id=3， 所以嘉宾 andy 对应的是红米 MAX
+发布会。<br>
 
 
 
