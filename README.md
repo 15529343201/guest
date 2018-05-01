@@ -1177,32 +1177,220 @@ address='北京会展中心',start_time=datetime(2016,9,22,14,0,0))
 &emsp;&emsp;需要说明的是， 表的 id 字段已经设置了自增， 所以， 该字段为空可以添加数据， 但在创建嘉宾时数据时
 需要指定关联的发布会 id。 Event 表指定了 id=3， Guest 表指定 event_id=3， 所以嘉宾 andy 对应的是红米 MAX
 发布会。<br>
+### 4.3.2、 查询数据
+&emsp;&emsp;查询无疑是数据库表中使用频率最高的操作。<br>
+&emsp;&emsp;table.objects.get()方法用于从数据库表中取得一条匹配的结果， 返回一个对象， 如果记录不存在的话， 那
+么它会报 DoesNotExist 类型错误。<br>
+&emsp;&emsp;通过 name='红米 MAX 发布会' 做为查询条件：<br>
+```
+>>> e1 = Event.objects.get(name='红米 MAX 发布会')
+>>> e1
+<Event: 红米 MAX 发布会>
+>>> e1.address
+'北京会展中心'
+>>> e1.start_time
+datetime.datetime(2016, 9, 22, 14, 0)
+>>>
+>>> Event.objects.get(name='红米 MAX 发布会').status
+True
+>>> Event.objects.get(name='红米 MAX 发布会').limit
+2000
+>>> Event.objects.get(name='发布会').address
+Traceback (most recent call last):
+File "<console>", line 1, in <module>
+File "C:\Python35\lib\site-packages\django\db\models\manager.py", line 85, in
+manager_method
+return getattr(self.get_queryset(), name)(*args, **kwargs)
+File "C:\Python35\lib\site-packages\django\db\models\query.py", line 385, in get
+self.model._meta.object_name
+sign.models.DoesNotExist: Event matching query does not exist.
+```
+&emsp;&emsp;因为 name='发布会' 并没有完全匹配到发布会名称， 所以会抛出 DoesNotExist 异常， 但更多的时候希望
+使用模糊查询。<br>
+&emsp;&emsp;table.objects.filter()方法是从数据库的取得匹配的结果， 返回一个对象列表， 如果记录不存在的话， 它会
+返回[]。<br>
+```
+>>> e2 = Event.objects.filter(name__contains='发布会')
+>>> e2
+<QuerySet [<Event: 小米 5 发布会>, <Event: 红米 Pro 发布会>, <Event: 红米 MAX 发布会>]>
+```
+&emsp;&emsp;在 name 和 contains 之间用双下划线。 这里， contains 部分会被 Django 翻译成 LIKE 语句。<br>
+&emsp;&emsp;接下来， 通过嘉宾信息查询其关联的发布会信息。 查看 phone='13611001101' 这位嘉宾所参加的发布会信
+息：<br>
+```
+>>> g1 = Guest.objects.get(phone='13611001101')
+>>> g1.event
+<Event: 红米 MAX 发布会>
+>>> g1.event.name
+'红米 MAX 发布会'
+>>> g1.event.address
+'北京会展中心'
+```
+### 4.3.3、 删除数据
+&emsp;&emsp;查询 phone='13611001101' 的嘉宾， 通过 delete()方法删除。<br>
+```
+>>> g2 = Guest.objects.get(phone='13611001101')
+>>> g2.delete()
+(1, {'sign.Guest': 1})
+>>> Guest.objects.get(phone='13611001101').delete()
+(1, {'sign.Guest': 1})
+```
+### 4.3.4、 更新数据
+&emsp;&emsp;查询 phone='13611001101' 的嘉宾， 更新 realname='andy2' 。<br>
+```
+>>> g3=Guest.objects.get(phone='13611001101')
+>>> g3.realname='andy2'
+>>> g3.save()
+>>> Guest.objects.select_for_update().filter(phone='13611001101').update(
+realname='andy')
+1
+```
+## 4.4 SQLite管理工具
+### 4.4.1 SQLiteManager
+&emsp;&emsp;SQLiteManager 是一个支持多国语言基于 Web 的 SQLite 数据库管理工具， 它的特点包括多数据库管理，
+创建和连接； 表格， 数据， 索引操作； 视图， 触发器， 和自定义函数管理， 数据导入/导出， 数据库结构导出
+等。<br>
+&emsp;&emsp;在 Firefox 浏览器插件库中可以搜索到 SQLiteManager， 所以， 这装起来非常方便。 打开 Firefox 浏览器，
+菜单栏“工具” -->“添加组件” ， 搜索“SQLiteManager” 安装， 并重启动 Firefox 浏览。 从菜单栏“工具”
+下拉菜单中将会出现“SQLiteManager” 的选项， 打开如图 4.7<br>
+![image](https://github.com/15529343201/guest/blob/chapter4/image/4.7.PNG)<br>
+### 4.4.2、 SQLiteStudio
+&emsp;&emsp;SQLiteStudio 是一款 SQLite 数据库可视化工具， 是使用 SQLite 数据库开发应用的必备软件， 软件无需安
+装， 下载后解压即可使用， 很小巧但很好用， 绿色中文版本。 比起其它 SQLite 管理工具， 我喜欢用这个。 很
+方便易用， 不用安装的单个可执行文件， 支持中文。<br>
+&emsp;&emsp;SQLiteStudio 是一个跨平台的 SQLite 数据库的管理工具， 采用 Tcl 语言开发。<br>
+&emsp;&emsp;下载地址： http://sqlitestudio.pl/<br>
+![image](https://github.com/15529343201/guest/blob/chapter4/image/4.8.PNG)<br>
+## 4.5 配置 MySQL
+&emsp;&emsp;前面用的数据库是 Python 自带的 SQLite3， 这种数据库并不适用大型的项目。 除 SQLite3 之外， Django
+还支持以下几种数据库：<br>
+ PostgreSQL (http://www.postgresql.org/)<br>
+ MySQL (http://www.mysql.com/)<br>
+ Oracle (http://www.oracle.com/)<br>
+&emsp;&emsp;本节以 MySQL 为例， 介绍 MySQL 的安装， 以及在 Django 中的配置。<br>
+### 4.5.1、 安装 MySQL
+&emsp;&emsp;下载 MySQL： http://dev.mysql.com/downloads/mysql/<br>
+### 4.5.2、 安装 PyMySQL
+&emsp;&emsp;这里遇到小小的分歧，如果读者使用的 Python2.x 版本，那么连接 MySQL 数据库可以使用 MySQL-python。
+但是， MySQL-python 只支持 Python2.x 版本， 并在 2014 年 1 月之后就不再更新了， 但这并不影响对该库的使
+用。 目前 Django 默认使用的是该驱动。<br>
+&emsp;&emsp;下载地址： https://pypi.python.org/pypi/MySQL-python<br>
+&emsp;&emsp;而 且 如 果 读 者 使 用 的 操 作 系 统 是 Win 64 位 ， 还 需 要 单 独 查 找 安 装 64 位 版 本 的 安 装 包 ，
+mysql-python-1.2.5.win-amd64-py2.7.exe。<br>
+&emsp;&emsp;而当前我们使用的是 Python3.x 版本的 Django， 所以这里推荐使用 PyMySQL 驱动。<br>
+&emsp;&emsp;下载地址： https://pypi.python.org/pypi/PyMySQL<br>
+&emsp;&emsp;PyMySQL 同样支持 pip 命令安装。<br>
+`C:\Users\fnngj>python3 -m pip install PyMySQL`<br>
+```
+import pymysql.cursors
+# Connect to the database
+connection = pymysql.connect(host='127.0.0.1',
+user='root',
+password='',
+db='test',
+charset='utf8mb4',
+cursorclass=pymysql.cursors.DictCursor)
+try:
+with connection.cursor() as cursor:
+# Create a new record
+sql = 'INSERT INTO sign_guest (realname, phone, email, sign, event_id,
+create_time) VALUES ("alen",18800110001,"alen@mail.com",0,1,NOW());'
+cursor.execute(sql)
+# connection is not autocommit by default. So you must commit to save
+# your changes.
+connection.commit()
+with connection.cursor() as cursor:
+# Read a single record
+sql = "SELECT realname,phone,email,sign FROM sign_guest WHERE phone=%s"
+cursor.execute(sql, ('18800110001',))
+result = cursor.fetchone()
+print(result)
+finally:
+connection.close()
+```
+&emsp;&emsp;connect() 建立数据库连接。<br>
+&emsp;&emsp;execute() 执行 SQL 语句。<br>
+&emsp;&emsp;close() 关闭数据连接。<br>
+### 4.5.3、 Django 配置 MySQL
+```
+# Database
+# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        'NAME': 'guest',
+        'USER': 'root',
+        'PASSWORD': '123456',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+    }
+}
+```
+&emsp;&emsp;配置信息从上到下依次是驱动（ENGINE） ， 主机地址（HOST） ， 端口号（PORT） ， 数据库（NAME），
+登录用户名（USER） ， 登录密码（PASSWORD） 。<br>
+&emsp;&emsp;关于， sql_mode 的设置， 请参考 Django 文档。<br>
+&emsp;&emsp;https://docs.djangoproject.com/en/1.10/ref/databases/#mysql-sql-mode<br>
+&emsp;&emsp;注意： 切换了数据库后， 之前 Sqlite3 数据库里的数据并不能复制到 MySQL 中， 所以需要重新进行数据
+库同步， 使数据模型重新在 MySQL 数据库中生成表。<br>
+```
+D:\pydj\guest>python3 manage.py migrate
+Traceback (most recent call last):
+File "C:\Python35\lib\site-packages\django\db\backends\mysql\base.py", line 25,
+in <module>
+import MySQLdb as Database
+ImportError: No module named 'MySQLdb'
+During handling of the above exception, another exception occurred:
+……
+File "C:\Python35\lib\site-packages\django\db\backends\mysql\base.py", line 28,
+in <module>
+raise ImproperlyConfigured("Error loading MySQLdb module: %s" % e)
+django.core.exceptions.ImproperlyConfigured: Error loading MySQLdb module: No
+module named 'MySQLdb'
+```
+&emsp;&emsp;出错了！ 这是因为 Django 在连接 MySQL 数据库时默认使用的是 MySQLdb 驱动， 然而我们没有安装该
+驱动， 因为它并不支持 Python3， 我们现在安装的是 PyMySQL 驱动， 如何让当前的 Django 通过 PyMySQL 来
+连接 MySQL 数据库呢？ 方法很简单。<br>
+&emsp;&emsp;在.../guest/__init__.py 目录下添加：<br>
+```
+import pymysql
+pymysql.install_as_MySQLdb()
+```
+```
+D:\pydj\guest>python3 manage.py migrate
+Operations to perform:
+Apply all migrations: admin, auth, contenttypes, sessions, sign
+Running migrations:
+Applying contenttypes.0001_initial... OK
+Applying auth.0001_initial... OK
+Applying admin.0001_initial... OK
+Applying admin.0002_logentry_remove_auto_add... OK
+Applying contenttypes.0002_remove_content_type_name... OK
+Applying auth.0002_alter_permission_name_max_length... OK
+Applying auth.0003_alter_user_email_max_length... OK
+Applying auth.0004_alter_user_username_opts... OK
+Applying auth.0005_alter_user_last_login_null... OK
+Applying auth.0006_require_contenttypes_0002... OK
+Applying auth.0007_alter_validators_add_error_messages... OK
+Applying auth.0008_alter_user_username_max_length... OK
+Applying sessions.0001_initial... OK
+Applying sign.0001_initial... OK
+```
+&emsp;&emsp;另外， 因为更换了数据库， 所以， Admin 后台超级管理员账号（admin/admin123456） 也需要重新创建。<br>
+```
+D:\pydj\guest>python3 manage.py createsuperuser
+Username (leave blank to use 'fnngj'): admin #输入登录用户名
+Email address: admin@mail.com #输入用户邮箱
+Password: #输入登录密码
+Password (again): #再次输入用户密码
+Superuser created successfully.
+```
+### 4.5.4、 MySQL 管理工具
+- Navicat
+- SQLyog
 
 
 
