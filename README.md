@@ -1007,6 +1007,166 @@ urlpatterns = [
 &emsp;&emsp;http://127.0.0.1:8000/event_manage/<br>
 &emsp;&emsp;默认， 都会跳转到登录页面。 但是， 如果你访问的是其它不存的路径， 比如/abc/， 依然会显示图 3.11 的
 页面。 这个时候需要设置默认的 404 页面<br>
+# chapter4 Django 模型
+## 4.1 设计系统表
+&emsp;&emsp;Django 提供完善的模型（model） 层主要用来创建和存取数据， 不需要我们直接对数据库操作。<br>
+&emsp;&emsp;Django 模型基础知识：<br>
+&emsp;&emsp;每个模型是一个 Python 类， 继承 django.db.models.model 类。<br>
+&emsp;&emsp;该模型的每个属性表示一个数据库表字段。<br>
+&emsp;&emsp;所有这一切， 已经给你一个自动生成的数据库访问的 API。<br>
+&emsp;&emsp;打开.../sign/models.py 文件， 完成表的创建。<br>
+models.py:<br>
+```Python
+
+
+from django.db import models
+
+
+# Create your models here.
+# 发布会表
+class Event(models.Model):
+    name = models.CharField(max_length=100)  # 发布会标题
+    limit = models.IntegerField()  # 参加人数
+    status = models.BooleanField()  # 状态
+    address = models.CharField(max_length=200)  # 地址
+    start_time = models.DateTimeField('events time')  # 发布会时间
+    create_time = models.DateTimeField(auto_now=True)  # 创建时间（自动获取当前时间）
+
+    def __str__(self):
+        return self.name
+
+
+# 嘉宾表
+class Guest(models.Model):
+    event = models.ForeignKey(Event)  # 关联发布会 id
+    realname = models.CharField(max_length=64)  # 姓名
+    phone = models.CharField(max_length=16)  # 手机号
+    email = models.EmailField()  # 邮箱
+    sign = models.BooleanField()  # 签到状态
+    create_time = models.DateTimeField(auto_now=True)  # 创建时间（自动获取当前时间）
+
+    class Meta:
+        unique_together = ("event", "phone")
+
+    def __str__(self):
+        return self.realname
+```
+&emsp;&emsp;对于产品发布会来说， 显然它是一个事件。 那么时间、 地点、 人物等要素必不可少。 数据库表的设计需
+要围绕着这些要素进行。<br>
+&emsp;&emsp;关于发布会表（Event 类） 和嘉宾表（Guest 类） 的每一个字段， 在代码中已经做了注解。 有些字段的设
+计需要做一下简单的说明。<br>
+&emsp;&emsp;首先， 发布会表和嘉宾表中默认都会生成自增 id， 而我们在创建模型时不需要声明该字段。<br>
+&emsp;&emsp;其次， 发布会表中增加了 status 字段用于表示发布会的状态是否开启， 用于控制该发布会是否可用。<br>
+&emsp;&emsp;再次， 嘉宾表中通过 event_id 关联发布会表， 一条嘉宾信息一定所属于某一场发布会。<br>
+&emsp;&emsp;最后， 对于一场发布会来说， 一般会选择手机号作为一位嘉宾的验证信息， 所以， 对于一场发布会来说，
+手机号必须是唯一。 除了嘉宾 id 外， 这里通过发布会 id +手机号来做为联合主键。<br>
+&emsp;&emsp;__str__()方法告诉 Python 如何将对象以 str 的方式显示出来。 所以， 为每个模型类添加了__str__()方法。
+（如果读者使用的是 Python2.x 的话， 这里需要使用__unicode__()） 。<br>
+`D:\pydj\guest>python3 manage.py makemigrations sign`<br>
+`D:\pydj\guest>python3 manage.py migrate`<br>
+## 4.2 admin 后台管理
+&emsp;&emsp;在第三章 3.3.1 小节， 通过 Admin 后台管理用户组/用户表非常方便。 那么， 我们创建的发布会和嘉宾表
+同样可以通过 Admin 后台去管理。<br>
+&emsp;&emsp;打开.../sign/admin.py 文件。<br>
+admin.py:<br>
+```Python
+from django.contrib import admin
+from sign.models import Event, Guest
+
+# Register your models here.
+admin.site.register(Event)
+admin.site.register(Guest)
+```
+&emsp;&emsp;这些代码通知 admin 管理工具为这些模块逐一提供界面。<br>
+&emsp;&emsp;登录 admin 后台： http://127.0.0.1:8000/admin/ （admin/admin123456）<br>
+![image](https://github.com/15529343201/guest/blob/chapter4/image/4.1.PNG)<br>
+&emsp;&emsp;现在点击“Add” 添加一条发布会（Event） 数据。<br>
+![image](https://github.com/15529343201/guest/blob/chapter4/image/4.2.PNG)<br>
+&emsp;&emsp;如图 4.2， 显示的是一条发布会数据， 然而只有发布会名称， 如何才能显示表中的更多字段呢？ 继续修
+改.../sign/admin.py 文件。<br>
+admin.py:<br>
+```Python
+from django.contrib import admin
+from sign.models import Event, Guest
+
+
+# Register your models here.
+
+class EventAdmin(admin.ModelAdmin):
+    list_display = ['name', 'status', 'start_time', 'id']
+
+
+class GuestAdmin(admin.ModelAdmin):
+    list_display = ['realname', 'phone', 'email', 'sign', 'create_time', 'event']
+
+
+admin.site.register(Event)
+admin.site.register(Guest)
+```
+&emsp;&emsp;新建了 EventAdmin 类， 继承 django.contrib.admin.ModelAdmin 类， 保存着一个类的自定义配置， 以供
+Admin 管理工具使用。 这里只自定义了一项： list_display， 它是一个字段名称的数组， 用于定义要在列表中显
+示哪些字段。 当然， 这些字段名称必须是模型中的 Event()类定义的。<br>
+&emsp;&emsp;接下来修改 admin.site.register()调用， 添加了 EventAdmin。 你可以这样理解： 用 EventAdmin 选项注册
+Event 模块。<br>
+&emsp;&emsp;然后， 对 Guest 模块也做了同样的操作。<br>
+&emsp;&emsp;保存代码后， 重新刷新 Event 列表， 如图 4.3。<br>
+![image](https://github.com/15529343201/guest/blob/chapter4/image/4.3.PNG)<br>
+再接下来， 点击“Add” 添加一条嘉宾（Guest） 数据。 如图 4.4。<br>
+![image](https://github.com/15529343201/guest/blob/chapter4/image/4.4.PNG)<br>
+&emsp;&emsp;除此之外， Admin 管理后台提供了的很强的定制性， 我们甚至可以非常方便生成搜索栏和过滤器。 重新
+打开.../sign/admin.py 文件， 做如下修改。<br>
+admin.py:<br>
+```Python
+class EventAdmin(admin.ModelAdmin):
+    list_display = ['name', 'status', 'start_time', 'id']
+    search_fields = ['name'] # 搜索栏
+    list_filter = ['status'] # 过滤器
+
+
+class GuestAdmin(admin.ModelAdmin):
+    list_display = ['realname', 'phone', 'email', 'sign', 'create_time', 'event']
+    search_fields = ['realname', 'phone'] # 搜索栏
+    list_filter = ['sign'] # 过滤器
+```
+&emsp;&emsp;search_fields 用于创建表字段的搜索器， 可以设置搜索关键字匹配多个表字段。 list_filter 用于创建字段过
+滤器。<br>
+&emsp;&emsp;查看 Event 列表与者 Guest 列表， 如图 4.5、 4.6。<br>
+![image](https://github.com/15529343201/guest/blob/chapter4/image/4.5.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter4/image/4.6.PNG)<br>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
