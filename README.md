@@ -1660,12 +1660,117 @@ def guest_manage(request):
 ```
 &emsp;&emsp;嘉宾管理页面如图5.3<br>
 ![image](https://github.com/15529343201/guest/blob/chapter5/image/5.3.PNG)<br>
+&emsp;&emsp;关于嘉宾管理页面的搜索功能， 这里不再介绍， 来吧！ 参考发布会管理页面上的搜索功能完成， 你可以
+的。 接下来， 我们将开发另外一个常见的功能分页器。<br>
+### 5.3.2、 分页器
+&emsp;&emsp;对于嘉宾管理页面来说， 特别需要一个分页功能， 一场大型的发布会可能需要几千条嘉宾信息， 如果将
+所有的嘉宾信息不做分页的显示在页面上， 首先页面的打开速度会受到严重的影响， 其次， 页面一次显示几
+千条甚至几万条数据并不方便查看。<br>
+&emsp;&emsp;Django 已经为我们准备好了 Paginator 分页类。 所以， 只需要调用它即可完成列表的分页功能。 分页功能
+略为复杂， 首先进入 Django 的 shell 模式， 练习 Paginator 类的基本使用。<br>
+```
+D:\pydj\guest>python3 manage.py shell
+Python 3.5.0 (v3.5.0:374f501f4567, Sep 13 2015, 02:27:37) [MSC v.1900 64 bit (AMD64)]
+on win32
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+>>> from django.core.paginator import Paginator # 导入 Paginator 类
+>>> from sign.models import Guest # Guest 下的所有表
+>>> guest_list = Guest.objects.all() # 查询 uest 表的所有数据
+>>> p = Paginator(guest_list,2) # 创建每页 2 条数据的分页器
+>>> p.count # 查看共多少条数据
+5>
+>> p.page_range #查看共分多少页（每页 2 条数据） 循环结果为 1， 2， 3（共 3 页）
+range(1, 4)
+>>>
+##########第一页#############
+>>> page1 = p.page(1) # 获取第 1 页的数据
+>>> page1 # 当前第几页
+<Page 1 of 3>
+>>> page1.object_list # 当前页的对象
+[<Guest: andy>, <Guest: jack>]
+>>> page1 = p.page(1)
+>>> for p in page1: # 循环打印第 1 页嘉宾的 realname
+... p.realname
+...
+'andy'
+'jack'
+##########第二页#############
+>>> page2 = p.page(2) # 获取第 2 页的数据
+>>> page2.start_index() # 本页的第一条数据
+3>
+>> page2.end_index() # 本页的最后一条数据
+4>
+>> page2.has_previous() # 是否有上一页
+True
+>>> page2.has_next() # 是否有下一页
+True
+>>> page2.previous_page_number() # 上一页是第几页
+1>
+>> page2.next_page_number() # 下一页是第几页
+3>
+>>
+##########第三页#############
+>>> page3 = p.page(3) # 获取第 3 页的数据
+>>> page3.has_next() # 是否有下一页
+False
+>>> page3.has_previous() # 是否有上一页
+True
+>>> page3.has_other_pages() # 是否有其它页
+True
+>>> page3.previous_page_number() # 前一页是第几页
+2
+```
+&emsp;&emsp;通过对 Guest 表的练习， 现在已经学会了 Paginator 类的基本操作， 那么下面就来实现分页面吧！<br>
+&emsp;&emsp;打开.../sign/views.py 文件， 修改 guest_manage()视图函数。<br>
+views.py:<br>
+```Python
+from django.core.paginator import Paginator,EmptyPage,PageNotAnInteger
 
-
-
-
-
-
+# 嘉宾管理
+@login_required
+def guest_manage(request):
+    username = request.session.get('user', '')
+    guest_list = Guest.objects.all()
+    paginator = Paginator(guest_list, 2)
+    page = request.GET.get('page')
+    try:
+        contacts = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        contacts = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        contacts = paginator.page(paginator.num_pages)
+    return render(request, "guest_manage.html", {"user": username, "guests": contacts})
+```
+&emsp;&emsp;`paginator = Paginator(guest_list, 2)`<br>
+&emsp;&emsp;把查询出来的所有嘉宾列表 guest_list 放到 Paginator 类中， 划分每页显示 2 条数据。<br>
+&emsp;&emsp;`page = request.GET.get('page')`<br>
+&emsp;&emsp;通过 GET 请求得到当前要显示第几页的数据。<br>
+&emsp;&emsp;`contacts = paginator.page(page)`<br>
+&emsp;&emsp;获取第 page 页的数据。 如果当前没有页数， 抛 PageNotAnInteger 异常， 返回第一页的数据。 如果超出最
+大页数的范围， 抛 EmptyPage 异常， 返回最后一页面的数据。<br>
+&emsp;&emsp;最终， 将得到的某一页数据返回到嘉宾管理页面上。<br>
+&emsp;&emsp;在`.../templates/guest_manage.html` 页面也需要添加分页器的代码。<br>
+guest_manage.html:<br>
+```html
+<!--列表分页器-->
+        <div class="pagination">
+            <span class="step-links">
+                {% if guests.has_previous %}
+                    <a href="?page={{ guests.previous_page_number }}">previous</a>
+                {% endif %}
+                <span class="current">
+                    Page {{ guests.number }} of {{ guests.paginator.num_pages }}.
+                </span>
+                {% if guests.has_next %}
+                    <a href="?page={{ guests.next_page_number }}">next</a>
+                {% endif %}
+            </span>
+        </div>
+```
+![image](https://github.com/15529343201/guest/blob/chapter5/image/5.4.PNG)<br>
 
 
 
