@@ -1560,10 +1560,95 @@ def search_name(request):
 &emsp;&emsp;通过 GET 方法接收搜索关键字， 并通过模糊查询， 匹配发布会 name 字段， 然后把匹配到的发布会列表
 返回到页面上。 查询功能如图 5.2。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter5/image/5.2.PNG)<br>
+## 5.3 嘉宾管理
+### 5.3.1、 嘉宾列表
+&emsp;&emsp;创建.../templates/guest_manage.html 页面。<br>
+guest_manage.html:<br>
+```html
+<html lang="zh-CN">
+    <head>
+        {% load bootstrap3 %}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+        <title>Event Manage</title>
+    </head>
+    <body role="document">
+        <!--导航栏-->
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="/event_manage/">Guest Manage System</a>
+                </div>
+                <div id="navbar" class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav">
+                        <li><a href="/event_manage/">发布会</a></li>
+                        <li class="active"><a href="#">嘉宾</a></li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="#">{{user}}</a></li>
+                        <li><a href="/logout/">退出</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
 
+        <!--嘉宾列表-->
+        <div class="row" style="padding-top: 80px;">
+            <div class="col-md-6">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>id</th><th>名称</th><th>手机</th><th>Email</th><th>签到</th>
+                            <th>发布会</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for guest in guests %}
+                        <tr>
+                            <td>{{ guest.id }}</td>
+                            <td>{{ guest.realname }}</td>
+                            <td>{{ guest.phone }}</td>
+                            <td>{{ guest.email }}</td>
+                            <td>{{ guest.sign }}</td>
+                            <td>{{ guest.event }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>
+```
+&emsp;&emsp;<li><a href="/event_manage/">发布会</a></li><br>
+&emsp;&emsp;<li class="active"><a href="#">嘉宾</a></li><br>
+&emsp;&emsp;当前处理嘉宾管理页面， 所以， 设置嘉宾按钮的处于选中状态（class="active"） 。 为发布按钮设置跳转
+路径（href="/event_manage/"）<br>
+```html
+{% for guest in guests %}
+<tr>
+<td>{{ guest.id }}</td>
+<td>{{ guest.realname }}</td>
+<td>{{ guest.phone }}</td>
+<td>{{ guest.email }}</td>
+<td>{{ guest.sign }}</td>
+<td>{{ guest.event }}</td>
+</tr>
+{% endfor %}
+```
+&emsp;&emsp;通过 Django 模板语言的 for 语句循环读取嘉宾列表， 并显示 id、 realname、 phone、 email、 sign、 event
+等字段。<br>
+&emsp;&emsp;在.../guest/urls.py 文件中添加嘉宾路径的路由。<br>
+urls.py:<br>
+```Python
+from sign import views
+urlpatterns = [
+......
+    url(r'^guest_manage/$', views.guest_manage),
+]
 
-
-
+```
+&emsp;&emsp;打开.../sign/views.py 文件， 创建 guest_manage()视图函数。<br>
 
 
 
