@@ -1392,22 +1392,573 @@ Superuser created successfully.
 - Navicat
 - SQLyog
 
+# chapter5 Django 模板
+&emsp;&emsp;https://github.com/defnngj/guest<br>
+## 5.1 Django-bootstrap3
+&emsp;&emsp;Django-bootstrap3 pypi 仓库地址： https://pypi.python.org/pypi/django-bootstrap3<br>
+&emsp;&emsp;1、 通过 Python 的 pip 命令安装：<br>
+&emsp;&emsp;`C:\pydj\guest>python3 -m pip install django-bootstrap3`<br>
+&emsp;&emsp;2、 在.../guest/settings.py 文件中添加“bootstrap3” 应用。<br>
+settings.py:<br>
+```
+# Application definition
 
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'sign',
+    'bootstrap3',
+]
+```
+## 5.2 发布会管理
+### 5.2.1、 发布会列表
+&emsp;&emsp;继续回到视图的开发中， 打开.../sign/views.py 文件， 修改 event_manage()视图函数。<br>
+views.py:<br>
+```Python
+# 发布会管理
+@login_required
+def event_manage(request):
+    event_list = Event.objects.all()
+    username= request.session.get('user','') # 读取浏览器session
+    return render(request, "event_manage.html",{"user":username,"events":event_list})
+```
+&emsp;&emsp;Event.objects.all() 用于查询所有发布会对象（数据） ， 通过 render()函数附加在 event_manage.html 页面
+返回给客户端浏览器。<br>
+&emsp;&emsp;打开并编写.../templates/event_manage.html 页面。<br>
+event_manage.html:<br>
+```html
+<html lang="zh-CN">
+    <head>
+        {% load bootstrap3 %}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+        <title>Event Manage</title>
+    </head>
+    <body role="document">
+        <!--导航栏-->
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="/event_manage/">Guest Manage System</a>
+                </div>
+                <div id="navbar" class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav">
+                        <li class="active"><a href="#">发布会</a></li>
+                        <li><a href="/guest_manage/">嘉宾</a></li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="#">{{ user }}</a></li>
+                        <li><a href="/logout/">退出</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
 
+        <!--发布会列表-->
+        <div class="row" style="padding-top: 80px;">
+            <div class="col-md-6">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>id</th><th>名称</th><th>状态</th><th>地址</th><th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}
+                            <tr>
+                                <td>{{ event.id }}</td>
+                                <td>{{ event.name }}</td>
+                                <td>{{ event.status }}</td>
+                                <td>{{ event.address }}</td>
+                                <td>{{ event.start_time }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>
+```
+&emsp;&emsp;对于 BootStrap 框架来说， 它主要通过 class 属性来设置 HTML 标签的样式。<br>
+&emsp;&emsp;`{% load bootstrap3 %}`<br>
+&emsp;&emsp;`{% bootstrap_css %}`<br>
+&emsp;&emsp;`{% bootstrap_javascript %}`<br>
+&emsp;&emsp;加载 Bootstrap3 应用， CSS 和 JavaScript 文件。 ｛% %｝ 为 Django 的模板标签， Django 的模板语言将会
+在该标签下编写。<br>
+&emsp;&emsp;`<title>Guest Manage</title>`<br>
+&emsp;&emsp;设置页面标题为 Guest Manage。<br>
+&emsp;&emsp;`<li class="active"><a href="#">发布会</a></li>`<br>
+&emsp;&emsp;`<li><a href="/guest_manage/">嘉宾</a></li>`<br>
+&emsp;&emsp;设置页面导航栏， class="active" 表示， 当前菜单处于选中状态。 href="/guest_manage/" 用于跳转到到嘉
+宾管理页， 我们稍后完善该页面。<br>
+&emsp;&emsp;`<li><a href="#">{{ user }}</a></li>`<br>
+&emsp;&emsp;`<li><a href="/logout/">退出</a></li>`<br>
+&emsp;&emsp;{{ }} Django 的模板标签， 用于定义显示变量。 这里将会通过浏览器 sessionid 获取到对应的登录用户名，
+并显示。 href="/logout/" 定义退出路径， 稍后完善该功能。<br>
+```html
+{% for event in events %}
+<tr>
+<td>{{ event.id }}</td>
+<td>{{ event.name }}</td>
+<td>{{ event.status }}</td>
+<td>{{ event.address }}</td>
+<td>{{ event.start_time }}</td>
+</tr>
+{% endfor %}
+```
+&emsp;&emsp;Django 模板语言， 用于循环打印发布的 id、 name、 status、 address 和 start_time 等字段。 Django 模板语
+言与 Python 有所不同。 for 语句需要有对应 endfor 来表示语句的结束， 同样， if 分支语句也需要 endif 来表示
+语句的结束。<br>
+![image](https://github.com/15529343201/guest/blob/chapter5/image/5.1.PNG)<br>
+&emsp;&emsp;如图 5.1， 发布会管理页面， 通过对 Django-bootstrap3 应用的使用， 可以非常轻松的创建出漂亮的网页。<br>
+### 5.2.2、 发布会搜索
+&emsp;&emsp;对于列表管理来说， 搜索功能必不可少， 接下来开发针对发布会名称的搜索功能。<br>
+&emsp;&emsp;这一次， 先在.../templates/event_manage.html 页面上创建搜索表单。<br>
+event_manage.html:<br>
+```html
+<!--发布会搜索表单-->
+<div class="page-header" style="padding-top: 60px;">
+    <div id="navbar" class="navbar-collapse collapse">
+        <form class="navbar-form" method="get" action="/search_name/">
+            <div class="form-group">
+                <input name="name" type="text" placeholder="名称" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-success">搜索</button>
+        </form>
+    </div>
+</div>
+```
+&emsp;&emsp;查询表单和我们前面开发的登录表单一样。 所以这里不再做过多介绍。 不过需要注意的几个地方，
+method="get" HTTP 请求方式； action="/search_name/" 搜索请求路径； name="name" 搜索输入框的 name 属性
+值。<br>
+&emsp;&emsp;不要忘记在.../guest/urls.py 文件中添加搜索路径的路由。<br>
+urls.py:<br>
+```Python
+from sign import views
+urlpatterns = [
+......
+    url(r'^search_name/$', views.search_name),
+]
+```
+&emsp;&emsp;打开.../sign/views.py 文件， 创建 search_name()视图函数。<br>
+views.py:<br>
+```Python
+# 发布会搜索名称
+@login_required
+def search_name(request):
+    username = request.session.get('user', '')
+    search_name = request.GET.get("name", "")
+    event_list = Event.objects.filter(name__contains=search_name)
+    return render(request, "event_manage.html", {"user": username,
+"events": event_list})
+```
+&emsp;&emsp;通过 GET 方法接收搜索关键字， 并通过模糊查询， 匹配发布会 name 字段， 然后把匹配到的发布会列表
+返回到页面上。 查询功能如图 5.2。<br>
+![image](https://github.com/15529343201/guest/blob/chapter5/image/5.2.PNG)<br>
+## 5.3 嘉宾管理
+### 5.3.1、 嘉宾列表
+&emsp;&emsp;创建.../templates/guest_manage.html 页面。<br>
+guest_manage.html:<br>
+```html
+<html lang="zh-CN">
+    <head>
+        {% load bootstrap3 %}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+        <title>Event Manage</title>
+    </head>
+    <body role="document">
+        <!--导航栏-->
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="/event_manage/">Guest Manage System</a>
+                </div>
+                <div id="navbar" class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav">
+                        <li><a href="/event_manage/">发布会</a></li>
+                        <li class="active"><a href="#">嘉宾</a></li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="#">{{user}}</a></li>
+                        <li><a href="/logout/">退出</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
 
+        <!--嘉宾列表-->
+        <div class="row" style="padding-top: 80px;">
+            <div class="col-md-6">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>id</th><th>名称</th><th>手机</th><th>Email</th><th>签到</th>
+                            <th>发布会</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for guest in guests %}
+                        <tr>
+                            <td>{{ guest.id }}</td>
+                            <td>{{ guest.realname }}</td>
+                            <td>{{ guest.phone }}</td>
+                            <td>{{ guest.email }}</td>
+                            <td>{{ guest.sign }}</td>
+                            <td>{{ guest.event }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>
+```
+&emsp;&emsp;`<li><a href="/event_manage/">发布会</a></li>`<br>
+&emsp;&emsp;`<li class="active"><a href="#">嘉宾</a></li>`<br>
+&emsp;&emsp;当前处理嘉宾管理页面， 所以， 设置嘉宾按钮的处于选中状态（class="active"） 。 为发布按钮设置跳转
+路径（href="/event_manage/"）<br>
+```html
+{% for guest in guests %}
+<tr>
+<td>{{ guest.id }}</td>
+<td>{{ guest.realname }}</td>
+<td>{{ guest.phone }}</td>
+<td>{{ guest.email }}</td>
+<td>{{ guest.sign }}</td>
+<td>{{ guest.event }}</td>
+</tr>
+{% endfor %}
+```
+&emsp;&emsp;通过 Django 模板语言的 for 语句循环读取嘉宾列表， 并显示 id、 realname、 phone、 email、 sign、 event
+等字段。<br>
+&emsp;&emsp;在.../guest/urls.py 文件中添加嘉宾路径的路由。<br>
+urls.py:<br>
+```Python
+from sign import views
+urlpatterns = [
+......
+    url(r'^guest_manage/$', views.guest_manage),
+]
 
+```
+&emsp;&emsp;打开.../sign/views.py 文件， 创建 guest_manage()视图函数。<br>
+views.py:<br>
+```Python
+# 嘉宾管理
+@login_required
+def guest_manage(request):
+    username = request.session.get('user', '')
+    guest_list = Guest.objects.all()
+    return render(request, "guest_manage.html", {"user": username, "guests": guest_list})
+```
+&emsp;&emsp;嘉宾管理页面如图5.3<br>
+![image](https://github.com/15529343201/guest/blob/chapter5/image/5.3.PNG)<br>
+&emsp;&emsp;关于嘉宾管理页面的搜索功能， 这里不再介绍， 来吧！ 参考发布会管理页面上的搜索功能完成， 你可以
+的。 接下来， 我们将开发另外一个常见的功能分页器。<br>
+### 5.3.2、 分页器
+&emsp;&emsp;对于嘉宾管理页面来说， 特别需要一个分页功能， 一场大型的发布会可能需要几千条嘉宾信息， 如果将
+所有的嘉宾信息不做分页的显示在页面上， 首先页面的打开速度会受到严重的影响， 其次， 页面一次显示几
+千条甚至几万条数据并不方便查看。<br>
+&emsp;&emsp;Django 已经为我们准备好了 Paginator 分页类。 所以， 只需要调用它即可完成列表的分页功能。 分页功能
+略为复杂， 首先进入 Django 的 shell 模式， 练习 Paginator 类的基本使用。<br>
+```
+D:\pydj\guest>python3 manage.py shell
+Python 3.5.0 (v3.5.0:374f501f4567, Sep 13 2015, 02:27:37) [MSC v.1900 64 bit (AMD64)]
+on win32
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+>>> from django.core.paginator import Paginator # 导入 Paginator 类
+>>> from sign.models import Guest # Guest 下的所有表
+>>> guest_list = Guest.objects.all() # 查询 uest 表的所有数据
+>>> p = Paginator(guest_list,2) # 创建每页 2 条数据的分页器
+>>> p.count # 查看共多少条数据
+5>
+>> p.page_range #查看共分多少页（每页 2 条数据） 循环结果为 1， 2， 3（共 3 页）
+range(1, 4)
+>>>
+##########第一页#############
+>>> page1 = p.page(1) # 获取第 1 页的数据
+>>> page1 # 当前第几页
+<Page 1 of 3>
+>>> page1.object_list # 当前页的对象
+[<Guest: andy>, <Guest: jack>]
+>>> page1 = p.page(1)
+>>> for p in page1: # 循环打印第 1 页嘉宾的 realname
+... p.realname
+...
+'andy'
+'jack'
+##########第二页#############
+>>> page2 = p.page(2) # 获取第 2 页的数据
+>>> page2.start_index() # 本页的第一条数据
+3>
+>> page2.end_index() # 本页的最后一条数据
+4>
+>> page2.has_previous() # 是否有上一页
+True
+>>> page2.has_next() # 是否有下一页
+True
+>>> page2.previous_page_number() # 上一页是第几页
+1>
+>> page2.next_page_number() # 下一页是第几页
+3>
+>>
+##########第三页#############
+>>> page3 = p.page(3) # 获取第 3 页的数据
+>>> page3.has_next() # 是否有下一页
+False
+>>> page3.has_previous() # 是否有上一页
+True
+>>> page3.has_other_pages() # 是否有其它页
+True
+>>> page3.previous_page_number() # 前一页是第几页
+2
+```
+&emsp;&emsp;通过对 Guest 表的练习， 现在已经学会了 Paginator 类的基本操作， 那么下面就来实现分页面吧！<br>
+&emsp;&emsp;打开.../sign/views.py 文件， 修改 guest_manage()视图函数。<br>
+views.py:<br>
+```Python
+from django.core.paginator import Paginator,EmptyPage,PageNotAnInteger
 
+# 嘉宾管理
+@login_required
+def guest_manage(request):
+    username = request.session.get('user', '')
+    guest_list = Guest.objects.all()
+    paginator = Paginator(guest_list, 2)
+    page = request.GET.get('page')
+    try:
+        contacts = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        contacts = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        contacts = paginator.page(paginator.num_pages)
+    return render(request, "guest_manage.html", {"user": username, "guests": contacts})
+```
+&emsp;&emsp;`paginator = Paginator(guest_list, 2)`<br>
+&emsp;&emsp;把查询出来的所有嘉宾列表 guest_list 放到 Paginator 类中， 划分每页显示 2 条数据。<br>
+&emsp;&emsp;`page = request.GET.get('page')`<br>
+&emsp;&emsp;通过 GET 请求得到当前要显示第几页的数据。<br>
+&emsp;&emsp;`contacts = paginator.page(page)`<br>
+&emsp;&emsp;获取第 page 页的数据。 如果当前没有页数， 抛 PageNotAnInteger 异常， 返回第一页的数据。 如果超出最
+大页数的范围， 抛 EmptyPage 异常， 返回最后一页面的数据。<br>
+&emsp;&emsp;最终， 将得到的某一页数据返回到嘉宾管理页面上。<br>
+&emsp;&emsp;在`.../templates/guest_manage.html` 页面也需要添加分页器的代码。<br>
+guest_manage.html:<br>
+```html
+<!--列表分页器-->
+        <div class="pagination">
+            <span class="step-links">
+                {% if guests.has_previous %}
+                    <a href="?page={{ guests.previous_page_number }}">previous</a>
+                {% endif %}
+                <span class="current">
+                    Page {{ guests.number }} of {{ guests.paginator.num_pages }}.
+                </span>
+                {% if guests.has_next %}
+                    <a href="?page={{ guests.next_page_number }}">next</a>
+                {% endif %}
+            </span>
+        </div>
+```
+![image](https://github.com/15529343201/guest/blob/chapter5/image/5.4.PNG)<br>
+## 5.4 签到功能
+### 5.4.1、 添加签到链接
+&emsp;&emsp;对于签到功能页面来说， 它应该所属于某一场发布会， 所以， 在打开签到页面之前， 我们应知道这是针
+对哪一场发布会的签到。 所以， 最好的方式是在发布列表中， 每一条发布会都提供一个“签到” 链接用来打
+开对应的签到页面。<br>
+&emsp;&emsp;在`.../templates/event_manage.html` 页面， 增加签到列链接。<br>
+event_manage.html:<br>
+```html
+<!--发布会列表-->
+<div class="row" style="padding-top: 80px;">
+    <div class="col-md-6">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>id</th><th>名称</th><th>状态</th><th>地址</th><th>时间</th><th>签到</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                    <tr>
+                        <td>{{ event.id }}</td>
+                        <td>{{ event.name }}</td>
+                        <td>{{ event.status }}</td>
+                        <td>{{ event.address }}</td>
+                        <td>{{ event.start_time }}</td>
+                        <td><a href="/sign_index/{{ event.id }}/" target="{{ event.id }}_blank">sign</a> </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+```
+&emsp;&emsp;当点击 sign 链接时， 路径会默认跳转到“/sign_index/{{ event.id }}/” 路径。 其中{{ event.id }} 为发布会
+的 id。 target="{{ event.id }}_blank" 属性表示链接在新窗口打开。<br>
+&emsp;&emsp;在`.../guest/urls.py` 文件中添加路径路由。<br>
+urls.py:<br>
+```Python
+from sign import views
+urlpatterns = [
+......
+    url(r'^sign_index/(?P<event_id>[0-9]+)/$', views.sign_index),
+]
+```
+&emsp;&emsp;此处与我们之前添加的路径在匹配方式上略有不同。<br>
+&emsp;&emsp;`(?P<event_id>[0-9]+)` 配置二级目录， 发布会 id， 要求必须为数字。而且匹配的数字， 将会作为 sign_index()
+视图函数的参数。<br>
+### 5.4.2、 签到页面
+&emsp;&emsp;打开.../sign/views.py 文件， 创建 sign_index()视图函数。<br>
+views.py:<br>
+```Python
+from django.shortcuts import render, get_object_or_404
+# 签到页面
+@login_required
+def sign_index(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+    return render(request,'sign_index.html',{'event':event})
+```
+&emsp;&emsp;创建.../templates/sign_index.html 签到页面。<br>
+sign_index.html:<br>
+```html
+<!--导航栏-->
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">{{ event.name }}</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">发布会</a></li>
+                <li><a href="/guest_manage/">嘉宾</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
 
-
-
-
-
-
-
-
-
-
-
+<!--签到功能-->
+<div class="page-header" style="padding-top: 80px;">
+    <div id="navbar" class="navbar-collapse collapse">
+        <form class="navbar-form" method="post" action="/sign_index_action/{{ event.id }}/">
+            <div class="form-group">
+                <input name="phone" type="text" placeholder="输入手机号" class="form-control"></div>
+                <button type="submit" class="btn btn-success">签到</button>
+            </div>
+        </form>
+    </div>
+</div>
+```
+&emsp;&emsp;`<a class="navbar-brand" href="#">{{ event.name }}</a>`<br>
+&emsp;&emsp;将页面标题设置为发布会名称。<br>
+&emsp;&emsp;`<li><a href="/event_manage/">发布会</a></li>`<br>
+&emsp;&emsp;`<li><a href="/guest_manage/">嘉宾</a></li>`<br>
+&emsp;&emsp;设置发布会与嘉宾导航链接。<br>
+&emsp;&emsp;`<form class="navbar-form" method="post" action="/sign_index_action/{{ event.id }}/">`<br>
+&emsp;&emsp;签到表单会通过 POST 请求提交到/sign_index_action/{{ event.id }}/ ， 二级目录会以发布会 id 替换。<br>
+&emsp;&emsp;签到页面， 如图 5.5。<br>
+![image](https://github.com/15529343201/guest/blob/chapter5/image/5.5.PNG)<br>
+### 5.4.3、 签到动作
+&emsp;&emsp;继续开发签到功能， 接下来考虑， 当在签到输入框中输入手机号， 点击“签到” 按钮之后， 改动作要如
+何处理？<br>
+&emsp;&emsp;首先， 打开.../guest/urls.py 文件， 添加签到路径的路由。<br>
+urls.py:<br>
+```Python
+......
+from sign import views
+urlpatterns = [
+......
+    url(r'^sign_index_action/(?P<event_id>[0-9]+)/$', views.sign_index_action),
+]
+```
+&emsp;&emsp;打开.../sign/views.py 文件， 创建 sign_index_action()视图函数。<br>
+views.py:<br>
+```Python
+# 签到动作
+@login_required
+def sign_index_action(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+    phone = request.POST.get('phone', '')
+    result = Guest.objects.filter(phone=phone)
+    if not result:
+        return render(request, 'sign_index.html', {'event': event, 'hint': 'phone error.'})
+    result = Guest.objects.filter(phone=phone, event_id=event_id)
+    if not result:
+        return render(request, 'sign_index.html', {'event': event,
+                                                   'hint': 'event id or phone error.'})
+    result = Guest.objects.get(phone=phone, event_id=event_id)
+    if result.sign:
+        return render(request, 'sign_index.html', {'event': event,
+                                                   'hint': "user has sign in."})
+    else:
+        Guest.objects.filter(phone=phone, event_id=event_id).update(sign='1')
+    return render(request, 'sign_index.html', {'event': event,
+                                               'hint': 'sign in success!',
+                                               'guest': result})
+```
+&emsp;&emsp;对于发布会的签到动作， 做了以下条件的判断。<br>
+&emsp;&emsp;首先， 查询 Guest 表判断用户输入的手机号是否存在， 如果不存在将提示用户“手机号为空或不存在” 。<br>
+&emsp;&emsp;然后， 通过手机和发布会 id 两个条件来查询 Guest 表， 如果结果为空将提示用户“该用户未参加此次发
+布会” 。<br>
+&emsp;&emsp;最后， 再通过手机号查询 Guest 表， 判断该手机号的签到状态是否为 1， 如果为 1， 表示已经签过到了，
+返回用户“已签到” ， 否则， 将提示用户“签到成功！ ” ， 并返回签到用户的信息。<br>
+&emsp;&emsp;修改.../templates/sign_index.html 页面， 增加 sign_index_action()视图函数返回的提示信息的位置。<br>
+```html
+<!--签到功能-->
+<div class="page-header" style="padding-top: 80px;">
+    <div id="navbar" class="navbar-collapse collapse">
+        <form class="navbar-form" method="post" action="/sign_index_action/{{ event.id }}/">
+            <div class="form-group">
+                <input name="phone" type="text" placeholder="输入手机号" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-success">签到</button>
+            <font color="red">
+                <br>{{ hint }}
+                <br>{{ guest.realname }}
+                <br>{{ guest.phone }}
+            </font>
+        </form>
+    </div>
+</div>
+```
+&emsp;&emsp;如果签到失败， 将会显示 {{ hint }}提示信息； 如果签到成功， 将会显示{{ hint }}提示信息和用户名称，
+及手机号。 如果 5.16。<br>
+![image](https://github.com/15529343201/guest/blob/chapter5/image/5.6.PNG)<br>
+## 5.5 退出系统
+&emsp;&emsp;之前留了一个坑， 在发布会管理页面和嘉宾管理页面的右上角有“退出” 按钮， 但我们一直没实现登录
+的退出。 现在是时候该填补上它了。<br>
+&emsp;&emsp;打开.../urls.py 文件， 添加退出目录的路由。<br>
+urls.py:<br>
+```Python
+from sign import views
+urlpatterns = [
+......
+    url(r'^logout/$', views.logout),
+]
+```
+&emsp;&emsp;打开.../sign/views.py 文件， 创建 logout()视图函数。<br>
+views.py:<br>
+```Python
+# 退出登录
+@login_required
+def logout(request):
+    auth.logout(request) # 退出登录
+    response=HttpResponseRedirect('/index/')
+    return response
+```
+&emsp;&emsp;Django 不单单为我们提供了方便的 auth.login()函数用于登录，还为我们准备了 auth.logout()函数用于系统
+的退出， 它可以帮我们清除掉浏览器保存的用户信息， 所以， 我们不用再考虑如何删除浏览器 cookie 等问题
+了<br>
 
 
 
