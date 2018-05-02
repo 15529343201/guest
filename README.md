@@ -2667,6 +2667,57 @@ if __name__ == '__main__':
 Request-URI HTTP-Version CRLF<br>
 &emsp;&emsp;其中 Method 表示请求方法； Request-URI 是一个统一资源标识符； HTTP-Version 表示请求的 HTTP
 协议版本； CRLF 表示回车和换行（除了作为结尾的 CRLF 外， 不允许出现单独的 CR 或 LF 字符） 。<br>
+&emsp;&emsp;请求方法（所有方法全为大写） 有多种， 各个方法的解释如下：<br>
+![image](https://github.com/15529343201/guest/blob/chapter8/image/8.1.PNG)<br>
+&emsp;&emsp;响应状态码：<br>
+&emsp;&emsp;状态代码有三位数字组成， 第一个数字定义了响应的类别， 且有五种可能取值：<br>
+&emsp;&emsp;1xx： 指示信息--表示请求已接收， 继续处理<br>
+&emsp;&emsp;2xx： 成功--表示请求已被成功接收、 理解、 接受<br>
+&emsp;&emsp;3xx： 重定向--要完成请求必须进行更进一步的操作<br>
+&emsp;&emsp;4xx： 客户端错误--请求有语法错误或请求无法实现<br>
+&emsp;&emsp;5xx： 服务器端错误--服务器未能实现合法的请求<br>
+&emsp;&emsp;常见状态代码、 状态说明：<br>
+&emsp;&emsp;200 OK //客户端请求成功<br>
+&emsp;&emsp;400 Bad Request //客户端请求有语法错误， 不能被服务器所理解<br>
+&emsp;&emsp;401 Unauthorized //请求未经授权， 这个状态代码必须和 WWW-Authenticate 报头域一起使用<br>
+&emsp;&emsp;403 Forbidden //服务器收到请求， 但是拒绝提供服务<br>
+&emsp;&emsp;404 Not Found //请求资源不存在， eg： 输入了错误的 URL<br>
+&emsp;&emsp;500 Internal Server Error //服务器发生不可预期的错误<br>
+&emsp;&emsp;503 Server Unavailable //服务器当前不能处理客户端的请求， 一段时间后可能恢复正常<br>
+&emsp;&emsp;请求头信息与响应头信息：<br>
+![image](https://github.com/15529343201/guest/blob/chapter8/image/8.2.PNG)<br>
+&emsp;&emsp;1、 请求头信息<br>
+&emsp;&emsp;请求报头允许客户端向服务器端传递请求的附加信息以及客户端自身的信息。<br>
+&emsp;&emsp;常用的请求报头：<br>
+&emsp;&emsp;Accept： 请求报头域用于指定客户端接受哪些类型的信息。 eg： Accept： image/gif， 表明客户端希望接
+受 GIF 图象格式的资源； Accept： text/html， 表明客户端希望接受 html 文本。<br>
+&emsp;&emsp;Accept-Encoding： 请求报头域类似于 Accept， 但是它是用于指定可接受的内容编码。<br>
+&emsp;&emsp;Accept-Language： 请求报头域类似于 Accept， 但是它是用于指定一种自然语言。<br>
+&emsp;&emsp;Connection： 允许发送指定连接的选项。 例如指定连接是连续， 或者指定“close” 选项， 通知服务器，
+在响应完成后， 关闭连接。 从 HTTP/1.1 起， 默认都开启了 Keep-Alive， 保持连接特性。<br>
+&emsp;&emsp;Host（发送请求时， 该报头域是必需的） ， Host 请求报头域主要用于指定被请求资源的 Internet 主机和
+端口号， 它通常从 HTTP URL 中提取出来的。<br>
+&emsp;&emsp;User-Agent： 请求报头域允许客户端将它的操作系统、 浏览器和其它属性告诉服务器。 不过， 这个报头
+域不是必需的， 如果我们自己编写一个浏览器， 不使用 User-Agent 请求报头域， 那么服务器端就无法得知我
+们的信息了。<br>
+&emsp;&emsp;2、 响应头信息<br>
+&emsp;&emsp;响应报头允许服务器传递不能放在状态行中的附加响应信息， 以及关于服务器的信息和对 Request-URI
+所标识的资源进行下一步访问的信息。<br>
+&emsp;&emsp;常用的响应报头<br>
+&emsp;&emsp;Location： 响应报头域用于重定向接受者到一个新的位置。 Location 响应报头域常用在更换域名的时候。<br>
+&emsp;&emsp;Server： 响应报头域包含了服务器用来处理请求的软件信息。 与 User-Agent 请求报头域是相对应的。<br>
+&emsp;&emsp;WWW-Authenticate： 响应报头域必须被包含在 401（未授权的） 响应消息中， 客户端收到 401 响应消
+息时候， 并发送 Authorization 报头域请求服务器对其进行验证时， 服务端响应报头就包含该报头域。<br>
+&emsp;&emsp;X-Frame-Options: 有三个值： DENY 表示该页面不允许在 frame 中展示， 即便是在相同域名的页面
+中嵌套也不允许。 SAMEORIGIN 表示该页面可以在相同域名页面的 frame 中展示。 ALLOW-FROM uri 表示
+该页面可以在指定来源的 frame 中展示。<br>
+
+
+
+
+
+
+
 
 
 
