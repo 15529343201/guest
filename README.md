@@ -2295,16 +2295,114 @@ or password error!” 提示。<br>
 &emsp;&emsp;当用例中输入了正确的用户名和密码（admin/admin123456）， 为什么 HTTP 返回的结果是 302 而不是 200
 呢？ 这是因为在 login_action 视图函数中， 当用户登录验证成功后， 通过 HttpResponseRedirect('/event_manage/')
 跳转到了发布会管理视图， 这是一个重定向， 所以 HTTP 返回码是 302。<br>
+### 6.3.3、 Test Event Manage
+&emsp;&emsp;继续在.../sign/tests.py 文件中编写发布会管理的测试用例。<br>
+```Python
+class EventManageTest(TestCase):
+    ''' 发布会管理 '''
 
+    def setUp(self):
+        Event.objects.create(id=2, name='xiaomi5', limit=2000, status=True, address='beijing',
+                             start_time=datetime(2016, 8, 10, 14, 0, 0))
+        self.c = Client()
 
+    def test_event_manage_success(self):
+        ''' 测试发布会:xiaomi5 '''
+        response = self.c.post('/event_manage/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"xiaomi5", response.content)
+        self.assertIn(b"beijing", response.content)
 
+    def test_event_manage_search_success(self):
+        ''' 测试发布会搜索 '''
+        response = self.c.post('/search_name/', {"name": "xiaomi5"})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"xiaomi5", response.content)
+        self.assertIn(b"beijing", response.content)
+```
+&emsp;&emsp;关于发布会管理的测试代码与登录视图相同， 这里不再解释。<br>
+&emsp;&emsp;此 用 例 要 想 运 行 通 过 ， 需 要 在 views.py 视 图 文 件 中 将 event_manage() 和 search_name() 函 数 的
+@login_required 装饰器去掉， 因为这两个函数依赖于登录， 然而， Client()所提供的 get()和 post()方法并没有验
+证登录的参数。<br>
+### 6.3.4、 Test Guest Manage
+&emsp;&emsp;继续在.../sign/tests.py 文件中编写嘉宾管理的测试用例。<br>
+```Python
+class GuestManageTest(TestCase):
+    ''' 嘉宾管理 '''
 
+    def setUp(self):
+        Event.objects.create(id=1, name="xiaomi5", limit=2000,
+                             address='beijing', status=1, start_time=datetime(2016, 8, 10, 14, 0, 0))
+        Guest.objects.create(realname="alen", phone=18611001100,
+                             email='alen@mail.com', sign=0, event_id=1)
+        self.c = Client()
 
+    def test_event_manage_success(self):
+        ''' 测试嘉宾信息: alen '''
+        response = self.c.post('/guest_manage/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"alen", response.content)
+        self.assertIn(b"18611001100", response.content)
 
+    def test_guest_manage_search_success(self):
+        ''' 测试嘉宾搜索 '''
+        response = self.c.post('/search_phone/', {"phone": "18611001100"})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"alen", response.content)
+        self.assertIn(b"18611001100", response.content)
+```
+&emsp;&emsp;关于嘉宾管理的用例要想运行通过， 需要在 views.py 视图文件中将 guest_manage()和 search_phone()函数
+的@login_required 装饰器去掉， 原因同上。<br>
+### 6.3.5、 Test User Sign
+&emsp;&emsp;继续在.../sign/tests.py 文件中编写用户签到的测试用例。<br>
+```Python
+class SignIndexActionTest(TestCase):
+    ''' 发布会签到 '''
 
+    def setUp(self):
+        Event.objects.create(id=1, name="xiaomi5", limit=2000, address='beijing', status=1,
+                             start_time='2017-8-10 12:30:00')
+        Event.objects.create(id=2, name="oneplus4", limit=2000, address='shenzhen', status=1,
+                             start_time='2017-6-10 12:30:00')
+        Guest.objects.create(realname="alen", phone=18611001100, email='alen@mail.com', sign=0, event_id=1)
+        Guest.objects.create(realname="una", phone=18611001101, email='una@mail.com', sign=1, event_id=2)
+        self.c = Client()
 
+    def test_sign_index_action_phone_null(self):
+        ''' 手机号为空 '''
+        response = self.c.post('/sign_index_action/1/', {"phone": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"phone error.", response.content)
 
+    def test_sign_index_action_phone_or_event_id_error(self):
+        ''' 手机号或发布会 id 错误 '''
+        response = self.c.post('/sign_index_action/2/', {"phone": "18611001100"})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"event id or phone error.", response.content)
 
+    def test_sign_index_action_user_sign_has(self):
+        ''' 用户已签到 '''
+        response = self.c.post('/sign_index_action/2/', {"phone": "18611001101"})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"user has sign in.", response.content)
+
+    def test_sign_index_action_sign_success(self):
+        ''' 签到成功 '''
+        response = self.c.post('/sign_index_action/1/', {"phone": "18611001100"})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"sign in success!", response.content)
+```
+&emsp;&emsp;首先用例要想运行通过， 需要在 views.py 视图文件中将 sign_index_action()函数的@login_required 装饰器
+去掉， 原因同上。<br>
+&emsp;&emsp;其次， 关于签到功能， 测试的情况比较多， 所以在 setUp()中创建测试数据需要注意。 创建了两条发布会
+“xiaomi5” 和“oneplus4” ， 嘉宾“alen” 所属于“xiaomi5” ， 嘉宾“una” 所属于“oneplus4” ， 并且“una”
+的签到状态为已签到。<br>
+&emsp;&emsp;当通过“alen”的手机号（18611001100）在“oneplus4”发布会页面签到时会， 将会提示：“event id or phone
+error.” 发布会 id 与手机号不匹配。<br>
+&emsp;&emsp;当通过“una” 手机号签到时， 将会提示： “user has sign in.” 用户已签到。<br>
+&emsp;&emsp;另外两条用例相对比较好理解， 这里不再解释。<br>
+&emsp;&emsp;关于 Django 测试讨论到此为止， 参考 Django 官方文档。<br>
+&emsp;&emsp;https://docs.djangoproject.com/en/1.9/topics/testing/tools/<br>
 
 
 
