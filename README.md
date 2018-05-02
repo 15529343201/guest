@@ -2711,12 +2711,46 @@ Request-URI HTTP-Version CRLF<br>
 &emsp;&emsp;X-Frame-Options: 有三个值： DENY 表示该页面不允许在 frame 中展示， 即便是在相同域名的页面
 中嵌套也不允许。 SAMEORIGIN 表示该页面可以在相同域名页面的 frame 中展示。 ALLOW-FROM uri 表示
 该页面可以在指定来源的 frame 中展示。<br>
+### 8.1.2、 JSON
+&emsp;&emsp;什么是 JSON？<br>
+- JSON 指的是 JavaScript 对象表示法（JavaScript Object Notation）
+- JSON 是轻量级的文本数据交换格式
+- JSON 独立于语言 *
+- JSON 具有自我描述性， 更易理解
+- JSON 使用 JavaScript 语法来描述数据对象， 但是 JSON 仍然独立于语言和平台。JSON 解析器和 JSON
+库支持不同的编程语言。
 
+&emsp;&emsp;JSON 数据格式<br>
+```
+{
+    "employees": [
+        { "firstName":"Bill" , "lastName":"Gates" },
+        { "firstName":"George" , "lastName":"Bush" },
+        { "firstName":"Thomas" , "lastName":"Carter" }
+    ]
+}
+```
+&emsp;&emsp;JSON 语法是 JavaScript 对象表示法语法的子集。<br>
+- 数据在名称/值对中。
+- 数据由逗号分隔。
+- 花括号保存对象。
+- 方括号保存数组。
 
-
-
-
-
+## 8.2 什么是 Web 接口
+&emsp;&emsp;什么是 Web 接口？ 在解释这个问题之前， 先来通过浏览器前端工具（Firebug） 捕捉一下发布会管理页
+面的请求。<br>
+&emsp;&emsp;发布会管理页面： http://127.0.0.1:8000/event_manage/<br>
+![image](https://github.com/15529343201/guest/blob/chapter8/image/8.3.PNG)<br>
+&emsp;&emsp;当我们通过 F5 刷新页面时， 服务器返回图 8.5 的资源， 其中包含了 HTML、 CSS 和 JavaScript， 除此
+之外， 服务器还可以返回图片、 视频、 字体和插件等类型的资源。<br>
+&emsp;&emsp;虽然这些资源的传输使用的是 HTTP 协议， 但我们不能将其看作为 Web 接口。 然而接口关心的是只数
+据， 它的输入和输出是具有一定格式的数据， 接口并不关心数据展示在哪里， 要以什么样式去展示。 而 HTML、
+CSS、 和 JavaScript 等关心的是数据展示在哪里， 如何展示。<br>
+&emsp;&emsp;一般 Web 接口返回数据如图 8.6。<br>
+![image](https://github.com/15529343201/guest/blob/chapter8/image/8.4.PNG)<br>
+&emsp;&emsp;显然， 这样的接口并不是直接给普通用户来使用的， 它一般为其它开者提供调用。 后端与前端开发之间，
+不同系统的开发之间， 以及不同公司的开发之间的调用。 至于调用接口数据的开发者如何使用这些数据， 对
+于接口开发者来说并不需要关心。<br>
 
 
 
