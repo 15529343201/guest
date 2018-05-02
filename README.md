@@ -1771,6 +1771,105 @@ guest_manage.html:<br>
         </div>
 ```
 ![image](https://github.com/15529343201/guest/blob/chapter5/image/5.4.PNG)<br>
+## 5.4 签到功能
+### 5.4.1、 添加签到链接
+&emsp;&emsp;对于签到功能页面来说， 它应该所属于某一场发布会， 所以， 在打开签到页面之前， 我们应知道这是针
+对哪一场发布会的签到。 所以， 最好的方式是在发布列表中， 每一条发布会都提供一个“签到” 链接用来打
+开对应的签到页面。<br>
+&emsp;&emsp;在`.../templates/event_manage.html` 页面， 增加签到列链接。<br>
+event_manage.html:<br>
+```html
+<!--发布会列表-->
+<div class="row" style="padding-top: 80px;">
+    <div class="col-md-6">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>id</th><th>名称</th><th>状态</th><th>地址</th><th>时间</th><th>签到</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                    <tr>
+                        <td>{{ event.id }}</td>
+                        <td>{{ event.name }}</td>
+                        <td>{{ event.status }}</td>
+                        <td>{{ event.address }}</td>
+                        <td>{{ event.start_time }}</td>
+                        <td><a href="/sign_index/{{ event.id }}/" target="{{ event.id }}_blank">sign</a> </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+```
+&emsp;&emsp;当点击 sign 链接时， 路径会默认跳转到“/sign_index/{{ event.id }}/” 路径。 其中{{ event.id }} 为发布会
+的 id。 target="{{ event.id }}_blank" 属性表示链接在新窗口打开。<br>
+&emsp;&emsp;在`.../guest/urls.py` 文件中添加路径路由。<br>
+urls.py:<br>
+```Python
+from sign import views
+urlpatterns = [
+......
+    url(r'^sign_index/(?P<event_id>[0-9]+)/$', views.sign_index),
+]
+```
+&emsp;&emsp;此处与我们之前添加的路径在匹配方式上略有不同。<br>
+&emsp;&emsp;`(?P<event_id>[0-9]+)` 配置二级目录， 发布会 id， 要求必须为数字。而且匹配的数字， 将会作为 sign_index()
+视图函数的参数。<br>
+### 5.4.2、 签到页面
+&emsp;&emsp;打开.../sign/views.py 文件， 创建 sign_index()视图函数。<br>
+views.py:<br>
+```Python
+from django.shortcuts import render, get_object_or_404
+# 签到页面
+@login_required
+def sign_index(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+    return render(request,'sign_index.html',{'event':event})
+```
+&emsp;&emsp;创建.../templates/sign_index.html 签到页面。<br>
+sign_index.html:<br>
+```html
+<!--导航栏-->
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">{{ event.name }}</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">发布会</a></li>
+                <li><a href="/guest_manage/">嘉宾</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!--签到功能-->
+<div class="page-header" style="padding-top: 80px;">
+    <div id="navbar" class="navbar-collapse collapse">
+        <form class="navbar-form" method="post" action="/sign_index_action/{{ event.id }}/">
+            <div class="form-group">
+                <input name="phone" type="text" placeholder="输入手机号" class="form-control"></div>
+                <button type="submit" class="btn btn-success">签到</button>
+            </div>
+        </form>
+    </div>
+</div>
+```
+&emsp;&emsp;`<a class="navbar-brand" href="#">{{ event.name }}</a>`<br>
+&emsp;&emsp;将页面标题设置为发布会名称。<br>
+&emsp;&emsp;`<li><a href="/event_manage/">发布会</a></li>`<br>
+&emsp;&emsp;`<li><a href="/guest_manage/">嘉宾</a></li>`<br>
+&emsp;&emsp;设置发布会与嘉宾导航链接。<br>
+&emsp;&emsp;`<form class="navbar-form" method="post" action="/sign_index_action/{{ event.id }}/">`<br>
+&emsp;&emsp;签到表单会通过 POST 请求提交到/sign_index_action/{{ event.id }}/ ， 二级目录会以发布会 id 替换。<br>
+&emsp;&emsp;签到页面， 如图 5.5。<br>
+![image](https://github.com/15529343201/guest/blob/chapter5/image/5.5.PNG)<br>
+
+
 
 
 
