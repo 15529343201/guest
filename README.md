@@ -1868,7 +1868,97 @@ sign_index.html:<br>
 &emsp;&emsp;签到表单会通过 POST 请求提交到/sign_index_action/{{ event.id }}/ ， 二级目录会以发布会 id 替换。<br>
 &emsp;&emsp;签到页面， 如图 5.5。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter5/image/5.5.PNG)<br>
-
+### 5.4.3、 签到动作
+&emsp;&emsp;继续开发签到功能， 接下来考虑， 当在签到输入框中输入手机号， 点击“签到” 按钮之后， 改动作要如
+何处理？<br>
+&emsp;&emsp;首先， 打开.../guest/urls.py 文件， 添加签到路径的路由。<br>
+urls.py:<br>
+```Python
+......
+from sign import views
+urlpatterns = [
+......
+    url(r'^sign_index_action/(?P<event_id>[0-9]+)/$', views.sign_index_action),
+]
+```
+&emsp;&emsp;打开.../sign/views.py 文件， 创建 sign_index_action()视图函数。<br>
+views.py:<br>
+```Python
+# 签到动作
+@login_required
+def sign_index_action(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+    phone = request.POST.get('phone', '')
+    result = Guest.objects.filter(phone=phone)
+    if not result:
+        return render(request, 'sign_index.html', {'event': event, 'hint': 'phone error.'})
+    result = Guest.objects.filter(phone=phone, event_id=event_id)
+    if not result:
+        return render(request, 'sign_index.html', {'event': event,
+                                                   'hint': 'event id or phone error.'})
+    result = Guest.objects.get(phone=phone, event_id=event_id)
+    if result.sign:
+        return render(request, 'sign_index.html', {'event': event,
+                                                   'hint': "user has sign in."})
+    else:
+        Guest.objects.filter(phone=phone, event_id=event_id).update(sign='1')
+    return render(request, 'sign_index.html', {'event': event,
+                                               'hint': 'sign in success!',
+                                               'guest': result})
+```
+&emsp;&emsp;对于发布会的签到动作， 做了以下条件的判断。<br>
+&emsp;&emsp;首先， 查询 Guest 表判断用户输入的手机号是否存在， 如果不存在将提示用户“手机号为空或不存在” 。<br>
+&emsp;&emsp;然后， 通过手机和发布会 id 两个条件来查询 Guest 表， 如果结果为空将提示用户“该用户未参加此次发
+布会” 。<br>
+&emsp;&emsp;最后， 再通过手机号查询 Guest 表， 判断该手机号的签到状态是否为 1， 如果为 1， 表示已经签过到了，
+返回用户“已签到” ， 否则， 将提示用户“签到成功！ ” ， 并返回签到用户的信息。<br>
+&emsp;&emsp;修改.../templates/sign_index.html 页面， 增加 sign_index_action()视图函数返回的提示信息的位置。<br>
+```html
+<!--签到功能-->
+<div class="page-header" style="padding-top: 80px;">
+    <div id="navbar" class="navbar-collapse collapse">
+        <form class="navbar-form" method="post" action="/sign_index_action/{{ event.id }}/">
+            <div class="form-group">
+                <input name="phone" type="text" placeholder="输入手机号" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-success">签到</button>
+            <font color="red">
+                <br>{{ hint }}
+                <br>{{ guest.realname }}
+                <br>{{ guest.phone }}
+            </font>
+        </form>
+    </div>
+</div>
+```
+&emsp;&emsp;如果签到失败， 将会显示 {{ hint }}提示信息； 如果签到成功， 将会显示{{ hint }}提示信息和用户名称，
+及手机号。 如果 5.16。<br>
+![image](https://github.com/15529343201/guest/blob/chapter5/image/5.6.PNG)<br>
+## 5.5 退出系统
+&emsp;&emsp;之前留了一个坑， 在发布会管理页面和嘉宾管理页面的右上角有“退出” 按钮， 但我们一直没实现登录
+的退出。 现在是时候该填补上它了。<br>
+&emsp;&emsp;打开.../urls.py 文件， 添加退出目录的路由。<br>
+urls.py:<br>
+```Python
+from sign import views
+urlpatterns = [
+......
+    url(r'^logout/$', views.logout),
+]
+```
+&emsp;&emsp;打开.../sign/views.py 文件， 创建 logout()视图函数。<br>
+views.py:<br>
+```Python
+# 退出登录
+@login_required
+def logout(request):
+    auth.logout(request) # 退出登录
+    response=HttpResponseRedirect('/index/')
+    return response
+```
+&emsp;&emsp;Django 不单单为我们提供了方便的 auth.login()函数用于登录，还为我们准备了 auth.logout()函数用于系统
+的退出， 它可以帮我们清除掉浏览器保存的用户信息， 所以， 我们不用再考虑如何删除浏览器 cookie 等问题
+了<br>
 
 
 

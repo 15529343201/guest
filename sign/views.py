@@ -1,9 +1,9 @@
-from django.shortcuts import render,get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from sign.models import Event, Guest
-from django.core.paginator import Paginator,EmptyPage,PageNotAnInteger
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 # Create your views here.
@@ -63,20 +63,39 @@ def guest_manage(request):
         contacts = paginator.page(paginator.num_pages)
     return render(request, "guest_manage.html", {"user": username, "guests": contacts})
 
+
 # 签到页面
 @login_required
 def sign_index(request, event_id):
     event = get_object_or_404(Event, id=event_id)
-    return render(request,'sign_index.html',{'event':event})
+    return render(request, 'sign_index.html', {'event': event})
 
 
+# 签到动作
+@login_required
+def sign_index_action(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+    phone = request.POST.get('phone', '')
+    result = Guest.objects.filter(phone=phone)
+    if not result:
+        return render(request, 'sign_index.html', {'event': event, 'hint': 'phone error.'})
+    result = Guest.objects.filter(phone=phone, event_id=event_id)
+    if not result:
+        return render(request, 'sign_index.html', {'event': event,
+                                                   'hint': 'event id or phone error.'})
+    result = Guest.objects.get(phone=phone, event_id=event_id)
+    if result.sign:
+        return render(request, 'sign_index.html', {'event': event,
+                                                   'hint': "user has sign in."})
+    else:
+        Guest.objects.filter(phone=phone, event_id=event_id).update(sign='1')
+    return render(request, 'sign_index.html', {'event': event,
+                                               'hint': 'sign in success!',
+                                               'guest': result})
 
-
-
-
-
-
-
-
-
-
+# 退出登录
+@login_required
+def logout(request):
+    auth.logout(request) # 退出登录
+    response=HttpResponseRedirect('/index/')
+    return response
