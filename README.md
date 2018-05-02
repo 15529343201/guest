@@ -3016,17 +3016,51 @@ urlpatterns = [
 ![image](https://github.com/15529343201/guest/blob/chapter8/image/8.13.PNG)<br>
 &emsp;&emsp;接口文档的形式也可以是多样的， 这里做成了 Word 文档的形式， 除此之外， 我们还可以将其做在线 Wike
 的形式。<br>
-
-
-
-
-
-
-
-
-
-
-
+# chapter9 接口测试工具介绍
+&emsp;&emsp;用于接口测试的工具非常多， 在开始介绍接口测试工具之前， 我大致把接口工具分为以下几类。<br>
+&emsp;&emsp;接口测试工具： 这类工具比较简单， 可以模拟和发送 HTTP 请求， 并显示返回数据。 返回的数据由人工
+来检查正确性。 例如 Poster、 Postman 等。<br>
+&emsp;&emsp;接口自动化测试工具： 相比接口测试要工具， 功能要更加强大， 一般提供用例的批量执行， 返回结果的
+断言以及测试报告的生成等， 如 Jmeter、 Robot Framework、 soapUI 等。<br>
+&emsp;&emsp;接口性能测试工具： 主要用于测试接口的性能测试， 验证接口处理并发的能力。 如 Jmeter、 LoadRunner、
+soapUI 等工具。<br>
+## 9.1 Poster 与 Postman
+&emsp;&emsp;之所以会把这两款工具放到一起介绍， 因为它们分别作为 Firefox 和 Chrome 浏览器的插件而存在， 所以，
+要想使用它们分别需要安装这两款浏览器。<br>
+### 9.1.1、 Poster
+&emsp;&emsp;Poster 为 Firefox 浏览器的一个插件， 主要用来模拟发并 HTTP 请求。 随着 Chrome 浏览器的流行， 它也
+出了 chrome 版本： Chrome Poster<br>
+&emsp;&emsp;在 Fiefox 浏览器中的安装非常简单。 首先， 打开 Fiefox 浏览器， 菜单栏“工具” --> “添加组件” ， 搜
+索“poster” ， 在搜索例表中点击“安装” ， 然后重启浏览器即可。<br>
+&emsp;&emsp;打开方法： 菜单栏“工具” --> “Poster” 。 如图 9.1。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.1.PNG)<br>
+&emsp;&emsp;发送 GET 请求（查询发布会信息） ： http://127.0.0.1:8000/api/get_event_list/?eid=1<br>
+&emsp;&emsp;获取发布会 id（eid） 为 1 的发布会信息。 如图 9.2， 左侧为填写的请求地址， 右则为接口返回值。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.2.PNG)<br>
+&emsp;&emsp;发送 POST 请求（添加发布会信息） ： http://127.0.0.1:8000/api/add_event/<br>
+&emsp;&emsp;POST 请求的参数与 GET 不同； 如图 9.3， 在 Parameters 标签中添加 POST 请求的参数， “Name” 为参
+数名， “Value” 为参数值。 然后点击“Add/Change” 按钮添加。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.3.PNG)<br>
+&emsp;&emsp;然后， 切换到“Content to Send” 标签页， 点击“Body from Parameters” 按钮， 添加 POST 请求的参数。
+然后， 点击“POST” 按钮发送请求， 并得得返回结果， 如图 9.4。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.4.PNG)<br>
+### 9.1.2、 Postman
+&emsp;&emsp;Postman 是一款功能强大的网页调试与发送网页 HTTP 请求的 Chrome 插件。<br>
+&emsp;&emsp;Postman 官方网站： http://www.getpostman.com/<br>
+&emsp;&emsp;（备注： 需要科学上网才能安装）<br>
+&emsp;&emsp;安装完成， 点击 Chrome 浏览器右上角菜单栏“更多工具” -->“扩展程序” 。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.5.PNG)<br>
+&emsp;&emsp;如图 9.5 所示， 说明 Postman 已经安装完成。 接下来可以在 Windows 系统开始运行中搜索 Postman 应用
+打开。 如图 9.6 为 Postman 应用主界面。 Postman 的使用方式与 Poster 相似。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.6.PNG)<br>
+&emsp;&emsp;发送 GET 请求（查询嘉宾信息） ： http://127.0.0.1:8000/api/get_guest_list/?eid=1&phone=18600110011<br>
+&emsp;&emsp;如图 9.8， 选择“GET” 请求， 查询关联发布会 id 为 1， 手机号为 18600110011 的嘉宾信息。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.7.PNG)<br>
+&emsp;&emsp;发送 POST 请求（添加嘉宾信息） ： http://127.0.0.1:8000/api/add_guest/<br>
+&emsp;&emsp;需要注意的是， POST 请求参数需要在 Body 标签中添加。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.8.PNG)<br>
+&emsp;&emsp;相对于 Poster 来说， Postman 功能更为强大一些， 使用也更加广泛， 网上也很容易找到使用教程。 在开发
+Web 接口时， 通过这两款工具来测试接口的实现是个很不错的选择。<br>
 
 
 
