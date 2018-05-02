@@ -1514,7 +1514,8 @@ event_manage.html:<br>
 &emsp;&emsp;Django 模板语言， 用于循环打印发布的 id、 name、 status、 address 和 start_time 等字段。 Django 模板语
 言与 Python 有所不同。 for 语句需要有对应 endfor 来表示语句的结束， 同样， if 分支语句也需要 endif 来表示
 语句的结束。<br>
-
+![image](https://github.com/15529343201/guest/blob/chapter5/image/5.1.PNG)<br>
+&emsp;&emsp;如图 5.1， 发布会管理页面， 通过对 Django-bootstrap3 应用的使用， 可以非常轻松的创建出漂亮的网页。<br>
 
 
 
