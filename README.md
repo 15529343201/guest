@@ -3137,3 +3137,35 @@ Web 接口时， 通过这两款工具来测试接口的实现是个很不错的
 ## 9.3 Robot Framework 测试框架
 &emsp;&emsp;Robot Framework 的架构是一个通用型的验收测试和验收测试驱动开发的自动化测试框架（ATDD） 。 它
 具有易于使用的表格来组织测试过程和测试数据。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.22.PNG)<br>
+&emsp;&emsp;Robot Framework 特点：<br>
+- 使用简单
+- 非常丰富的库
+- 可以像编程一样写测试用例
+- 支持开发系统关键字
+
+### 9.3.1、 环境搭建
+&emsp;&emsp;目前 Robot Framework3.0 已经支持 Python3.x，但是基于该框架的大多 Library 还并未完全支持 Python3.x，
+好在用来做接口测试的 RequestsLibrary 已经支持了 Python3.x， 所以， 我们可以在 Python3.x 进行环境的搭建
+和接口自动化测试。<br>
+&emsp;&emsp;Python3.x：<br>
+&emsp;&emsp;在本书的第一章已经详细的介绍了两个版本的安装， 这里不再介绍。<br>
+&emsp;&emsp;安装 Robot Framwork：<br>
+&emsp;&emsp;https://pypi.python.org/pypi/robotframework<br>
+&emsp;&emsp;它同样支持 pip 命令安装：<br>
+&emsp;&emsp;`pip install robotframework`<br>
+&emsp;&emsp;安装 Requests：<br>
+&emsp;&emsp;robotframework-requests 的运行依赖于 Requests 库， 在本书的第十章中会详细介绍 Requests 库的使用， 这
+里我们先通过 pip 命令进行安装。<br>
+&emsp;&emsp;`pip install requests`<br>
+&emsp;&emsp;安装 robotframework-requests：<br>
+&emsp;&emsp;目前 PyPi 仓库中的 robotframework-requests 库暂时还不支持 Python3.x， 不过我们可以在 GitHub 上获取
+最新的项目代码来安装。<br>
+&emsp;&emsp;GitHub 地址： https://github.com/bulkan/robotframework-requests<br>
+&emsp;&emsp;将项目克隆或下载并解压， 执行目录下的 setup.py 文件进行安装。<br>
+&emsp;&emsp;`...\robotframework-requests-master>python3 setup.py install`<br>
+
+
+
+
+
