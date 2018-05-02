@@ -1620,8 +1620,8 @@ guest_manage.html:<br>
     </body>
 </html>
 ```
-&emsp;&emsp;<li><a href="/event_manage/">发布会</a></li><br>
-&emsp;&emsp;<li class="active"><a href="#">嘉宾</a></li><br>
+&emsp;&emsp;`<li><a href="/event_manage/">发布会</a></li>`<br>
+&emsp;&emsp;`<li class="active"><a href="#">嘉宾</a></li>`<br>
 &emsp;&emsp;当前处理嘉宾管理页面， 所以， 设置嘉宾按钮的处于选中状态（class="active"） 。 为发布按钮设置跳转
 路径（href="/event_manage/"）<br>
 ```html
