@@ -2527,3 +2527,118 @@ PyMySQL 驱动就扮演着这样的角色。<br>
 &emsp;&emsp;检查服务器的异常处理能力：<br>
 &emsp;&emsp;我们通常把前端的验证称为弱验证， 因为它很容易被绕过， 这个时候如果只站在功能的层面进行测试，
 就很难发现一些安全的问题。 不以功能为入口的接口测试就会很容易的验证这些异常情况。<br>
+## 7.4 编程语言中的 Interface
+&emsp;&emsp;在大多面向对象的编程语言中都提供了 Interface（接口） 的概念。 既然本章要介绍接口的概念， 那么这
+里简单介绍一下面向对象编程语言中的 Interface。<br>
+### 7.4.1、 Java 中的 Interface
+&emsp;&emsp;在 Java 中定义接口使用 interface 关键字来声明， 可以看做是一种特殊的抽象类， 可以指定一个类必须做
+什么， 而不是规定它如何去做。<br>
+&emsp;&emsp;为什么使用 Interface？<br>
+&emsp;&emsp;在大型项目开发中， 可能需要从继承链的中间插入一个类， 让它的子类具备某些功能而不影响它们的父
+类。 例如 A -> B -> C -> D -> E（“->” 表示继承关系） ， A 是祖先类， 如果需要为 C、 D、 E 类添加某些通
+用的功能， 最简单的方法是让 C 类再继承另外一个类。 但是问题来了， Java 是一种单继承的语言， 不能再让
+C 继承另外一个父类了， 只到移动到继承链的最顶端， 让 A 再继承一个父类。 这样一来， 对 C、 D、 E 类的修
+改， 影响到了整个继承链， 不具备可插入性的设计。<br>
+&emsp;&emsp;接口是可插入性的保证。 在一个继承链中的任何一个类都可以实现一个接口， 这个接口会影响到此类的
+所有子类， 但不会影响到此类的任何父类。 此类将不得不实现这个接口所规定的方法， 而子类可以从此类自
+动继承这些方法， 这时候， 这些子类具有了可插入性。<br>
+&emsp;&emsp;我们关心的不是哪一个具体的类， 而是这个类是否实现了我们需要的接口。<br>
+&emsp;&emsp;接口提供了关联以及方法调用上的可插入性， 软件系统的规模越大， 生命周期越长， 接口使得软件系统
+的灵活性、 可扩展性和可插入性方面得到保证。<br>
+&emsp;&emsp;接口在面向对象的 Java 程序设计中占有举足轻重的地位。 事实上在设计阶段最重要的任务之一就是设
+计出各部分的接口， 然后通过接口的组合， 形成程序的基本框架结构。<br>
+&emsp;&emsp;所以简单总结其用途为： 实现类的多继承， 以解决 Java 只能单继承， 不支持多继承的问题。<br>
+&emsp;&emsp;下面通过例子介绍 Java 中接口的使用。<br>
+&emsp;&emsp;定义接口：<br>
+IAnimal.java:<br>
+```Java
+package mypor.interfaces.demo;
+public interface IAnimal {
+    public String Behavior(); //行为方法， 描述各种动物的特性
+}
+```
+&emsp;&emsp;实现接口（一） ：<br>
+Dog.java:<br>
+```Java
+package mypor.interfaces.demo;
+import mypor.interfaces.demo.IAnimal;
+//类: 狗
+public class Dog implements IAnimal{
+    public String Behavior()
+    {
+        String ActiveTime = "我晚上睡觉,白天活动";
+        return ActiveTime;
+    }
+}
+```
+&emsp;&emsp;实现接口（二） ：<br>
+Cat.java:<br>
+```Java
+package mypor.interfaces.demo;
+import mypor.interfaces.demo.IAnimal;
+//类： 猫
+public class Cat implements IAnimal{
+    public String Behavior()
+    {
+        String ActiveTime = "我白天睡觉,晚上捉老鼠。 ";
+        return ActiveTime;
+    }
+}
+```
+&emsp;&emsp;测试接口的实现：<br>
+Test.java:<br>
+```Java
+package mypor.interfaces.demo;
+import mypor.interfaces.demo.Dog;
+import mypor.interfaces.demo.Cat;
+public class Test {
+    public static void main(String[] args) {
+    //调用 dog 和 cat 的行为
+    Dog d = new Dog();
+    Cat c = new Cat();
+    System.out.println(d.Behavior());
+    System.out.println(c.Behavior());
+    }
+}
+```
+&emsp;&emsp;注意， 这里的测试， 并不是测试的接口， 因为接口本身只是抽象的定义， 并没有可测试性， 这里真正所
+测试的是继承了接口的类， 或者叫已经实例化的对象。<br>
+### 7.4.2、 Python 中的 Zope.interface
+&emsp;&emsp;那么读者要问了， 在 Python 编程语言中是否有 Interface 的概念， 然而 Python 本身并不提供 Interface
+的创建和使用， 但是我们可以通过第三方扩展库来使用类似 Interface 的概念， 这里选用 Zope.interface 库。<br>
+&emsp;&emsp;下载地址： https://pypi.python.org/pypi/zope.interface<br>
+&emsp;&emsp;先来看个普通的例子。<br>
+demo.py:<br>
+```Python
+class Host(object):
+    def goodmorning(self, name):
+        """Say good morning to guests"""
+        return "Good morning, %s!" % name
+if __name__ == '__main__':
+    h = Host()
+    hi = h.goodmorning('zhangsan')
+    print(hi)
+```
+&emsp;&emsp;下面在这个例子的基础中使用 Interface（Python3） 。<br>
+interface_demo.py:<br>
+```Python
+from zope.interface import Interface
+from zope.interface.declarations import implementer
+# 定义接口
+class IHost(Interface):
+    def goodmorning(self,host):
+    """Say good morning to host"""
+
+@implementer(IHost) #继承接口
+class Host:
+    def goodmorning(self, guest):
+        """Say good morning to guest"""
+        return "Good morning, %s!" % guest
+if __name__ == '__main__':
+    p = Host()
+    hi = p.goodmorning('Tom')
+    print(hi)
+```
+
+
+
