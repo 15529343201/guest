@@ -1649,6 +1649,26 @@ urlpatterns = [
 
 ```
 &emsp;&emsp;打开.../sign/views.py 文件， 创建 guest_manage()视图函数。<br>
+views.py:<br>
+```Python
+# 嘉宾管理
+@login_required
+def guest_manage(request):
+    username = request.session.get('user', '')
+    guest_list = Guest.objects.all()
+    return render(request, "guest_manage.html", {"user": username, "guests": guest_list})
+```
+&emsp;&emsp;嘉宾管理页面如图5.3<br>
+![image](https://github.com/15529343201/guest/blob/chapter5/image/5.3.PNG)<br>
+
+
+
+
+
+
+
+
+
 
 
 
