@@ -32,3 +32,12 @@ def event_manage(request):
     event_list = Event.objects.all()
     username= request.session.get('user','') # 读取浏览器session
     return render(request, "event_manage.html",{"user":username,"events":event_list})
+
+# 发布会搜索名称
+@login_required
+def search_name(request):
+    username = request.session.get('user', '')
+    search_name = request.GET.get("name", "")
+    event_list = Event.objects.filter(name__contains=search_name)
+    return render(request, "event_manage.html", {"user": username,
+"events": event_list})

@@ -1516,12 +1516,50 @@ event_manage.html:<br>
 语句的结束。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter5/image/5.1.PNG)<br>
 &emsp;&emsp;如图 5.1， 发布会管理页面， 通过对 Django-bootstrap3 应用的使用， 可以非常轻松的创建出漂亮的网页。<br>
-
-
-
-
-
-
+### 5.2.2、 发布会搜索
+&emsp;&emsp;对于列表管理来说， 搜索功能必不可少， 接下来开发针对发布会名称的搜索功能。<br>
+&emsp;&emsp;这一次， 先在.../templates/event_manage.html 页面上创建搜索表单。<br>
+event_manage.html:<br>
+```html
+<!--发布会搜索表单-->
+<div class="page-header" style="padding-top: 60px;">
+    <div id="navbar" class="navbar-collapse collapse">
+        <form class="navbar-form" method="get" action="/search_name/">
+            <div class="form-group">
+                <input name="name" type="text" placeholder="名称" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-success">搜索</button>
+        </form>
+    </div>
+</div>
+```
+&emsp;&emsp;查询表单和我们前面开发的登录表单一样。 所以这里不再做过多介绍。 不过需要注意的几个地方，
+method="get" HTTP 请求方式； action="/search_name/" 搜索请求路径； name="name" 搜索输入框的 name 属性
+值。<br>
+&emsp;&emsp;不要忘记在.../guest/urls.py 文件中添加搜索路径的路由。<br>
+urls.py:<br>
+```Python
+from sign import views
+urlpatterns = [
+......
+    url(r'^search_name/$', views.search_name),
+]
+```
+&emsp;&emsp;打开.../sign/views.py 文件， 创建 search_name()视图函数。<br>
+views.py:<br>
+```Python
+# 发布会搜索名称
+@login_required
+def search_name(request):
+    username = request.session.get('user', '')
+    search_name = request.GET.get("name", "")
+    event_list = Event.objects.filter(name__contains=search_name)
+    return render(request, "event_manage.html", {"user": username,
+"events": event_list})
+```
+&emsp;&emsp;通过 GET 方法接收搜索关键字， 并通过模糊查询， 匹配发布会 name 字段， 然后把匹配到的发布会列表
+返回到页面上。 查询功能如图 5.2。<br>
+![image](https://github.com/15529343201/guest/blob/chapter5/image/5.2.PNG)<br>
 
 
 
