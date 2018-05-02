@@ -2403,10 +2403,108 @@ error.” 发布会 id 与手机号不匹配。<br>
 &emsp;&emsp;另外两条用例相对比较好理解， 这里不再解释。<br>
 &emsp;&emsp;关于 Django 测试讨论到此为止， 参考 Django 官方文档。<br>
 &emsp;&emsp;https://docs.djangoproject.com/en/1.9/topics/testing/tools/<br>
+# chapter7 接口相关概念
+## 7.1 分层的自动化测试
+&emsp;&emsp;测试金字塔的概念由敏捷大师 Mike Cohn 在他的《Succeeding with Agile》 一书中首次提出， 如图7.1所示。
+他的基本观点是： 我们应该有更多的低级别的单元测试， 而不仅仅是通过用户界面运行高层的端到端的测试。<br>
+![image](https://github.com/15529343201/guest/blob/chapter7/image/7.1.PNG)<br>
+&emsp;&emsp;Martin Fowler 大师在测试金字塔模型的基础上提出分层自动化测试的概念。 在自动化测试之前加了一个
+“分层” 的修饰， 用来区别于“传统的” 自动化测试。 那么什么是传统的自动化测试？ 为何要提倡分层自动
+化测试的思想呢？<br>
+&emsp;&emsp;所谓传统的自动化测试我们可以理解为基于产品 UI 层的自动化测试， 它是将黑盒功能测试转化为由程序
+或工具执行的一种自动化测试。<br>
+&emsp;&emsp;在目前的大多数研发组织当中， 都存在开发与测试团队割裂（部门墙） 、 质量职责错配（测试主要对质
+量负责） 的问题， 在这种状态下， 测试团队的一个“正常” 反应就是试图在测试团队能够掌控的黑盒测试环
+节进行尽可能全面的覆盖， 甚至是尽可能全面的 UI 自动化测试。<br>
+&emsp;&emsp;这可能会导致两个恶果： 一是测试团队规模的急剧膨胀； 二是所谓的全面 UI 自动化测试运动。 因为 UI
+是非常易变的， 所以 UI 自动化测试维护成本相对高昂。<br>
+&emsp;&emsp;分层自动化测试倡导的是从黑盒（UI） 单层到黑白盒多层的自动化测试体系， 从全面黑盒自动化测试到
+对系统的不同层次进行自动化测试， 如图7.2所示。<br>
+![image](https://github.com/15529343201/guest/blob/chapter7/image/7.2.PNG)<br>
+&emsp;&emsp;我在《Selenium2自动化测试实战---基本 Python 语言》 一书中第一章也曾对分层自动化测试的概念进行
+了介绍， 这本书通过对 Selenium 的讲解全面展示了 Web UI 层自动化测试的应用。 那么本书写作的出发点同样
+遵循分层自动化测试的思想， 将自动化测试技术延伸到 Service 层， 关注 Web 接口的开发与自动化测试。<br>
+## 7.2 单元测试与模块测试
+&emsp;&emsp;不管读者是软件开发人员还是软件测试人员， 相信对这两个概念都不陌生。 但是， 当我试图要描述这两
+个概念时， 发现却很难描述清楚， 因为在前面开发的 Web 项目中， 并不能直接找到与之对应的概念。 在开发
+的 Web 项目中只有项目目录、 程序文件、 函数、 类和方法。 并没有“单元” ， 也没有“模块” 。<br>
+&emsp;&emsp;我试图在网上找到了一些关于这两个概念的大多数人认同的定义， 来看看它们有何区别。<br>
+&emsp;&emsp;单元测试（Unit testing）<br>
+&emsp;&emsp;In computer programming, unit testing is a software testing method by which individual units
+of source code, sets of one or more computer program modules together with associated control data, usage
+procedures, and operating procedures, are tested to determine whether they are fit for use.<br>
+&emsp;&emsp;Intuitively, one can view a unit as the smallest testable part of an application. In procedural programming,
+a unit could be an entire module, but it is more commonly an individual function or procedure.
+In object-oriented programming, a unit is often an entire interface, such as a class, but could be an individual
+method. Unit tests are short code fragments created by programmers or occasionally by white box
+testers during the development process. It forms the basis for component testing。<br>
+&emsp;&emsp;---引用《维基百科》<br>
+&emsp;&emsp;通过这段定义， 我们读到几个关于单元测试的描述：<br>
+&emsp;&emsp;1、 单元测试是应用程序的最小可测试部分。<br>
+&emsp;&emsp;2、 在面向过程编程中， 单元也可以是整个模块， 但常见的是单个函数或过程。<br>
+&emsp;&emsp;3、 在面向对象编程中， 单元通常是整个接口， 例如类， 但可以是单独的方法。<br>
+&emsp;&emsp;4、 单元测试多数情况下是由程序员自己完成的。<br>
+&emsp;&emsp;模块测试（Module testing）<br>
+&emsp;&emsp;大多时候， 我们认为单元测试与模块测试是一样的。 我在国外某网站找到另段关于模块测试的定义。<br>
+&emsp;&emsp;A library may be composed of a single compiled object or several compiled objects. There is only a slight
+difference between unit testing and module testing. Modules are fully formed chunks of coherent source code
+that can typically be tested by driving a few function signatures with various stimuli. On the other hand, unit
+testing (which is considered as part of the implementation phase for this software development process) may
+involve testing one small part of a function that will never formally implement any function interface.<br>
+&emsp;&emsp;---引用国外某大学网站<br>
+&emsp;&emsp;通过这一段定义， 我们读到了几个模块测试的解释：<br>
+&emsp;&emsp;1、 首先， 这段定义认为模块测试与单元测试有细微的区别。<br>
+&emsp;&emsp;2、 模块测试是针对具有明显的功能特征的代码块进行的测试。<br>
+&emsp;&emsp;3、 并且， 它认为单元测试可能只涉及测试一小部分的功能。<br>
+&emsp;&emsp;4、 模块测试多数情况下由其它程序员或测试人员进行。 （嗯， 这一条是自己加的。 ）<br>
+&emsp;&emsp;通过对单元测试和模块测试的概念的分析， 读者是否对这两个概念有了更清晰的认识。 其实， 我们可以
+认为是同一个事物用不同的两个角度去解释。 单元测试更强调的是程序的最小可测试单元； 而且模块测试更
+强调所测试程序的功能完整性。<br>
+&emsp;&emsp;模块接口测试： 对于这个叫法并没有找到规范的概念， 它更多的只是一个口头概念。 其实它就是模块测
+试， 加上“接口” 两个字， 更强调了被测试的模块有规范的输入和输出。 因为这是一个可测试的模块最显著
+的特征之一。<br>
+## 7.3 接口测试
+&emsp;&emsp;关于接口的概念， 这里就不再引用一些资料中的定义了。 我根据自己的理解和认识大致把接口分为两类：
+程序接口和协议接口。<br>
+&emsp;&emsp;关于程序接口， 也可以看作是程序模块接口， 具体到程序中一般就是提供了输入输出的类、 方法或函数。
+对于程序接口的测试， 一般需要使用与开发程序接口相同的编程语言， 通过不同的传入不同的参数， 来验证
+程序接口的功能。<br>
+&emsp;&emsp;关于协议接口， 一般指系统通过不同的协议来提供的接口， 例如 HTTP/SOAP 协议等。 这种类型接口对
+底层代码做了封装， 通过协议的方式对外提供调用。 因为不涉及到程序层面， 所以， 不受编程语言的限制；
+我们可以通过其它编程语言或工具对其进行测试。 那么本书的重点也是对这类接口的测试。<br>
+### 7.3.1 接口的分类
+&emsp;&emsp;接口的大体分为以下三类：<br>
+- 系统与系统之间的接口
 
+![image](https://github.com/15529343201/guest/blob/chapter7/image/7.3.PNG)<br>
+&emsp;&emsp;系统与系统之间的接口， 这里可以是公司内部不同系统之间的接口调用， 也可以不同公司之间系统接口
+的调用。 对于前者来说， 笔者所测试 MAC 平台就是一个对公司内部提供接口的系统。 例如用户接口、 抽奖接
+口、 图片相册接口等。 而对于公司的其它系统， 如社区网站和微信活动可以调用这些接口快速的实现相应的
+功能。 而对于后者来说， 如微信， 微博所提供的第三方登录接口， 如果你开发的系统不想自建用户体系， 完
+全可以调用这些接口来实现用户的登录。<br>
+- 下层服务对上层服务的接口
 
+![image](https://github.com/15529343201/guest/blob/chapter7/image/7.4.PNG)<br>
+&emsp;&emsp;应用层， 从认知上你可以看成是系统所提供的 UI 层功能。 对于 Web 系统来说， 你可以认为是浏览器页面
+上所提供的功能， 登录、 注册、 查询、 删除等。<br>
+&emsp;&emsp;Service 层， 可以理解为服务器所提供数据和逻辑的处理。<br>
+&emsp;&emsp;DB 层， (Data Base) 数据库主要用来存放数据， 例如用户的个人信息， 商品的信息等。<br>
+&emsp;&emsp;访问对象， 它是一个面向对象的数据库访问接口。<br>
+&emsp;&emsp;举例来说明各层的工作过程， 首先是 Service 提供了一个查询接口， 这个接口需要一个参数（查询的关键
+字） ； 然后应用层提供了一个输入框， 需要用户输入查询关键字， 并且还提供了一个查询按钮用于提交查询
+的关键字。 当用户输入查询关键字并点击提交按钮后， 相当于调用的查询接口， 查询接口需要对用户提交的
+关键字做出相应的判断， 是否为空？ 然后， 通过 DAO 层调用数据库， 根据关键字查询表中的数据， 最后， 再
+将拿到的数据返回给应用层， 应用层负责将数据展示到 Web 页面上。<br>
+&emsp;&emsp;在这个过程中， 各层之间的交互就是通过接口， 应用层与 Service 主要通过 HTTP 接口。 Service 层与 DB
+层主要通过 DAO（Data Access Object） 数据库访问接口， 对于 Python 与 MySQL 之间的调用， 本书第四章中
+PyMySQL 驱动就扮演着这样的角色。<br>
+- 系统内， 服务与服务之间的调用
 
-
-
-
+![image](https://github.com/15529343201/guest/blob/chapter7/image/7.5.PNG)<br>
+&emsp;&emsp;系统内部， 服务与服务之间的调用， 大多情况下是程序之间的调用。<br>
+&emsp;&emsp;继续举例， 假设系统开发一个用户查询接口， 输入用户名， 返回用户信息（性别、 年龄、 手机号、 邮箱
+地址等） ， 如果用户不存在则返回 null； 现在需要新开发一个用户抽奖的接口， 该接口需要用户名和抽奖动 id，
+抽奖接口得到用户名后可以调用用户查询接口， 如果用户查询接口返回 null， 那么抽奖接口就可以直接返回用
+户不存在了。 在这个例子中， 用户抽奖接口就调用的用户查询接口。<br>
+&emsp;&emsp;那么这里的用户查询接口和抽奖接口本质上就是程序开发的函数或类方法， 提供入参与返回值。<br>
 
