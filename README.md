@@ -2751,6 +2751,273 @@ CSS、 和 JavaScript 等关心的是数据展示在哪里， 如何展示。<br
 &emsp;&emsp;显然， 这样的接口并不是直接给普通用户来使用的， 它一般为其它开者提供调用。 后端与前端开发之间，
 不同系统的开发之间， 以及不同公司的开发之间的调用。 至于调用接口数据的开发者如何使用这些数据， 对
 于接口开发者来说并不需要关心。<br>
+## 8.3 开发系统的 Web 接口
+&emsp;&emsp;了解的什么是 Web 接口， 以及它的作用。 那么接下来就针对发布会签到系统来开发 Web 接口。<br>
+### 8.3.1、 发布会添加接口
+&emsp;&emsp;首先， 单独创建.../sign/views_if.py 文件， 开发添加发布会接口。<br>
+views_if.py:<br>
+```Python
+from django.http import JsonResponse
+from sign.models import Event
+from django.core.exceptions import ValidationError
+
+
+# 添加发布会接口
+def add_event(request):
+    eid = request.POST.get('eid', '')  # 发布会 id
+    name = request.POST.get('name', '')  # 发布会标题
+    limit = request.POST.get('limit', '')  # 限制人数
+    status = request.POST.get('status', '')  # 状态
+    address = request.POST.get('address', '')  # 地址
+    start_time = request.POST.get('start_time', '')  # 发布会时间
+    if eid == '' or name == '' or limit == '' or address == '' or start_time == '':
+        return JsonResponse({'status': 10021, 'message': 'parameter error'})
+    result = Event.objects.filter(id=eid)
+    if result:
+        return JsonResponse({'status': 10022, 'message': 'event id already exists'})
+    result = Event.objects.filter(name=name)
+    if result:
+        return JsonResponse({'status': 10023, 'message': 'event name already exists'})
+    if status == '':
+        status = 1
+    try:
+        Event.objects.create(id=eid, name=name, limit=limit, address=address, status=int(status), start_time=start_time)
+    except ValidationError as e:
+        error = 'start_time format error. It must be in YYYY-MM-DD HH:MM:SS format.'
+        return JsonResponse({'status': 10024, 'message': error})
+    return JsonResponse({'status': 200, 'message': 'add event success'})
+```
+&emsp;&emsp;通过 POST 请求接收发布会参数： 发布会 id、 标题、 人数、 状态、 地址和时间等参数。<br>
+&emsp;&emsp;首先， 判断 eid、 name、 limit、 address、 start_time 等字段均不能为空， 否则 JsonResponse()返回相应的
+状态码和提示。 JsonResponse()是一个非常有用的方法， 它可以直接将字典转化成 Json 格式返回到客户端。<br>
+&emsp;&emsp;接下来， 判断发布会 id 是否存在， 以及发布会名称（name） 是否存在； 如果存在将返回相应的状态码和
+提示信息。<br>
+&emsp;&emsp;再接下来， 判断发布会状态是否为空， 如果为空， 将状态设置为 1（True） 。<br>
+&emsp;&emsp;最后， 将数据插入到 Event 表， 在插入的过程中如果日期格式错误， 将抛出 ValidationError 异常， 接收
+该异常并返回相应的状态和提示， 否则， 插入成功， 返回状态码 200 和“add event success” 的提示。<br>
+### 8.3.2、 发布会查询接口
+&emsp;&emsp;打开.../sign/views_if.py 文件， 添加发布会查询接口。<br>
+```Python
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+# 发布会查询
+def get_event_list(request):
+    eid = request.GET.get("eid", "")  # 发布会 id
+    name = request.GET.get("name", "")  # 发布会名称
+    if eid == '' and name == '':
+        return JsonResponse({'status': 10021, 'message': 'parameter error'})
+    if eid != '':
+        event = {}
+        try:
+            result = Event.objects.get(id=eid)
+        except ObjectDoesNotExist:
+            return JsonResponse({'status': 10022, 'message': 'query result is empty'})
+        else:
+            event['name'] = result.name
+            event['limit'] = result.limit
+            event['status'] = result.status
+            event['address'] = result.address
+            event['start_time'] = result.start_time
+            return JsonResponse({'status': 200, 'message': 'success', 'data': event})
+    if name != '':
+        datas = []
+        results = Event.objects.filter(name__contains=name)
+        if results:
+            for r in results:
+                event = {}
+                event['name'] = r.name
+                event['limit'] = r.limit
+                event['status'] = r.status
+                event['address'] = r.address
+                event['start_time'] = r.start_time
+                datas.append(event)
+            return JsonResponse({'status': 200, 'message': 'success', 'data': datas})
+        else:
+            return JsonResponse({'status': 10022, 'message': 'query result is empty'})
+```
+&emsp;&emsp;通过 GET 请求接收发布会 id 和 name 参数。 两个参数都是可选的。 首先， 判断当两个参数同时为空， 接
+口返回状态码 10021， 参数错误。<br>
+&emsp;&emsp;如果发布会 id 不为空， 优先通过 id 查询， 因为 id 的唯一性， 所以， 查询结果只会有一条， 将查询结果
+以 key:value 对的方式存放到定义的 event 字典中， 并将数据字典作为整个返回字典中 data 对应的值返回。<br>
+&emsp;&emsp;name 查询为模糊查询， 查询数据可能会有多条， 返回的数据稍显复杂； 首先将查询的每一条数据放到一
+个字典 event 中， 再把每一个字典再放到数组 datas 中， 最后再将整个数组做为返回字典中 data 对应的值返回。<br>
+### 8.3.3、 嘉宾添加接口
+&emsp;&emsp;打开.../sign/views_if.py 文件， 添加嘉宾添加接口。<br>
+```Python
+# 添加嘉宾接口
+def add_guest(request):
+    eid = request.POST.get('eid', '')  # 关联发布会 id
+    realname = request.POST.get('realname', '')  # 姓名
+    phone = request.POST.get('phone', '')  # 手机号
+    email = request.POST.get('email', '')  # 邮箱
+    if eid == '' or realname == '' or phone == '':
+        return JsonResponse({'status': 10021, 'message': 'parameter error'})
+    result = Event.objects.filter(id=eid)
+    if not result:
+        return JsonResponse({'status': 10022, 'message': 'event id null'})
+    result = Event.objects.get(id=eid).status
+    if not result:
+        return JsonResponse({'status': 10023, 'message': 'event status is not available'})
+    event_limit = Event.objects.get(id=eid).limit  # 发布会限制人数
+    guest_limit = Guest.objects.filter(event_id=eid)  # 发布会已添加的嘉宾数
+    if len(guest_limit) >= event_limit:
+        return JsonResponse({'status': 10024, 'message': 'event number is full'})
+    event_time = Event.objects.get(id=eid).start_time  # 发布会时间
+    etime = str(event_time).split(".")[0]
+    timeArray = time.strptime(etime, "%Y-%m-%d %H:%M:%S")
+    e_time = int(time.mktime(timeArray))
+    now_time = str(time.time())  # 当前时间
+    ntime = now_time.split(".")[0]
+    n_time = int(ntime)
+    if n_time >= e_time:
+        return JsonResponse({'status': 10025, 'message': 'event has started'})
+    try:
+        Guest.objects.create(realname=realname, phone=int(phone), email=email, sign=0, event_id=int(eid))
+    except IntegrityError:
+        return JsonResponse({'status': 10026, 'message': 'the event guest phone number repeat'})
+    return JsonResponse({'status': 200, 'message': 'add guest success'})
+```
+&emsp;&emsp;通过 POST 请求接收嘉宾参数： 关联的发布会 id、 姓名、 手机号和邮箱等参数。<br>
+&emsp;&emsp;首先， 判断 eid、 realname、 phone 等参数均不能为空。<br>
+&emsp;&emsp;接下来， 判断嘉宾关联的发布会 id 是否存在， 以及关联的发布会状态是否为 True（即 1） ， 如果不存在
+或不为 True， 将返回相应的状态码和提示信息。<br>
+&emsp;&emsp;再接下来的步骤是判断当前时间是否大于发布会时间， 如果大于则说明发布已开始， 或者早已经结束。
+那么该发布会就应该不能允许再添加嘉宾。<br>
+&emsp;&emsp;最后， 插入嘉宾数据， 如果发布会的手机号重复则抛 IntegrityError 异常， 接收该异常并返回相应的状态
+码和提示信息。 如果添加成功， 则返回状态码 200 和“add guest success” 的提示。<br>
+### 8.3.4、 嘉宾查询接口
+&emsp;&emsp;打开.../sign/views_if.py 文件， 继续添加嘉宾查询接口。<br>
+```Python
+# 嘉宾查询接口
+def get_guest_list(request):
+    eid = request.GET.get("eid", "")  # 关联发布会 id
+    phone = request.GET.get("phone", "")  # 嘉宾手机号
+    if eid == '':
+        return JsonResponse({'status': 10021, 'message': 'eid cannot be empty'})
+    if eid != '' and phone == '':
+        datas = []
+        results = Guest.objects.filter(event_id=eid)
+        if results:
+            for r in results:
+                guest = {}
+                guest['realname'] = r.realname
+                guest['phone'] = r.phone
+                guest['email'] = r.email
+                guest['sign'] = r.sign
+                datas.append(guest)
+            return JsonResponse({'status': 200, 'message': 'success', 'data': datas})
+        else:
+            return JsonResponse({'status': 10022, 'message': 'query result is empty'})
+    if eid != '' and phone != '':
+        guest = {}
+        try:
+            result = Guest.objects.get(phone=phone, event_id=eid)
+        except ObjectDoesNotExist:
+            return JsonResponse({'status': 10022, 'message': 'query result is empty'})
+        else:
+            guest['realname'] = result.realname
+            guest['phone'] = result.phone
+            guest['email'] = result.email
+            guest['sign'] = result.sign
+            return JsonResponse({'status': 200, 'message': 'success', 'data': guest})
+```
+### 8.3.5、 嘉宾签到接口
+&emsp;&emsp;打开.../sign/views_if.py 文件， 添加嘉宾签到接口。<br>
+```Python
+# 嘉宾签到接口
+def user_sign(request):
+    eid = request.POST.get('eid', '')  # 发布会 id
+    phone = request.POST.get('phone', '')  # 嘉宾手机号
+    if eid == '' or phone == '':
+        return JsonResponse({'status': 10021, 'message': 'parameter error'})
+    result = Event.objects.filter(id=eid)
+    if not result:
+        return JsonResponse({'status': 10022, 'message': 'event id null'})
+    result = Event.objects.get(id=eid).status
+    if not result:
+        return JsonResponse({'status': 10023, 'message': 'event status is not available'})
+    event_time = Event.objects.get(id=eid).start_time  # 发布会时间
+    etime = str(event_time).split(".")[0]
+    timeArray = time.strptime(etime, "%Y-%m-%d %H:%M:%S")
+    e_time = int(time.mktime(timeArray))
+    now_time = str(time.time())  # 当前时间
+    ntime = now_time.split(".")[0]
+    n_time = int(ntime)
+    if n_time >= e_time:
+        return JsonResponse({'status': 10024, 'message': 'event has started'})
+    result = Guest.objects.filter(phone=phone)
+    if not result:
+        return JsonResponse({'status': 10025, 'message': 'user phone null'})
+    result = Guest.objects.filter(event_id=eid, phone=phone)
+    if not result:
+        return JsonResponse({'status': 10026, 'message': 'user did not participate in the conference'})
+    result = Guest.objects.get(event_id=eid, phone=phone).sign
+    if result:
+        return JsonResponse({'status': 10027, 'message': 'user has sign in'})
+    else:
+        Guest.objects.filter(event_id=eid, phone=phone).update(sign='1')
+        return JsonResponse({'status': 200, 'message': 'sign success'})
+```
+&emsp;&emsp;签到接口通过 POST 请求接收发布会 id 和嘉宾手机号。 签到接口的判断条件比较多。<br>
+&emsp;&emsp;首先， 判断两个参数均不能为空。<br>
+&emsp;&emsp;接着， 判断发布会 id 是否存在， 以及发布会状态是否为 True， 如果不存在或不为 True， 将返回相应的状
+态码和提示信息。<br>
+&emsp;&emsp;再接着， 判断当前时间是否大于发布会时间， 如果大于发布会时间说明发布会已开始， 不允许签到。<br>
+&emsp;&emsp;然后， 再判断嘉宾的手机号是否存在， 以及嘉宾的手机号与发布会 id 是否为对应关系。 否则返回相应的
+错误码和提示信息。<br>
+&emsp;&emsp;最后， 判断该嘉宾的状态是否为已签到， 如果已签到， 返回相应的状态码和提示； 如果未签到修改状态
+为已签到， 并返回状态码 200 和“sign success” 的提示。<br>
+### 8.3.6、 配置接口路径
+&emsp;&emsp;当所有接口都已经开发完成， 需要配置接口的访问路径。<br>
+&emsp;&emsp;打开.../guest/urls.py 文件， 添加接口基本路径“/api/” ：<br>
+urls.py:<br>
+```Python
+from django.conf.urls import url, include
+urlpatterns = [
+......
+    url(r'^api/', include('sign.urls', namespace="sign")),
+]
+```
+&emsp;&emsp;创建.../sign/urls.py 文件， 配置具体接口的二级路径。<br>
+```Python
+from django.conf.urls import url
+from sign import views_if
+
+urlpatterns = [
+    # guest system interface:
+    # ex : /api/add_event/
+    url(r'^add_event/', views_if.add_event, name='add_event'),
+    # ex : /api/add_guest/
+    url(r'^add_guest/', views_if.add_guest, name='add_guest'),
+    # ex : /api/get_event_list/
+    url(r'^get_event_list/', views_if.get_event_list, name='get_event_list'),
+    # ex : /api/get_guest_list/
+    url(r'^get_guest_list/', views_if.get_guest_list, name='get_guest_list'),
+    # ex : /api/user_sign/
+    url(r'^user_sign/', views_if.user_sign, name='user_sign'),
+]
+```
+## 8.4 编写 Web 接口文档
+&emsp;&emsp;编写接口文档是接口开发非常重要的一个环节， 因为开发的接口是给其它开发人员调用的， 那么其它开
+发如何知道我们的开发的接口怎么调用？ 当然需要通过查看接口文档了。 那么对接口文档就必须要做到内容
+准确， 以及当接口变动时要实时更新。<br>
+&emsp;&emsp;1、 添加发布会接口<br>
+![image](https://github.com/15529343201/guest/blob/chapter8/image/8.5.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter8/image/8.6.PNG)<br>
+&emsp;&emsp;2、 添加嘉宾接口<br>
+![image](https://github.com/15529343201/guest/blob/chapter8/image/8.7.PNG)<br>
+&emsp;&emsp;3、 查询发布会接口<br>
+![image](https://github.com/15529343201/guest/blob/chapter8/image/8.8.PNG)<br>
+&emsp;&emsp;4、 查询嘉宾接口<br>
+![image](https://github.com/15529343201/guest/blob/chapter8/image/8.9.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter8/image/8.10.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter8/image/8.11.PNG)<br>
+&emsp;&emsp;5、 嘉宾签到接口<br>
+![image](https://github.com/15529343201/guest/blob/chapter8/image/8.12.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter8/image/8.13.PNG)<br>
+&emsp;&emsp;接口文档的形式也可以是多样的， 这里做成了 Word 文档的形式， 除此之外， 我们还可以将其做在线 Wike
+的形式。<br>
+
+
 
 
 
