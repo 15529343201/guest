@@ -3061,14 +3061,79 @@ soapUI 等工具。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter9/image/9.8.PNG)<br>
 &emsp;&emsp;相对于 Poster 来说， Postman 功能更为强大一些， 使用也更加广泛， 网上也很容易找到使用教程。 在开发
 Web 接口时， 通过这两款工具来测试接口的实现是个很不错的选择。<br>
-
-
-
-
-
-
-
-
-
-
-
+### 9.2.1、 安装 Jmeter
+&emsp;&emsp;Jmeter 官方网址： http://jmeter.apache.org/<br>
+&emsp;&emsp;相信你可以在官网上找到下载地址并把它下载下来。 Jmeter 由 Java 语言开发， 最新的 Jmeter3.0 版本的
+运行需要有 Java 7 或之后版本的环境。<br>
+&emsp;&emsp;接下来，将下载的 apache-jmeter-3.0.zip 解压，进入解压目录.../apache-jmeter-3.0/bin 。双击 ApacheJMeter.jar
+启动， 如图 9.10：<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.9.PNG)<br>
+### 9.2.2、 添加 HTTP 接口测试
+&emsp;&emsp;打开 Jmeter 工具， 按照下面的步骤来创建一个 HTTP 接口测试。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.10.PNG)<br>
+&emsp;&emsp;如图 9.11， 右键点击“测试计划” -->“添加” -->“Threads(Users)” -->“线程组” 。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.11.PNG)<br>
+&emsp;&emsp;如图 9.12 设置线程组， 线程组主要包含三个参数： 线程数、 准备时长（Ramp-Up Period(in seconds)） 、
+循环次数。<br>
+&emsp;&emsp;线程数： 虚拟用户数。 一个虚拟用户占用一个进程或线程。 设置多少虚拟用户数在这里也就是设置多少
+个线程数。<br>
+&emsp;&emsp;准备时长： 设置的虚拟用户数全部启动的时长。 如果线程数为 20 ， 准备时长为 10（秒） ， 那么需要 10
+秒钟启动 20 个线程。 也就是平均每秒启动 2 个线程。<br>
+&emsp;&emsp;循环次数： 每个线程发送请求的个数。 如果线程数为 20 ， 循环次数为 100 ， 那么每个线程发送 100 次请
+求。 总请求数为 20*100=2000 。 如果勾选了“永远” ， 那么所有线程会一直发送请求， 直到手动点击工具栏
+上的停止按钮， 或者设置的线程时间结束。<br>
+&emsp;&emsp;因为这里要做接口功能测试， 所以各个参数均为 1。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.12.PNG)<br>
+&emsp;&emsp;如图 9.13， 右键点击“线程组” -->“添加” -->“Sampler” -->“HTTP 请求” 。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.13.PNG)<br>
+&emsp;&emsp;名称： 本属性用于标识一个取样器， 建议使用一个有意义的名称。<br>
+&emsp;&emsp;注释： 对于测试没有任何作用， 仅用于记录用户可读的注释信息。<br>
+&emsp;&emsp;服务器名称或 IP ： HTTP 请求发送的目标服务器名称或 IP 地址。<br>
+&emsp;&emsp;端口号： 目标服务器的端口号， 默认值为 80 。<br>
+&emsp;&emsp;协议： 向目标服务器发送 HTTP 请求时的协议， 可以是 HTTP 或者是 HTTPS ， 默认值为 http 。<br>
+&emsp;&emsp;方法： 发送 HTTP 请求的方法， 可用方法包括 GET、 POST、 HEAD、 PUT、 OPTIONS、 TRACE、 DELETE
+等。<br>
+&emsp;&emsp;Content encoding ： 内容的编码方式， 默认值为 iso8859<br>
+&emsp;&emsp;路径： 目标 URL 路径（不包括服务器地址和端口）<br>
+&emsp;&emsp;自动重定向： 如果选中该选项， 当发送 HTTP 请求后得到的响应是 302/301 时， JMeter 自动重定向到新
+的页面。<br>
+&emsp;&emsp;Use keep Alive ： 当该选项被选中时， jmeter 和目标服务器之间使用 Keep-Alive 方式进行 HTTP 通信，
+默认选中。<br>
+&emsp;&emsp;Use multipart/from-data for HTTP POST ： 当发送 HTTP POST 请求时， 使用 Use multipart/from-data 方
+法发送， 默认不选中。<br>
+&emsp;&emsp;同请求一起发送参数 ： 在请求中发送 URL 参数， 对于带参数的 URL ， Jmeter 提供了一个简单的参数化
+的方法。 用户可以将 URL 中所有参数设置在本表中， 表中的每一行是一个参数值对（对应 RUL 中的 名称 1=
+值 1） 。<br>
+&emsp;&emsp;接下来， 添加“察看结果树” 。 如图 9.15， 右键点击“线程组” -->“添加” -->“监听器” -->“察看结
+果树” 。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.14.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.15.PNG)<br>
+### 9.2.3、 添加 GET/POST 请求
+&emsp;&emsp;在 HTTP 请求元件中添加 GET/POST 请求。<br>
+&emsp;&emsp;首先， 添加一个 GET 请求类型的 HTTP 协议接口。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.16.PNG)<br>
+&emsp;&emsp;图 9.17， 填写选项如下表（获取嘉宾信息） ：<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.17.PNG)<br>
+&emsp;&emsp;再次添加一下“HTTP 请求” ， 填写内容如下表（添加嘉宾信息） ：<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.18.PNG)<br>
+&emsp;&emsp;执行测试， 点击工具栏“启动” 按钮运行测试， 并查看结果树。 如图 9.18。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.19.PNG)<br>
+### 9.2.4、 添加断言
+&emsp;&emsp;对于自动化测试来说， 断言必须必不可少， 如果没有断言只能人工比对接口返回的数据， 如果接口很多，
+这种过程就会非常耗时， 而且也容易出错。 Jmeter 提供了丰富的断言策略来帮助我们完成这项工作。<br>
+&emsp;&emsp;如图 9.19， 右键点击 HTTP 请求“添加” -->“断言” -->“响应断言” 。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.20.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.21.PNG)<br>
+&emsp;&emsp;要测试的响应字段： 响应文本、 Document(text)、 URL 样本、 响应信息、 Response Headers、 Lgnore Staus
+等选项。 虽然接口返回的是 Json 格式的数据， 但对于 Jmeter 来说返回数据为文本， 所以， 这里可以勾选“响
+应文本”<br>
+&emsp;&emsp;模式匹配规则： 包括、 匹配、 Equals、 Substring。 这里只需要验证返回数据中是否包含主要的关键字， 所
+以， 这里勾选“包括” 。<br>
+&emsp;&emsp;要测试的模式： 其实就是断言的数据。 点击“添加” 按钮， 输入要断言的数据。<br>
+&emsp;&emsp;对于获取嘉宾信息的断言，可以添加模糊匹配，“200”、“success”以及查询到的嘉宾手机号“13511001100”。<br>
+&emsp;&emsp;对于添加嘉宾信息的断言， 可以模糊匹配， “200” 、 “add guest success” 等信息。<br>
+&emsp;&emsp;添加断言过后， 再次点击工具栏的“启动” 按钮， 运行测试。 通过“全部清除” 按钮可以清除掉上一次
+运行的结果。<br>
+## 9.3 Robot Framework 测试框架
+&emsp;&emsp;Robot Framework 的架构是一个通用型的验收测试和验收测试驱动开发的自动化测试框架（ATDD） 。 它
+具有易于使用的表格来组织测试过程和测试数据。<br>
