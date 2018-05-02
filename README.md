@@ -1392,15 +1392,128 @@ Superuser created successfully.
 - Navicat
 - SQLyog
 
+# chapter5 Django 模板
+&emsp;&emsp;https://github.com/defnngj/guest<br>
+## 5.1 Django-bootstrap3
+&emsp;&emsp;Django-bootstrap3 pypi 仓库地址： https://pypi.python.org/pypi/django-bootstrap3<br>
+&emsp;&emsp;1、 通过 Python 的 pip 命令安装：<br>
+&emsp;&emsp;`C:\pydj\guest>python3 -m pip install django-bootstrap3`<br>
+&emsp;&emsp;2、 在.../guest/settings.py 文件中添加“bootstrap3” 应用。<br>
+settings.py:<br>
+```
+# Application definition
 
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'sign',
+    'bootstrap3',
+]
+```
+## 5.2 发布会管理
+### 5.2.1、 发布会列表
+&emsp;&emsp;继续回到视图的开发中， 打开.../sign/views.py 文件， 修改 event_manage()视图函数。<br>
+views.py:<br>
+```Python
+# 发布会管理
+@login_required
+def event_manage(request):
+    event_list = Event.objects.all()
+    username= request.session.get('user','') # 读取浏览器session
+    return render(request, "event_manage.html",{"user":username,"events":event_list})
+```
+&emsp;&emsp;Event.objects.all() 用于查询所有发布会对象（数据） ， 通过 render()函数附加在 event_manage.html 页面
+返回给客户端浏览器。<br>
+&emsp;&emsp;打开并编写.../templates/event_manage.html 页面。<br>
+event_manage.html:<br>
+```html
+<html lang="zh-CN">
+    <head>
+        {% load bootstrap3 %}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+        <title>Event Manage</title>
+    </head>
+    <body role="document">
+        <!--导航栏-->
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="/event_manage/">Guest Manage System</a>
+                </div>
+                <div id="navbar" class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav">
+                        <li class="active"><a href="#">发布会</a></li>
+                        <li><a href="/guest_manage/">嘉宾</a></li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="#">{{ user }}</a></li>
+                        <li><a href="/logout/">退出</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
 
-
-
-
-
-
-
-
+        <!--发布会列表-->
+        <div class="row" style="padding-top: 80px;">
+            <div class="col-md-6">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>id</th><th>名称</th><th>状态</th><th>地址</th><th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}
+                            <tr>
+                                <td>{{ event.id }}</td>
+                                <td>{{ event.name }}</td>
+                                <td>{{ event.status }}</td>
+                                <td>{{ event.address }}</td>
+                                <td>{{ event.start_time }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>
+```
+&emsp;&emsp;对于 BootStrap 框架来说， 它主要通过 class 属性来设置 HTML 标签的样式。<br>
+&emsp;&emsp;`{% load bootstrap3 %}`<br>
+&emsp;&emsp;`{% bootstrap_css %}`<br>
+&emsp;&emsp;`{% bootstrap_javascript %}`<br>
+&emsp;&emsp;加载 Bootstrap3 应用， CSS 和 JavaScript 文件。 ｛% %｝ 为 Django 的模板标签， Django 的模板语言将会
+在该标签下编写。<br>
+&emsp;&emsp;`<title>Guest Manage</title>`<br>
+&emsp;&emsp;设置页面标题为 Guest Manage。<br>
+&emsp;&emsp;`<li class="active"><a href="#">发布会</a></li>`<br>
+&emsp;&emsp;`<li><a href="/guest_manage/">嘉宾</a></li>`<br>
+&emsp;&emsp;设置页面导航栏， class="active" 表示， 当前菜单处于选中状态。 href="/guest_manage/" 用于跳转到到嘉
+宾管理页， 我们稍后完善该页面。<br>
+&emsp;&emsp;`<li><a href="#">{{ user }}</a></li>`<br>
+&emsp;&emsp;`<li><a href="/logout/">退出</a></li>`<br>
+&emsp;&emsp;{{ }} Django 的模板标签， 用于定义显示变量。 这里将会通过浏览器 sessionid 获取到对应的登录用户名，
+并显示。 href="/logout/" 定义退出路径， 稍后完善该功能。<br>
+```html
+{% for event in events %}
+<tr>
+<td>{{ event.id }}</td>
+<td>{{ event.name }}</td>
+<td>{{ event.status }}</td>
+<td>{{ event.address }}</td>
+<td>{{ event.start_time }}</td>
+</tr>
+{% endfor %}
+```
+&emsp;&emsp;Django 模板语言， 用于循环打印发布的 id、 name、 status、 address 和 start_time 等字段。 Django 模板语
+言与 Python 有所不同。 for 语句需要有对应 endfor 来表示语句的结束， 同样， if 分支语句也需要 endif 来表示
+语句的结束。<br>
 
 
 
