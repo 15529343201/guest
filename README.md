@@ -1959,40 +1959,342 @@ def logout(request):
 &emsp;&emsp;Django 不单单为我们提供了方便的 auth.login()函数用于登录，还为我们准备了 auth.logout()函数用于系统
 的退出， 它可以帮我们清除掉浏览器保存的用户信息， 所以， 我们不用再考虑如何删除浏览器 cookie 等问题
 了<br>
+# chapter6 Django 测试
+## 6.1 unittest framework
+&esmp;&emsp;在学习 Django 单元测试之前， 我们先来学习一下 unittest 单元测试框架。 首先， 更新一个误区， 单元测
+试框架不单单只适用于程序单元级别的测试。<br>
+&esmp;&emsp;一般单元测试框架主要完成以下几件事儿：<br>
+&esmp;&emsp;提供用例组织与执行： 当你的测试用例只有几条时， 可以不必考虑用例的组织， 但是， 当测试用例达到
+成百上千条时， 大量的测试用例堆砌在一起， 就产生了扩展性与维护性等问题， 需要考虑用例的规范与组织
+问题了。 单元测试框架就是用来解决这个问题的。<br>
+&esmp;&emsp;提供丰富的比较方法： 不论是功能测试， 还是单元测试， 在用例执行完成之后都需要将实际结果与进行
+预期结果的进行比较（断言） ， 从而断定用例是否执行通过。 所以， 作为单元测试框架一般也会提供丰富的
+断言方法。 例如， 判断相等/不等、 包含/不包含、 Trure/False 的断言方法等。<br>
+&esmp;&emsp;提供丰富的日志： 当测试用例执行失败时能抛出清晰的失败原因， 当所有用例执行完成后能提供丰富的
+执行情况结果信息。 例如， 总执行时间、 失败用例数、 成功用例数等。<br>
+&esmp;&emsp;从这几点来看， 单元测试框架可以帮助我们完成任何级别测试的自动化。<br>
+&esmp;&emsp;单元测试： unittest<br>
+&esmp;&emsp;HTTP 接口自动化测试： unittest + Requests<br>
+&esmp;&emsp;Web UI 自动化测试： unittest + Selenium<br>
+&esmp;&emsp;移动自动化测试： unittest + Appium<br>
+&esmp;&emsp;例如， 开发一了个简单的计算器， 用于两个数的加、 减、 乘、 除， 功能代码如下。<br>
+count.py:<br>
+```
+'''
+Author:shiyongchao
+Date: 2018/5/2
+Describe:实现简单计算器:+,-,*,/
+'''
 
 
+class Calculator():
+    '''
+    实现两个数的加
+    '''
+
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+    # 加法
+    def add(self):
+        return self.a + self.b
+
+    # 减法
+    def sub(self):
+        return self.a - self.b
+
+    # 乘法
+    def mul(self):
+        return self.a * self.b
+
+    # 除法
+    def div(self):
+        return self.a / self.b
+```
+&emsp;&emsp;首先， 需要说明的是， 不用单元测试框架一样可以做单元测试。 使用单元测试框架来做单元测试的优点
+是由测试更加规范和简单。 回顾前面关于单元测试框架所完成的几件事。<br>
+&emsp;&emsp;那么， 通过 unittest 单元测试框架如何编写测试用例。<br>
+test_count.py:<br>
+```import unittest
+from count import Calculator
 
 
+class CountTest(unittest.TestCase):
+    def setUp(self):
+        self.cal = Calculator(8, 4)
+
+    def tearDown(self):
+        pass
+
+    def test_add(self):
+        result = self.cal.add()
+        self.assertEqual(result, 12)
+
+    def test_sub(self):
+        result = self.cal.sub()
+        self.assertEqual(result, 4)
+
+    def test_mul(self):
+        result = self.cal.mul()
+        self.assertEqual(result, 32)
+
+    def test_div(self):
+        result = self.cal.div()
+        self.assertEqual(result, 2)
 
 
+if __name__ == "__main__":
+    # unittest.main()
+    # 构造测试集
+    suite = unittest.TestSuite()
+    suite.addTest(CountTest("test_add"))
+    suite.addTest(CountTest("test_sub"))
+    suite.addTest(CountTest("test_mul"))
+    suite.addTest(CountTest("test_div"))
+    # 执行测试
+    runner = unittest.TextTestRunner()
+    runner.run(suite)
+```
+&emsp;&emsp;首先从感官上来看， 通过 unittest 单元测试框架编写测试用例更加规范和整洁。 接下来， 分析一下 unittest单元测试用例。<br>
+&emsp;&emsp;首先， 通过 import 导入 unittest 单元测试框架。<br>
+&emsp;&emsp;创建 CountTest 类继承 unittest.TestCase 类。<br>
+&emsp;&emsp;setUp()和 tearDown()在单元测试框架中比较特别， 它们分别在每一个测试用例的开始和结束执行。setUp()
+方法用于测试用例执行前的初始化工作， 例如初始化变量、 生成数据库测试数据、 打开浏览器等。 tearDown()
+方法与 setUp()方法相呼应， 用于测试用例执行之后的善后工作， 例如清除数据库测试数据、 关闭文件、 关闭
+浏览器等。<br>
+&emsp;&emsp;unittest 要求测试方法必须以“test” 开头。 例如， test_add、 test_sub 等。<br>
+&emsp;&emsp;接下来， 调用 unittest.TestSuite()类中的 addTest()方法向测试套件中添加测试用例。 简单的可以将测试套
+件理解成运行测试用例的集合。<br>
+&emsp;&emsp;通过 unittest.TextTestRunner()类中的 run()方法运行测试套件中的测试用例。<br>
+&emsp;&emsp;如果想默认运行当前测试文件下的所有测试用例， 可以直接使用 unittest.main()方法。 那么 main()方法在
+查找测试用例时按照两个规则。 首先， 该测试类必须继承 unittest.TestCase 类； 其次， 该测试类下面的方法必
+须以“test” 开头。<br>
+&emsp;&emsp;最后， 执行结果如下：<br>
+```
+> python3 test_count.py
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+OK
+```
+&emsp;&emsp;从执行结果可以看到通过一个小点“.” 来表示一条运行通过的用例， 总共运行 4 条测试用例， 用时 0.001
+秒。<br>
+https://docs.python.org/3/library/unittest.html<br>
+## 6.2 Testing in Django
+&emsp;&emsp;对于 Web 开发人员来说， 自动化测试是一个非常有用的发现 bug 的手段。 您可以使用一个测试集合或一
+个测试套件来解决， 或避免一些问题：<br>
+&emsp;&emsp;当你编写新的代码， 你可以使用测试来验证你的代码是否按预期工作。<br>
+&emsp;&emsp;当你重构或修改旧代码， 你可以使用测试， 以确保您的更改不会影响您的应用程序的行为意外。<br>
+&emsp;&emsp;测试一个 Web 应用是一项复杂的任务， 因为在 Web 应用程序是由逻辑几层 - 从 HTTP 的级请求处理，<br>
+以形成验证和处理， 以模板渲染。 随着 Django 的测试执行框架和各种实用工具， 可以模拟请求， 插入测试数
+据， 检查您的应用程序的输出， 一般检查你的代码是做什么的， 应该做的事情。<br>
+&emsp;&emsp;Django 使用的是内置于 Python 标准库中的 unittest 单元测试框架。 您也可以使用任何其他的 Python 测试
+框架； Django 提供了一个 API 和工具， 可以融合其它的单元测试框架。<br>
+### 6.2.1、 A simple example
+&emsp;&emsp;Django 的单元测试使用 Python 标准库模块： unittest。 该模块定义使用基于类的方法测试。 在我们创建
+Django 应用时， 默认已经帮我们生成了 tests.py 文件， 打开.../sign/tests.py 文件， 编写测试如下代码：<br>
+```Python
+from django.test import TestCase
+from sign.models import Event, Guest
 
 
+# Create your tests here.
+class ModelTest(TestCase):
+    def setUp(self):
+        Event.objects.create(id=1, name="oneplus 3 event", status=True, limit=2000, address='shenzhen',
+                             start_time='2016-08-31 02:18:22')
+        Guest.objects.create(id=1, event_id=1, realname='alen', phone='13711001101', email='alen@mail.com', sign=False)
 
+    def test_event_models(self):
+        result = Event.objects.get(name="oneplus 3 event")
 
+        self.assertEqual(result.address, "shenzhen")
+        self.assertTrue(result.status)
 
+    def test_guest_models(self):
+        result = Guest.objects.get(phone='13711001101')
 
+        self.assertEqual(result.realname, "alen")
+        self.assertFalse(result.sign)
+```
+&emsp;&emsp;我们以测试发布会和嘉宾模型为例， 如果不清楚该模型的字段和在 Django 中的操作， 请回到本书的第四
+章进行学习。<br>
+&emsp;&emsp;分析一下测试用例的实现：<br>
+&emsp;&emsp;首先， 创建 ModelTest 类， 继承 django.test 的 TestCase 测试类。<br>
+&emsp;&emsp;然后， 在 setUp()初始化方法中， 创建一条发布会和嘉宾数据。<br>
+&emsp;&emsp;最后， 通过 test_event_models()和 test_guest_models()测试方法， 分别查询两张表的数据， 断言表中的数
+据是否正确。<br>
+&emsp;&emsp;执行测试用例， 切换到项目的根目录下， 通过 manage.py 所提供的“test” 命令运行测试。<br>
+&emsp;&emsp;`D:\pydj\guest>python3 manage.py test`<br>
+```
+Creating test database for alias 'default'...
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.216s
+OK
+Destroying test database for alias 'default'...
+```
+&emsp;&emsp;Django 在执行 setUp()方法中的数据库初始化时， 并非真正的向数据库表中插入了数据。 所以， 数据库并
+不会因为运行测试而产生测试数据。<br>
+&emsp;&emsp;当用例执行失败时又是怎样的呢？ 修改用例中的预期结果， 你可以试着把断言结果由"shenzhen"改为
+"beijing"， 再次执行测试。<br>
+```
+D:\pydj\guest>python3 manage.py test
+Creating test database for alias 'default'...
+F.
+======================================================================
+FAIL: test_event_models (sign.tests.ModelTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+    File "D:\pydj\guest\sign\tests.py", line 15, in test_event_models
+        self.assertEqual(result.address, "beijing")
+AssertionError: 'shenzhen' != 'beijing'
+- shenzhen
++ beijing
+----------------------------------------------------------------------
+Ran 2 tests in 0.183s
+FAILED (failures=1)
+Destroying test database for alias 'default'...
+```
+&emsp;&emsp;从上面的提示信息中， 将会很容易就可以找到错误的原因。<br>
+### 6.2.2、 Run test case
+&emsp;&emsp;当编写完测试， 最简单的方式是通过 manage.py 中“test” 命令来直接执行所有测试。 但是编写的测试用
+例越来越多的时候， 测试运行的情况就复杂起， 比如要指定特定的测试模块， 或测试类， 又或者想执行测试
+文件名包含了“test” 的文件。<br>
+&emsp;&emsp;通过参数可以控制 Django 项目不同级别的测试。<br>
+&emsp;&emsp;运行 sign 应用下的所有测试用例：<br>
+```
+D:\pydj\guest>python3 manage.py test sign
+Creating test database for alias 'default'...
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.283s
+OK
+Destroying test database for alias 'default'...
+```
+&emsp;&emsp;运行 sign 应用下的 tests.py 测试文件：<br>
+```
+D:\pydj\guest>python3 manage.py test sign.tests
+Creating test database for alias 'default'...
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.308s
+OK
+Destroying test database for alias 'default'...
+```
+&emsp;&emsp;运行 sign 应用 tests.py 测试文件下的 ModelTest 测试类：<br>
+```
+D:\pydj\guest>python3 manage.py test sign.tests.ModelTest
+Creating test database for alias 'default'...
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.304s
+OK
+Destroying test database for alias 'default'...
+```
+&emsp;&emsp;下面执行 ModelTest 测试类下面的 test_event_models 测试方法（用例） ：<br>
+```
+D:\pydj\guest>python3 manage.py test sign.tests.ModelTest.test_event_models
+Creating test database for alias 'default'...
+.-
+---------------------------------------------------------------------
+Ran 1 test in 0.226s
+OK
+Destroying test database for alias 'default'...
+```
+&emsp;&emsp;除此之外， 我们还可以使用 -p （或 --pattern） 参数模糊匹配测试文件：<br>
+```
+D:\pydj\guest>python3 manage.py test -p test*.py
+Creating test database for alias 'default'...
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.185s
+OK
+Destroying test database for alias 'default'...
+```
+&emsp;&emsp;指定匹配运行的测试文件--->test*.py， 匹配以“test” 开头， 以“.py” 结尾的测试文件。<br>
+## 6.3 The test views
+&emsp;&emsp;客户端测试是一个 Python 类， 它充当一个虚拟的网络浏览器， 让您测试您的视图层， 并与你的 Django的应用程序编程方式进行交互。<br>
+&emsp;&emsp;客户端测试可以做的事情：<br>
+ 模拟“GET” 和“POST” 请求， 观察响应结果--从 HTTP(headers， status codes)到页面内容.<br>
+ 检查重定向链(如果有的话)， 在每一步检查 URL 和 status code。<br>
+ 用一个包括特定值的模板 context 来测试一个 request 被 Django 模板渲染。<br>
+&emsp;&emsp;进入 Django Shell 模式 ， 建立测试环境：<br>
+```
+D:\pydj\guest>python3 manage.py shell
+Python 3.5.0 (v3.5.0:374f501f4567, Sep 13 2015, 02:27:37) [MSC v.1900 64 bit (AMD64)]
+on win32
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+>>>
+>>> from django.test.utils import setup_test_environment
+>>> setup_test_environment()
+```
+&emsp;&emsp;setup_test_environment()用测试前的初始化测试环境。<br>
+&emsp;&emsp;导入 Client()测试类， 测试登录视图：<br>
+```
+>>> from django.test import Client
+>>> c = Client()
+>>> response = c.get('/index/')
+>>> response.status_code
+200
+```
+&emsp;&emsp;Client()类提供的 get()和 post()方法可以模式 GET/POST 请求。 通过 get()请求“/index/” 路径， 即为登录
+页面， 得到的返回码为 200， 表示成功。<br>
+### 6.3.1、 Test Index
+&emsp;&emsp;接下来打开.../sign/tests.py 文件， 编写测试用例。<br>
+```Python
+class IndexPageTest(TestCase):
+    '''测试index登录首页'''
 
+    def test_index_page_renders_index_template(self):
+        '''测试index视图'''
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'index.html')
+```
+&emsp;&emsp;client.get()方法从 TestCase 父类继承而来， 用于请求一个路径， assertEqual()服务器对客户端的应答是否
+为 200， assertTemplateUsed()断言是否用给定的是 index.html 模版响应。<br>
+### 6.3.2、 Test Login action
+&emsp;&emsp;继续在.../sign/tests.py 文件中编写登录测试用例。<br>
+```Python
+class LoginActionTest(TestCase):
+    '''测试登录函数'''
 
+    def setUp(self):
+        User.objects.create_user('admin', 'admin@mail.com', 'admin123456')
+        self.c = Client()
 
+    def test_login_action_username_password_null(self):
+        '''用户名密码为空'''
+        test_data = {'username': '', 'password': ''}
+        response = self.c.post('/login_action/', data=test_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"username or password error!", response.content)
 
+    def test_login_action_username_password_error(self):
+        ''' 用户名密码错误 '''
+        test_data = {'username': 'abc', 'password': '123'}
+        response = self.c.post('/login_action/', data=test_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"username or password error!", response.content)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    def test_login_action_success(self):
+        ''' 登录成功 '''
+        test_data = {'username': 'admin', 'password': 'admin123456'}
+        response = self.c.post('/login_action/', data=test_data)
+        self.assertEqual(response.status_code, 302)
+```
+&emsp;&emsp;在 setUp()初始化方法中， 调用 User.objects.create_user()创建登录用户数据。Client()类提供的 get()和 post()
+方法可以模式 GET/POST 请求。<br>
+&emsp;&emsp;`“/login_action/” `为用户登录的路径。<br>
+&emsp;&emsp;`{'username':'admin','password':'admin123456'} `字典中的内容为用户登录的用户名密码。<br>
+&emsp;&emsp;前两条例分别为用户名/密码为空， 和用户名/密码错误。 assertIn()断言在返回的 HTML 中包含“username
+or password error!” 提示。<br>
+&emsp;&emsp;当用例中输入了正确的用户名和密码（admin/admin123456）， 为什么 HTTP 返回的结果是 302 而不是 200
+呢？ 这是因为在 login_action 视图函数中， 当用户登录验证成功后， 通过 HttpResponseRedirect('/event_manage/')
+跳转到了发布会管理视图， 这是一个重定向， 所以 HTTP 返回码是 302。<br>
 
 
 
