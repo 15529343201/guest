@@ -3897,6 +3897,98 @@ urlpatterns = [
 &emsp;&emsp;发布会查询接口文档：<br>
 ![image](https://github.com/15529343201/guest/blob/chapter11/image/11.3.PNG)<br>
 ![image](https://github.com/15529343201/guest/blob/chapter11/image/11.4.PNG)<br>
+### 11.1.3、接口测试用例
+&emsp;&emsp;按照惯例,接下来需要针对开发的接口编写测试用例了,Requests库的get()和post()方法均提供有auth参数,用于设置用户签名。<br>
+sec_test_cast.py:<br>
+```Python
+import unittest
+import requests
+
+
+class GetEventListTest(unittest.TestCase):
+    ''' 查询发布会信息（带用户认证） '''
+
+    def setUp(self):
+        self.base_url = "http://127.0.0.1:8000/api/sec_get_event_list/"
+        self.auth_user = ('admin', 'admin123456')
+
+    def test_get_event_list_auth_null(self):
+        ''' auth 为空 '''
+        r = requests.get(self.base_url, params={'eid': ''})
+        result = r.json()
+        self.assertEqual(result['status'], 10011)
+        self.assertEqual(result['message'], 'user auth null')
+
+    def test_get_event_list_auth_error(self):
+        ''' auth 错误 '''
+        r = requests.get(self.base_url, auth=('abc', '123'), params={'eid': ''})
+        result = r.json()
+        self.assertEqual(result['status'], 10012)
+        self.assertEqual(result['message'], 'user auth fail')
+
+    def test_get_event_list_eid_null(self):
+        ''' eid 参数为空 '''
+        r = requests.get(self.base_url, auth=self.auth_user, params={'eid': ''})
+        result = r.json()
+        self.assertEqual(result['status'], 10021)
+        self.assertEqual(result['message'], 'parameter error')
+
+    def test_get_event_list_eid_success(self):
+        ''' 根据 eid 查询结果成功 '''
+        r = requests.get(self.base_url, auth=self.auth_user, params={'eid': 1})
+        result = r.json()
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(result['message'], 'success')
+        self.assertEqual(result['data']['name'], u'mx6 发布会')
+        self.assertEqual(result['data']['address'], u'北京国家会议中心')
+if __name__ == "__main__":
+    unittest.main()
+```
+## 11.2 数字签名
+&emsp;&emsp;在使用 HTTP/SOAP 协议传输数据的时候， 签名作为其中一个参数， 可以起到关键作用：<br>
+&emsp;&emsp;一、 鉴权： 通过客户的密钥， 服务端的密钥匹配；<br>
+&emsp;&emsp;这个很有好理解， 例如一个接口传参为：<br>
+&emsp;&emsp;http://127.0.0.1:8000/api/?a=1&b=2<br>
+&emsp;&emsp;假设签名的密钥为： @admin123<br>
+&emsp;&emsp;加上签名之后的接口参数为：<br>
+&emsp;&emsp;http://127.0.0.1:8000/sign/?a=1&b=2&sign=@admin123<br>
+&emsp;&emsp;显然， sign 参数明文传输是不安全的， 所以， 一般会通过加密算法进行加密。<br>
+mdt_test.py:<br>
+```Python
+import hashlib
+
+md5 = hashlib.md5()
+sign_str = "@admin123"
+sign_bytes_utf8 = sign_str.encode(encoding="utf-8")
+md5.update(sign_bytes_utf8)
+sign_md5 = md5.hexdigest()
+print(sign_md5)
+```
+&emsp;&emsp;执行程序将会得到： `4b9db269c5f978e1264480b0a7619eea`<br>
+&emsp;&emsp;所以， 单做为鉴权， 带签名的接口为：<br>
+&emsp;&emsp;http://127.0.0.1:8000/sign/?a=1&b=2&sign=4b9db269c5f978e1264480b0a7619eea<br>
+&emsp;&emsp;因为 MD5 算法是不可逆向的， 所以， 当服务器接收到请求后， 同样需要对“@admin123” 进行 MD5 加
+密， 然后， 比对与调用者传来的 sign 加密串是否一致， 从而来鉴别调用者是否有权限方位该接口。<br>
+&emsp;&emsp;什么是 MD5？<br>
+&emsp;&emsp;MD5 即 Message-Digest Algorithm 5（中文名为消息摘要算法第五版） ， 用于确保信息传输完整一致。
+是计算机广泛使用的杂凑算法之一， 主流编程语言普遍已有 MD5 实现。<br>
+&emsp;&emsp;二、 数据防篡改： 参数是明文传输， 将参数及密钥加密作为签名与服务器匹配；<br>
+&emsp;&emsp;同样是这样一个带参数的接口：<br>
+&emsp;&emsp;http://127.0.0.1:8000/sign/?a=1&b=2<br>
+&emsp;&emsp;加密方式比前者要复杂。<br>
+&emsp;&emsp;假设签名的密钥为： @admin123<br>
+&emsp;&emsp;签名的明文为： a=1&b=2&api_key=@admin123<br>
+&emsp;&emsp;再次通过上面的代码对整个接参与值生成 MD5 加密串： 786bfe32ae1d3764f208e03ca0bfaf13<br>
+&emsp;&emsp;所以， 带参数的接口串为：<br>
+&emsp;&emsp;http://127.0.0.1:8000/sign/?a=1&b=2&sign=786bfe32ae1d3764f208e03ca0bfaf13<br>
+&emsp;&emsp;因为整个接口的参数做了加密， 所以， 只要任意一个参数发改变， 那签名的验证就会失败。 从而起到了
+鉴权及数据完整性的保护。<br>
+&emsp;&emsp;不过， 接口全参数的加密签名也存在弊端， 因为 MD5 加密是不可逆的， 所以， 服务器端必须已知客户
+端的接口参数和值， 否则签名的验证就会失败。 但一般接口在设计时对客户端所请求的参数并不完全已知，
+例如， 嘉宾手机号查询， 服务器并不知道客户传的手机号具体是什么， 只是通过数据库来查询该号码是否存
+在。<br>
+
+
 
 
 
