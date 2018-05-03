@@ -4055,5 +4055,145 @@ D:\Python35\python3.exe C:/Users/Administrator/git/guest/sign/time_test.py
 &emsp;&emsp;服务器端以同样的规则来生成这样一个加密后的字符串， 从而比较这个串是否相等， 如果相等说明签名
 验证通过； 如果不相等， 则返回“sign fail” 。<br>
 &emsp;&emsp;将签名功能应用到添加发布会接口中。<br>
+views_if_sec.py:<br>
+```Python
+# 添加发布会接口---增加签名+时间戳
+def add_event(request):
+    sign_result = user_sign(request)  # 调用签名函数
+    if sign_result == "error":
+        return JsonResponse({'status': 10011, 'message': 'request error'})
+    elif sign_result == "sign null":
+        return JsonResponse({'status': 10012, 'message': 'user sign null'})
+    elif sign_result == "timeout":
+        return JsonResponse({'status': 10013, 'message': 'user sign timeout'})
+    elif sign_result == "sign error":
+        return JsonResponse({'status': 10014, 'message': 'user sign error'})
+```
+urls.py:<br>
+```Python
+from sign import views_if,views_if_security
+urlpatterns = [
+    ......
+    # security interface:
+    # ex : /api/sec_add_event/
+    url(r'^sec_add_event/', views_if_security.add_event, name='add_event'),
+]
+```
+### 11.2.2、 编写接口文档
+&emsp;&emsp;添加发布会接口文档：<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.5.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.6.PNG)<br>
+### 11.2.3、 编写接口用例
+&emsp;&emsp;学会了带签名接口的实现， 参靠接口文档的描述。 接下来就是编写接口用例环节。 这个接口用现成的接
+口工具很难测试。 因为由时间戳和 MD5 加密就让很多接口工具无功为力了。 所以， 写代码才是万能的！<br>
+```Python
+# coding=utf-8
+import unittest
+import requests
+from time import time
+import hashlib
 
 
+class AddEventTest(unittest.TestCase):
+    def setUp(self):
+        self.base_url = "http://127.0.0.1:8000/api/sec_add_event/"
+        # app_key
+        self.api_key = "&Guest-Bugmaster"
+        # 当前时间
+        now_time = time()
+        self.client_time = str(now_time).split('.')[0]
+        # sign
+        md5 = hashlib.md5()
+        sign_str = self.client_time + self.api_key
+        sign_bytes_utf8 = sign_str.encode(encoding="utf-8")
+        md5.update(sign_bytes_utf8)
+        self.sign_md5 = md5.hexdigest()
+
+    def test_add_event_request_error(self):
+        '''请求方法错误'''
+        r=requests.get(self.base_url)
+        result=r.json()
+        self.assertEqual(result['status'],10011)
+        self.assertEqual(result['message'],'request error')
+
+    def test_add_event_sign_null(self):
+        ''' 签名参数为空 '''
+        payload = {'eid': 1, '': '', 'limit': '', 'address': '', 'start_time': '', 'time': '', 'sign': ''}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 10012)
+        self.assertEqual(result['message'], 'user sign null')
+
+    def test_add_event_time_out(self):
+        ''' 请求超时 '''
+        now_time = str(int(self.client_time) - 61)
+        payload = {'eid': 1, '': '', 'limit': '', 'address': '', 'start_time': '', 'time': now_time, 'sign': 'abc'}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 10013)
+        self.assertEqual(result['message'], 'user sign timeout')
+
+    def test_add_event_sign_error(self):
+        ''' 签名错误 '''
+        payload = {'eid': 1, '': '', 'limit': '', 'address': '', 'start_time': '', 'time': self.client_time,
+                   'sign': 'abc'}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 10014)
+        self.assertEqual(result['message'], 'user sign error')
+
+    def test_add_event_eid_exist(self):
+        ''' id已经存在 '''
+        payload = {'eid': 1, 'name': '一加4发布会', 'limit': 2000, 'address': "深圳宝体", 'start_time': '2017',
+                   'time': self.client_time, 'sign': self.sign_md5}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 10022)
+        self.assertEqual(result['message'], 'event id already exists')
+
+    def test_add_event_name_exist(self):
+        ''' 名称已经存在 '''
+        payload = {'eid': 11, 'name': '一加3手机发布会', 'limit': 2000, 'address': "深圳宝体", 'start_time': '2017',
+                   'time': self.client_time, 'sign': self.sign_md5}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 10023)
+        self.assertEqual(result['message'], 'event name already exists')
+
+    def test_add_event_data_type_error(self):
+        ''' 日期格式错误 '''
+        payload = {'eid': 11, 'name': '一加5手机发布会', 'limit': 2000, 'address': "深圳宝体", 'start_time': '2017',
+                   'time': self.client_time, 'sign': self.sign_md5}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 10024)
+        self.assertIn('start_time format error.', result['message'])
+
+    def test_add_event_success(self):
+        ''' 添加成功 '''
+        payload = {'eid': 11, 'name': '一加4手机发布会', 'limit': 2000, 'address': "深圳宝体", 'start_time': '2017-05-10 12:00:00',
+                   'time': self.client_time, 'sign': self.sign_md5}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(result['message'], 'add event success')
+
+
+if __name__ == '__main__':
+    unittest.main()
+```
+## 11.3 接口加密
+&emsp;&emsp;PyCrypto 是一个免费的加密算法库， 支持常见的 DES、 AES 加密以及 MD5、 SHA 各种 HASH 运算。 我
+们可以在其官方网站下载最新版本： https://www.dlitz.net/software/pycrypto/<br>
+&emsp;&emsp;另外， 也可以在 PyPi 仓库中下载安装： https://pypi.python.org/pypi/pycrypto<br>
+&emsp;&emsp;目前来看只提供了.tar.gz 包， 所以只能下载安装了。<br>
+&emsp;&emsp;PyCrypto 在 Windows 下面安装需要依赖于“vcvarsall.bat”文件， 解决办法是需要安装庞大的 Visual Studio
+或者通过其它繁琐的安装才能成功。 所以， 建议读者切换到 Linux（Ubuntu） 下完成本小节的练习。<br>
+### 11.3.1、 PyCrypto 库
+&emsp;&emsp;PyCrypto 可以做什么？ 在 PyPi 的下载与介绍页面给出了几个简单例子。 接下来就通过这些例子演示
+PyCrypto 的强大之处。<br>
+例一：<br>
+&emsp;&emsp;SHA-256 算法属于密码 SHA-2 系列哈希。 它产生了一个消息的 256 位摘要。<br>
+&emsp;&emsp;哈希值用作表示大量数据的固定大小的唯一值。 两组数据的哈希值仅在相应数据也匹配时才应当匹配。
+数据的少量更改会在哈希值中产生不可预知的大量更改。<br>
+&emsp;&emsp;接下来的例子演示 SHA256 模块的使用。<br>

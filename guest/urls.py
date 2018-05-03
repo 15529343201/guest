@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import url,include
 from django.contrib import admin
-from sign import views  # 导入 sign 应用 views 文件
+from sign import views,views_if_security,views_if_sec  # 导入 sign 应用 views 文件
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -28,4 +28,6 @@ urlpatterns = [
     url(r'^sign_index/(?P<event_id>[0-9]+)/$',views.sign_index),
     url(r'^sign_index_action/(?P<event_id>[0-9]+)/$', views.sign_index_action),
     url(r'^api/',include('sign.urls',namespace="sign")),
+    url(r'^sec_add_event/', views_if_security.add_event, name='add_event'),
+    url(r'^sec_get_event_list/', views_if_sec.get_event_list,name='get_event_list'),
 ]

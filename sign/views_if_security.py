@@ -1,4 +1,5 @@
 import time, hashlib
+from django.http import JsonResponse
 
 
 # 用户签名+时间戳
@@ -27,3 +28,16 @@ def user_sign(request):
         return "sign error"
     else:
         return "sign right"
+
+
+# 添加发布会接口---增加签名+时间戳
+def add_event(request):
+    sign_result = user_sign(request)  # 调用签名函数
+    if sign_result == "error":
+        return JsonResponse({'status': 10011, 'message': 'request error'})
+    elif sign_result == "sign null":
+        return JsonResponse({'status': 10012, 'message': 'user sign null'})
+    elif sign_result == "timeout":
+        return JsonResponse({'status': 10013, 'message': 'user sign timeout'})
+    elif sign_result == "sign error":
+        return JsonResponse({'status': 10014, 'message': 'user sign error'})
