@@ -3376,4 +3376,58 @@ ${r}= Post Request event /add_event/ data=${payload}
 围也很广泛。 另外， 关于 RequestsLibrary 中所提供的关键字， 可以在下面的文档中查看。<br>
 &emsp;&emsp;http://bulkan.github.io/robotframework-requests/<br>
 # chapter10 接口测试框架设计
+## 10.1、 接口测试工具的不足
+&emsp;&emsp;相信读者一定产生了疑问， 在第九章中通过各种接口测试工具来完成测试， 看上去简单方便， 为何还要
+学习编程的方式来做接口测试呢？ 工具虽然方便， 但也不足之处， 这里简单总结几条工具的不足。<br>
+&emsp;&emsp;测试数据不可控制<br>
+&emsp;&emsp;接口测试本质是对数据的测试， 调用接口， 输入一些数据， 随后， 接口返回一些数据。 验证接口返回数
+据的正确性。<br>
+&emsp;&emsp;假设有一个用户查询接口， 要输入用户名 username， 返回用户的年龄、 性别、 邮箱、 手机号等数据。 在
+测试该接口时传参 username=zhangsan。 首先， 数据库里一定要有一条 zhangsan 的数据， 否则接口返回为空。
+如果要想断言接口返回值， 如 assert age==22； 那么一定预先确定参数的返回数据。<br>
+&emsp;&emsp;要想接口测试用例可以正确的执行并断言通过，必须要事先插入测试数据（username=zhangsan ; age=22...），
+一般的接口测试工具并不具备数据插入的功能。 在用工具运行测试用例之前不得不手动向数据库中插入测试
+数据。 这样我们的接口测试是不是就没有那么“自动化了” 。<br>
+&emsp;&emsp;无法测试加密接口<br>
+&emsp;&emsp;这是接口测试工具的一大硬伤， 如我们前面开发的接口用工具测试完全没有问题， 但遇到需要对接口参
+数进行加密/解密的接口， 例如 md5、 base64、 AES 等常见加密方式。 本书第十一章会对加密接口进行介绍。
+又或者接口的参数需要使用时间戳， 也是工具很难模拟的。<br>
+&emsp;&emsp;扩展能力不足<br>
+&emsp;&emsp;当我们在享受工具所带来的便利的同时， 往往也会受制于工具所带来的局限。 例如， 我想将测试结果生
+成 HMTL 格式测试报告， 我想将测试报告发送到指定邮箱。 我想对接口测试做定时任务。 我想对接口测试做
+持续集成。 这些需求都是工具难以实现的。<br>
+&emsp;&emsp;备注： 关于上面的几点不足， 大多情况 Robot Framework 可以满足， 严格意义上来说 Robot Framework 并
+不属于“工具” ， 虽然我将其划分到了测试工具一章。 但 Robot Framework 有着与编程一样的扩展性， 前提是
+你需要熟悉 Python 语言， 并且可以为 Robot Framework 开发系统关键字。 然而， Robot Framework 的脚本难读
+在我看来是它的最大弱点。 既然都要开发系统关键字了， 为何不直接写 Python 脚本更加自由。<br>
+## 10.2、 接口自动化测试设计
+&emsp;&emsp;既然讨论了自动化接口测试工具的不足， 接下来介绍一下接口自动化项目的实现。<br>
+![image](https://github.com/15529343201/guest/blob/chapter10/image/10.1.PNG)<br>
+&emsp;&emsp;一般的接口工具测试过程：<br>
+&emsp;&emsp;1、 接口工具调用被测系统的接口（传参 username="zhangsan"） 。<br>
+&emsp;&emsp;2、 系统接口根据传参（username="zhangsan"） 向正式数据库中查询数据。<br>
+&emsp;&emsp;3、 将查询结果组装成一定格式的数据， 并返回给被调用者。<br>
+&emsp;&emsp;4、 人工或通过工具的断言功能检查接口测试的正确性。<br>
+&emsp;&emsp;而我们设计的接口自动化测试项目， 为了使接口测试对数据的变得可控， 测试过程如下：<br>
+&emsp;&emsp;1、 接口测试项目先向测试数据库中插入测试数据（zhangsan 的个人信息） 。<br>
+&emsp;&emsp;2、 调用被测系统接口（传参 username="zhangsan"） 。<br>
+&emsp;&emsp;3、 系统接口根据传参（username="zhangsan"） 向测试数据库中进行查询并得到 zhangsan 个人信息。<br>
+&emsp;&emsp;4、 将查询结果组装成一定格式的数据， 并返回给被调用者。<br>
+&emsp;&emsp;5、 通过单元测试框架断言接口返回的数据（zhangsan 的个人信息） ， 并生成测试报告。<br>
+&emsp;&emsp;为了使正式数据库的数据不被污染， 建议使用独立的测试数据库。 Web 项目配置数据库非常简单。 参考
+本书第四章。<br>
+## 10.3、 Request 库
+&emsp;&emsp;Requests 是使用 Apache2 Licensed 许可证的 HTTP 库。 用 Python 编写。<br>
+&emsp;&emsp;Requests 使用的是 urllib3， 因此继承了它的所有特性。 Requests 支持 HTTP 连接保持和连接池， 支持
+使用 cookie 保持会话， 支持文件上传， 支持自动确定响应内容的编码， 支持国际化的 URL 和 POST 数据
+自动编码。 现代、 国际化、 人性化。<br>
+&emsp;&emsp;Requests 以 PEP 20 的习语为中心开发：<br>
+&emsp;&emsp;1、 Beautiful is better than ugly.（美丽优于丑陋）<br>
+&emsp;&emsp;2、 Explicit is better than implicit.（清楚优于含糊）<br>
+&emsp;&emsp;3、 Simple is better than complex.（简单优于复杂）<br>
+&emsp;&emsp;4、 Complex is better than complicated.（复杂优于繁琐）<br>
+&emsp;&emsp;5、 Readability counts.（重要的是可读性）<br>
+&emsp;&emsp;官方网站： http://docs.python-requests.org/en/master/<br>
+&emsp;&emsp;中文文档： http://cn.python-requests.org/zh_CN/latest/<br>
+
 
