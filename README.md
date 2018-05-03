@@ -3259,7 +3259,121 @@ Library。<br>
 &emsp;&emsp;HTTP 测试： HTTP library (livetest)、 HTTP library (Requests)等。<br>
 &emsp;&emsp;夸完了 Robot Framework 的强大， 接下来介绍接口测试用例的编写。 在前面环境搭建一节， 已经教读者
 安装好了 robotframework-requests 库， 接下来使用该库来编写接口测试用例。<br>
+test_if.robot:<br>
+```
+*** Settings ***
+Library        RequestsLibrary
+Library        Collections
 
+*** Test Cases ***
 
+testget
+    ${payload}= Create Dictionary eid=1
+    Create Session event http://127.0.0.1:8000/api
+    ${r}= Get Request event /get_event_list/ params=${payload}
+    Should Be Equal As Strings ${r.status_code} 200
+    log ${r.json()}
+    ${dict} Set variable ${r.json()}
+    #断言结果
+    ${msg} Get From Dictionary ${dict} message
+    Should Be Equal ${msg} success
+    ${sta} Get From Dictionary ${dict} status
+    ${status} Evaluate int(200)
+    Should Be Equal ${sta} ${status}
+```
+&emsp;&emsp;虽然前面已经对 Robot Framework 的语法有了一定的认识， 但我相信在你看到上面这一段脚本时内心几
+乎是崩溃的。<br>
+&emsp;&emsp;如果用 RIDE 编写脚本， 这些脚本会横竖整齐的填写在“表格” 中。 如果用 Sublime Text3 编写脚本的话，
+起码有代码着色和空格位。 然而， 这样的脚本确实看起来比较杂乱， 不过， 还是希望你能耐下心来和我一起
+学习。<br>
+```
+----------------------------------------------------------
+Library RequestsLibrary
+Library Collections
+--------------------------------------
+```
+&emsp;&emsp;首先， 引用了 RquestsLibrary 库和 Collections 库， RquestsLibrary 就是我们安装的 robotframework-requests，
+用来进行接口测试的相关操作。 而 Collections 库是用来操作字典的， 因为接口的返回数据是 Json 格式， 转化
+成字典才能进行断言。<br>
+```
+----------------------------------------------------------
+testget
+...
+--------------------------------------
+```
+&emsp;&emsp;testget 用来操作 GET 接口的用例。<br>
+```
+----------------------------------------------------------
+${payload}= Create Dictionary eid=1
+Create Session event http://127.0.0.1:8000/api
+${r}= Get Request event /get_event_list/ params=${payload}
+----------------------------------------------------------
+```
+&emsp;&emsp;先来看 testget 用例的前三行， 通过“Create Dictionary” 关键字定义字典变量${payload}， 字典有一个键
+值 eid=1。 该字典将会作为接口的参数。<br>
+&emsp;&emsp;“Create Session”关键字用来创建一个 HTTP 会话服务器。event 为该会话的别名，http://127.0.0.1:8000/api
+为该会话的基本 url.<br>
+&emsp;&emsp;“Get Requests” 关键字用来发起一个 GET 请求， 接口 URL 为 event + /get_event_list/， 接口参数为
+${payload}。 最后将接口返回信息赋值给变量${r}。<br>
+```
+----------------------------------------------------------
+Should Be Equal As Strings ${r.status_code} 200
+log ${r.json()}
+----------------------------------------------------------
+```
+&emsp;&emsp;通过${r.status_code}可以得到请求的 HTTP 状态码， 通过“Should Be Equal As Strings” 关键字判断其是
+否为 200。<br>
+&emsp;&emsp;通过${r.json()}可得将 json 格式的返回值转化为字典， 并通过 log 打印。<br>
+```
+----------------------------------------------------------
+${dict} Set variable ${r.json()}
+#断言结果
+${msg} Get From Dictionary ${dict} message
+Should Be Equal ${msg} success
+${sta} Get From Dictionary ${dict} status
+${status} Evaluate int(200)
+Should Be Equal ${sta} ${status}
+----------------------------------------------------------
+```
+&emsp;&emsp;再接下来的操作主要是对返回字典的验证。 将${r.json()}通过定义变量关键字“Set Variable” 赋值给变量
+${dict}。<br>
+&emsp;&emsp;“Get From Dictionary” 关键字由前面的引入的 Collections 库提供， 可以取到字典中 key 对应 value。 这
+里获取 key 为“message” 对应的 value 赋值给变量${msg}。<br>
+&emsp;&emsp;“Should Be Equal” 关键字用于比较${msg}是否等于“success” 。<br>
+&emsp;&emsp;接下来以同样的方式获取到字典 key 为“status” 对应的 value。 可是得到的 value 200 是整数类型。 然而，
+在 Robot Framework 中直接编写的内容为字符串。 所以， 这里借助强大的 Evaluate， 它可以直接调用 Python
+所提供的方法。 例如， 这里调用 Python 的 int()方法把 200 转整数类型， 并与字典中的取出来的整数 200 进行
+比较。<br>
+&emsp;&emsp;到此， 这一个完整接口用例介绍完毕。 接下来再编写一个 POST 请求的接口测试用例。<br>
+```
+testpost
+    ${header} Create Dictionary Content-Type=application/json
+    ${payload}= Create Dictionary eid=1
+    Create Session event http://127.0.0.1:8000/api ${header}
+    ${r}= Post Request event /add_event/ data=${payload}
+    Should Be Equal As Strings ${r.status_code} 200
+    log ${r.json()}
+    ${dict} Set variable ${r.json()}
+    #断言结果
+    ${msg} Get From Dictionary ${dict} message
+    Should Be Equal ${msg} parameter error
+    ${sta} Get From Dictionary ${dict} status
+    ${status} Evaluate int(10021)
+    Should Be Equal ${sta} ${status}
+```
+&emsp;&emsp;POST 接口用例基本与前面介绍的 GET 接口用例相似， 但略有不同。<br>
+```
+----------------------------------------------------------------
+${header} Create Dictionary Content-Type=application/json
+${payload}= Create Dictionary eid=1
+Create Session event http://127.0.0.1:8000/api ${header}
+${r}= Post Request event /add_event/ data=${payload}
+----------------------------------------------------------------
+```
+&emsp;&emsp;首先， POST 请求一般需要创建 header 标头， 用来指定请求信息的内容类型。 在创建 HTTP 会话服务器
+时指定。 另外， POST 请求所用到的关键字为“Post Request” 。<br>
+&emsp;&emsp;最后， 关于 Robot Framework 框架的介绍就到此为止， 不得不说它是一个非常优秀的测试框架， 应用范
+围也很广泛。 另外， 关于 RequestsLibrary 中所提供的关键字， 可以在下面的文档中查看。<br>
+&emsp;&emsp;http://bulkan.github.io/robotframework-requests/<br>
 
 
