@@ -3195,7 +3195,70 @@ Sublimt Text2。<br>
 &emsp;&emsp;接下来练习一下 Robot Framework 用例的创建与运行。<br>
 &emsp;&emsp;首先创建测试目录 rf_test/ ， 在该目录下创建 test.robot 文件。 通过 Sublime Text2 打开文件， 编写如下内
 容。<br>
-
+test.robot:<br>
+```
+*** Settings ***
+*** Test Cases ***
+testcase
+    log robot framework
+```
+&emsp;&emsp;`*** Settings ***` 部分用于引用 Library， 当前没有引用， 默认为空。<br>
+&emsp;&emsp;`*** Test Cases ***` 部分用于编写测试用例。<br>
+&emsp;&emsp;testcase 顶格写， 表示用例的名称。<br>
+&emsp;&emsp;log robot framework log 前面四个空格， 表示该行为 testcase 的一行语句， log 为打印关键字， 与 Python 的
+print()方法类似，“robot framework”为打印的字符串， 注意关键字与字符串之间的间距为四个空格。 在 Sublime
+Text3 中的显示如图 9.23。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.26.PNG)<br>
+&emsp;&emsp;如何运行 Robot Framework 用例？ 首先， 在安装好 Robot Framework 之后， 在 Python 的 Script/目录下会
+多出一个 pybot.bat 文件， 并且确保“C:\Python35\Scripts\” 目录已经添加到了环境变量 path 下面。 接下来， 打
+开 Windows 命令提示符， 在任意目录下输入“pybot -h” 命令回车。 如果出现帮助信息， 说明 pybot 命令可用，
+如果提示 pybot 不是内部或外部命令， 请检查环境变量是否正确的配置。<br>
+&emsp;&emsp;运行测试：<br>
+```
+...\rf_test>pybot test.robot
+==============================================================================
+Test
+==============================================================================
+testcase | PASS |
+------------------------------------------------------------------------------
+Test | PASS |
+1 critical test, 1 passed, 0 failed
+1 test total, 1 passed, 0 failed
+==============================================================================
+Output: D:\rf_test\output.xml
+Log: D:\rf_test\log.html
+Report: D:\rf_test\report.html
+```
+&emsp;&emsp;除了运行过程中的打印信息外， Robot Framework 还生成了三个文件， 分别为 output.xml 、 log.html 和
+report.html。<br>
+&emsp;&emsp;output.xml 是以 XML 格式记录测试结果。 阅读起来不够直观， 在我看来， 它的作用是提供给我们测试结
+果， 让我们读取该文件生成定制化的测试报告。 例如， 你可以使用 Python 语言读取该文件生成自定义的测试
+报告。<br>
+&emsp;&emsp;log.html 和 report.html 要美观的得多， log.html 偏向于测试日志， 记录脚本每一步的执行情况。 report.html
+偏向于测试报告， 总体性的展示测试用例的执行情况。 log.html 文件通过浏览器打开， 如图 9.24<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.27.PNG)<br>
+&emsp;&emsp;最后， 介绍几种“pybot” 命令的运行测试用例的策略：<br>
+```
+...\rf_test>pybot test.robot #运行指定文件
+...\rf_test>pybot *.robot #运行当前目录下以.robot 为后缀名的测试文件
+...\rf_test>pybot test_a #运行当前 test_a 目录下的所有用例
+...\rf_test>pybot ./ #运行当前目录下的所有以.robot 为后缀名的测试文件
+```
+&emsp;&emsp;关于， 更多用法， 读者可以通过“pybot -h” 查看帮助。<br>
+9.3.3、 接口测试
+&emsp;&emsp;Robot Framework 测试框架更像一个自动化测试平台， 它本身只提供了最基础的测试功能， 例如， 测试用
+例的组织、 运行、 测试报告的生成， 以及最基本的 Builtin 库， 该库提供了最基本的关键字来实现打印， 变量
+定义， if 语句， for 循环等。<br>
+&emsp;&emsp;那么， 我们想要完成不同类型的测试， 就需要安装不同的 Library。 Robot Framework 提供了非常丰富的
+Library。<br>
+&emsp;&emsp;Web 自动化测试： SeleniumLibrary， Selenium2Library， Selenium2Library for Java、 watir-robot 等。<br>
+&emsp;&emsp;Windows GUI 测试： AutoItLibrary。<br>
+&emsp;&emsp;移动测试： Android library、 iOS library、 AppiumLibrary 等。<br>
+&emsp;&emsp;数据库测试： Database Library (Java)、 Database Library (Python)、 MongoDB library 等。<br>
+&emsp;&emsp;文件对比测试： Diff Library。<br>
+&emsp;&emsp;HTTP 测试： HTTP library (livetest)、 HTTP library (Requests)等。<br>
+&emsp;&emsp;夸完了 Robot Framework 的强大， 接下来介绍接口测试用例的编写。 在前面环境搭建一节， 已经教读者
+安装好了 robotframework-requests 库， 接下来使用该库来编写接口测试用例。<br>
 
 
 
