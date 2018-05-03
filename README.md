@@ -3810,5 +3810,6 @@ if __name__ == "__main__":
 &emsp;&emsp;通过 time 的 strftime()方法获取当前时间， 并且转化成一定的时间格式。 作为测试报告的名称。 这样做目
 的是是为了避免因为生成的报告的名称重名而造成报告的覆盖。 最终， 将测试报告存放于 report/目录下面。 如
 图 10.3， 一张完整的接口自动化测试报告。<br>
+![image](https://github.com/15529343201/guest/blob/chapter10/image/10.3.PNG)<br>
 
 
