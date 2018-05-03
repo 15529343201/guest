@@ -3871,11 +3871,32 @@ def user_auth(request):
 &emsp;&emsp;再接来的处理过程我们就很熟悉了。 调用 Django 的认证模块， 对得到 Auth 信息进行认证。 成功将返回
 “success” ， 失败则返回“fail” 。<br>
 &emsp;&emsp;在发布会查询接口中调用刚开发的用户认证功能。<br>
-
-
-
-
-
+```Python
+# 发布会查询接口---增加用户认证
+def get_event_list(request):
+    auth_result = user_auth(request)  # 调用认证函数
+    if auth_result == "null":
+        return JsonResponse({'status': 10011, 'message': 'user auth null'})
+    if auth_result == "fail":
+        return JsonResponse({'status': 10012, 'message': 'user auth fail'})
+    eid = request.GET.get("eid", "")  # 发布会 id
+    name = request.GET.get("name", "")  # 发布会名称
+```
+&emsp;&emsp;在.../sign/urls.py 文件中添加新的安全接口指向。<br>
+```Python
+from sign import views_if,views_if_security
+urlpatterns = [
+......
+    # security interface:
+    # ex : /api/sec_get_event_list/
+    url(r'^sec_get_event_list/', views_if_sec.get_event_list,name='get_event_list'),
+]
+```
+&emsp;&emsp;需要说明的是， 这种认证方式是一种相对较弱的认证方式， 安全性较低。<br>
+### 11.1.2、 编写接口文档
+&emsp;&emsp;发布会查询接口文档：<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.3.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.4.PNG)<br>
 
 
 

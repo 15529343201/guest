@@ -1,4 +1,5 @@
 from django.contrib import auth as django_auth
+from django.http import JsonResponse
 import hashlib
 import base64
 
@@ -18,3 +19,14 @@ def user_auth(request):
         return "success"
     else:
         return "fail"
+
+
+# 发布会查询接口---增加用户认证
+def get_event_list(request):
+    auth_result = user_auth(request)  # 调用认证函数
+    if auth_result == "null":
+        return JsonResponse({'status': 10011, 'message': 'user auth null'})
+    if auth_result == "fail":
+        return JsonResponse({'status': 10012, 'message': 'user auth fail'})
+    eid = request.GET.get("eid", "")  # 发布会 id
+    name = request.GET.get("name", "")  # 发布会名称
