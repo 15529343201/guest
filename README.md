@@ -3650,7 +3650,7 @@ if __name__ == '__main__':
 &emsp;&emsp;最后， 通过 close()方法用于关闭数据库连接。<br>
 &emsp;&emsp;接下来创建测试数据， .../db_fixture/test_data.py<br>
 test_data.py:<br>
-```
+```Python
 import sys, time
 
 sys.path.append('../db_fixture')
