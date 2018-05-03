@@ -3475,6 +3475,57 @@ assert result['data']['start_time'] == "2016-10-15T18:00:00"
 的 URL 地址， params 设置接口的数， 参数以字典形式组织。<br>
 &emsp;&emsp;json()方法可以将接口返回的 json 格式的数据转化为字典。<br>
 &emsp;&emsp;接下来就是通过 assert 语句对接字典中的数据进行断言。分别断言 status、 message 和 data 的相关数据等。<br>
+### 10.3.3、 接口自动化测试
+&emsp;&emsp;使用 unittest 单元测试框架开发接口测试用例.<br>
+```
+import requests
+import unittest
+
+class GetEventListTest(unittest.TestCase):
+    '''查询发布会接口测试'''
+
+    def setUp(self):
+        self.url="http://127.0.0.1:8000/api/get_event_list/"
+
+    def test_get_event_null(self):
+        '''发布会id为空'''
+        r=requests.get(self.url,params={'eid':''})
+        result=r.json()
+        print(result)
+        self.assertEqual(result['status'],10021)
+        self.assertEqual(result['message'],"parameter error")
+
+    def test_get_event_success(self):
+        '''发布会id为1,查询成功'''
+        r=requests.get(self.url,params={'eid':'1'})
+        result=r.json()
+        print(result)
+        self.assertEqual(result['status'],200)
+        self.assertEqual(result['message'],"success")
+        self.assertEqual(result['data']['name'], "xx 产品发布会")
+        self.assertEqual(result['data']['address'], "北京林匹克公园水立方")
+        self.assertEqual(result['data']['start_time'], "2016-10-15T18:00:00")
+
+if __name__ == '__main__':
+    unittest.main()
+```
+## 10.4 接口自动化测试框架实现
+&emsp;&emsp;关于接口自动化测试， unittest 已经帮我们做了大部分工作， 接下来只需要集成数据库操作， 以及
+HTMLTestRunner 测试报告生成扩展即可。<br>
+### 10.4.2、 框架结构介绍
+&emsp;&emsp;自动化测试框架目录结构如下：<br>
+![image](https://github.com/15529343201/guest/blob/chapter10/image/10.2.PNG)<br>
+&emsp;&emsp;`pyrequests` 框架：<br>
+&emsp;&emsp;`db_fixture/`： 初始化接口测试数据。<br>
+&emsp;&emsp;`interface/`： 用于编写接口自动化测试用例。<br>
+&emsp;&emsp;`report/`： 生成接口自动化测试报告。<br>
+&emsp;&emsp;`db_config.ini` ： 数据库配置文件。<br>
+&emsp;&emsp;`HTMLTestRunner.py` unittest 单元测试框架扩展， 生成 HTML 格式的测试报告。<br>
+&emsp;&emsp;`run_tests.py` ： 执行所有接口测试用例。<br>
+&emsp;&emsp;GitHub 项目地址： https://github.com/defnngj/pyrequest<br>
+
+
+
 
 
 
