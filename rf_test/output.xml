@@ -1,28 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot generated="20180503 11:32:14.168" generator="Robot 3.0.4 (Python 2.7.14 on win32)">
-<suite source="C:\Users\Administrator\git\guest\rf_test\test.robot" id="s1" name="Test">
-<test id="s1-t1" name="testcase">
-<kw name="Log" library="BuiltIn">
-<doc>Logs the given message with the given level.</doc>
-<arguments>
-<arg>robot framework</arg>
-</arguments>
-<msg timestamp="20180503 11:32:14.199" level="INFO">robot framework</msg>
-<status status="PASS" endtime="20180503 11:32:14.199" starttime="20180503 11:32:14.199"></status>
+<robot generated="20180503 12:17:45.095" generator="Robot 3.0.4 (Python 2.7.14 on win32)">
+<suite source="C:\Users\Administrator\git\guest\rf_test\test_if.robot" id="s1" name="Test If">
+<test id="s1-t1" name="testget">
+<kw name="${payload}= Create Dictionary eid=1">
+<msg timestamp="20180503 12:17:45.366" level="FAIL">No keyword with name '${payload}= Create Dictionary eid=1' found.</msg>
+<status status="FAIL" endtime="20180503 12:17:45.366" starttime="20180503 12:17:45.366"></status>
 </kw>
-<status status="PASS" endtime="20180503 11:32:14.200" critical="yes" starttime="20180503 11:32:14.198"></status>
+<status status="FAIL" endtime="20180503 12:17:45.368" critical="yes" starttime="20180503 12:17:45.359">No keyword with name '${payload}= Create Dictionary eid=1' found.</status>
 </test>
-<status status="PASS" endtime="20180503 11:32:14.202" starttime="20180503 11:32:14.171"></status>
+<test id="s1-t2" name="testpost">
+<kw name="${header} Create Dictionary Content-Type=application/json">
+<msg timestamp="20180503 12:17:45.376" level="FAIL">No keyword with name '${header} Create Dictionary Content-Type=application/json' found.</msg>
+<status status="FAIL" endtime="20180503 12:17:45.376" starttime="20180503 12:17:45.376"></status>
+</kw>
+<status status="FAIL" endtime="20180503 12:17:45.377" critical="yes" starttime="20180503 12:17:45.371">No keyword with name '${header} Create Dictionary Content-Type=application/json' found.</status>
+</test>
+<status status="FAIL" endtime="20180503 12:17:45.380" starttime="20180503 12:17:45.102"></status>
 </suite>
 <statistics>
 <total>
-<stat fail="0" pass="1">Critical Tests</stat>
-<stat fail="0" pass="1">All Tests</stat>
+<stat fail="2" pass="0">Critical Tests</stat>
+<stat fail="2" pass="0">All Tests</stat>
 </total>
 <tag>
 </tag>
 <suite>
-<stat fail="0" id="s1" name="Test" pass="1">Test</stat>
+<stat fail="2" id="s1" name="Test If" pass="0">Test If</stat>
 </suite>
 </statistics>
 <errors>
