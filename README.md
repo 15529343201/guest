@@ -3811,5 +3811,65 @@ if __name__ == "__main__":
 的是是为了避免因为生成的报告的名称重名而造成报告的覆盖。 最终， 将测试报告存放于 report/目录下面。 如
 图 10.3， 一张完整的接口自动化测试报告。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter10/image/10.3.PNG)<br>
+# chapter11 接口的安全机制
+&emsp;&emsp;一般在实际项目的接口开发中， 接口的安全机制是绕不开的一个话题。 不管理自己内部使用的接口也好，
+还是给第三方使用的接口也好。 如果毫无限制可以给任何人调用， 那么必然会带来诸多安全问题， 例如， 重
+要数据泄密， 系统瘫痪等。<br>
+&emsp;&emsp;这一章介绍在接口开发中常见的向种安全机制。<br>
+## 11.1 用户认证
+&emsp;&emsp;在测试 Web 接口时， 不管所用的接口工具还是 Requests 库都提供的 Auth 的选项/参数， 这个选项提供了
+username 和 password 的选项， 但这里 Auth 的用户名和密码与系统登录的用户名密码有所区别， 登录的用户名
+/密码是作为接口的参数来传输， 而 Auth 不是， 但它仍然包含在 request 请求中。<br>
+&emsp;&emsp;通过 Postman 填写 Auth（Authorization） 选项。<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.1.PNG)<br>
+&emsp;&emsp;通过 Fiddler 工具抓取请求。<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.2.PNG)<br>
+&emsp;&emsp;其实， 这个问题难点并不再测试上面。 你是否和我一样好奇， Django 如何来接收这个参数， 以及如何处
+理或验证。 为此我翻了很久的 Django 文档， 然而并没有找到想要的结果。 Django-REST-framwork 框架（后面
+章节会介绍该框架的使用） 自带的有这样的一个 Auth 的功能， 在接口调用的时候需要填写 Auth 认证。 通过
+查看 Django-REST-framwork 框架的源码， 找到了答案。<br>
+### 11.1.1、 开发带 Auth 接口
+&emsp;&emsp;相信学到这里关于 Django 的开发过程你已经比较熟悉了， 为了练习与安全有关的接口开发， 重新创
+建.../sign/views_if_sec.py 视图文件。<br>
+&emsp;&emsp;接口的处理逻辑主要由 views 层完成。 所以， 这里只提供 views 层的实现。<br>
+views_if_sec.py:<br>
+```Python
+from django.contrib import auth as django_auth
+import hashlib
+import base64
+
+
+# 用户认证
+def user_auth(request):
+    get_http_auth = request.META.get('HTTP_AUTHORIZATION', b'')
+    auth = get_http_auth.split()
+    try:
+        auth_parts = base64.b64decode(auth[1]).decode('iso-8859-1').partition(':')
+    except IndexError:
+        return "null"
+    userid, password = auth_parts[0], auth_parts[2]
+    user = django_auth.authenticate(username=userid, password=password)
+    if user is not None and user.id_active:
+        django_auth.login(request, user)
+        return "success"
+    else:
+        return "fail"
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
