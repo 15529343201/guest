@@ -3855,14 +3855,22 @@ def user_auth(request):
     else:
         return "fail"
 ```
-
-
-
-
-
-
-
-
+&emsp;&emsp;`get_http_auth = request.META.get('HTTP_AUTHORIZATION', b'')`<br>
+&emsp;&emsp;request.META 是一个 Python 字典， 包含了所有本次 HTTP 请求的 Header 信息， 比如用户认证、 IP 地址
+和用户 Agent（通常是浏览器的名称和版本号） 等。<br>
+&emsp;&emsp;`HTTP_AUTHORIZATION` 用于获取 `HTTP authorization`。如果为空,将得到一个空的bytes对象。<br>
+&emsp;&emsp;当客户端传输的认证数据为:admin/admin123456,这里得到的数据是:<br>
+&emsp;&emsp;`Basic YWRtaW46YWRtaW4xMjM0NTY=`<br>
+&emsp;&emsp;通过 split()方法将其拆分成 list。 拆分后的数据是这样的： `['Basic', 'YWRtaW46YWRtaW4xMjM0NTY=']`<br>
+&emsp;&emsp;`auth_parts = base64.b64decode(auth[1]).decode('iso-8859-1').partition(':')`<br>
+&emsp;&emsp;取出 list 中的加密串， 通过 base64 对加密串进行解码。 通过decode()方法以UTF-8编码对字符串进行解码。partition()方法以冒号":"为分隔符对字符串进行分割,得到的数据是： ('admin', ':', 'admin123456')<br>
+&emsp;&emsp;执行到这一行， 如果获取不到 Auth 信息， 将会抛 IndexError 异常， 通过 try...except...进行异常捕捉， 如
+果捕捉到异常将返回“null” 。<br>
+&emsp;&emsp;`userid, password = auth_parts[0], auth_parts[2]`<br>
+&emsp;&emsp;最后， 取出元组中对应的用户 id 和密码。 最终于数据： admin admin123456<br>
+&emsp;&emsp;再接来的处理过程我们就很熟悉了。 调用 Django 的认证模块， 对得到 Auth 信息进行认证。 成功将返回
+“success” ， 失败则返回“fail” 。<br>
+&emsp;&emsp;在发布会查询接口中调用刚开发的用户认证功能。<br>
 
 
 
