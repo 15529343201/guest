@@ -3987,10 +3987,73 @@ print(sign_md5)
 端的接口参数和值， 否则签名的验证就会失败。 但一般接口在设计时对客户端所请求的参数并不完全已知，
 例如， 嘉宾手机号查询， 服务器并不知道客户传的手机号具体是什么， 只是通过数据库来查询该号码是否存
 在。<br>
+### 11.2.1、 开发接口
+&emsp;&emsp;打开.../sign/views_if_security.py 视图文件， 实现接口签名代码。<br>
+views_if_security.py:<br>
+```Python
+import time, hashlib
 
 
+# 用户签名+时间戳
+def user_sign(request):
+    if request.method == 'POST':
+        client_time = request.POST.get('time', '')  # 客户端时间戳
+        client_sign = request.POST.get('sign', '')  # 客户端签名
+    else:
+        return "error"
+    if client_time == '' or client_sign == '':
+        return "sign null"
+    # 服务器时间
+    now_time = time.time()  # 1466426831
+    server_time = str(now_time).split('.')[0]
+    # 获取时间差
+    time_difference = int(server_time) - int(client_time)
+    if time_difference >= 60:
+        return "timeout"
+    # 签名检查
+    md5 = hashlib.md5()
+    sign_str = client_time + "&Guest-Bugmaster"
+    sign_bytes_utf8 = sign_str.encode(encoding="utf-8")
+    md5.update(sign_bytes_utf8)
+    sever_sign = md5.hexdigest()
+    if sever_sign != client_sign:
+        return "sign error"
+    else:
+        return "sign right"
+```
+&emsp;&emsp;实现的代码不多， 但过程有些复杂。 我们来解释一下过程。<br>
+&emsp;&emsp;首先，通过 POST 方法获取两个参数 time 和 sign 两个参数，并判断它们其中的任一一个为空，则返回“sign
+null” ， 这个逻辑很好理解。<br>
+&emsp;&emsp;接下来， 是判断时间戳。 需要客户端获取一个“当前时间戳” ， 取当前的时间。 （例如， 1466830935）<br>
+```Python
+import time
 
-
-
+# 当前时间戳
+now_time = time.time()
+print('当前时间戳:' + str(now_time))
+# 将时间戳转化为字符串类型,并截取小数点前的时间
+print(str(now_time).split('.')[0])
+# 转换成日期格式
+otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now_time))
+print('日期格式:' + str(otherStyleTime))
+"""
+D:\Python35\python3.exe C:/Users/Administrator/git/guest/sign/time_test.py
+当前时间戳:1525352026.589537
+1525352026
+日期格式:2018-05-03 20:53:46
+"""
+```
+&emsp;&emsp;Python3 生成的的时间戳精度太高， 我们只需要小数点前面的 10 位即可。 所以， 使用 split()函数截取小
+数点前面的时间。<br>
+&emsp;&emsp;同样， 当服务器端口拿到客户端传来的时间戳后， 服务器端也需要重新再获取一下当前时间戳。 如果服
+务器端的当前时间戳减法去客户端时间戳小于 60， 说明这个接口的请求时间是离现在最近的 60 秒之内。 那么
+允许接口访问， 如果超过 60 秒， 则返回“timeout” 。<br>
+&emsp;&emsp;这样就要求请求的客户端不断的获取当前戳作为接口参来访问接口。 所以， 一直用固定的参数访问接口
+是无效的。<br>
+&emsp;&emsp;关于是签名参数的生成。 需要将 api_key（密钥字符串： “&Guest-Bugmaster” ） 和客户端发来的时间戳，
+两者拼接成一个新的字符串。 并且通过 MD5 对其进行加密。 从而将加密后的字符串作为 sign 的字段的参数。<br>
+&emsp;&emsp;服务器端以同样的规则来生成这样一个加密后的字符串， 从而比较这个串是否相等， 如果相等说明签名
+验证通过； 如果不相等， 则返回“sign fail” 。<br>
+&emsp;&emsp;将签名功能应用到添加发布会接口中。<br>
 
 
