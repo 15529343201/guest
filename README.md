@@ -3164,6 +3164,37 @@ Web 接口时， 通过这两款工具来测试接口的实现是个很不错的
 &emsp;&emsp;GitHub 地址： https://github.com/bulkan/robotframework-requests<br>
 &emsp;&emsp;将项目克隆或下载并解压， 执行目录下的 setup.py 文件进行安装。<br>
 &emsp;&emsp;`...\robotframework-requests-master>python3 setup.py install`<br>
+&emsp;&emsp;那么， 接下来应该练习编写如何 Robot Framework 脚本； 用什么 IDE 来编写脚本呢？ 如果你阅读过其它
+Robot Framework 的安装资料的话， 也许会认为我所介绍的安装过程遗留了 Robot Framework -RIDE（以下简
+称 RIDE） ， 是的！ 对于编写 Robot Framework 脚本来说， RIDE 几乎是必不可少的。 然而它的角色是依然只是
+一款 IDE， 也就是说不用它一样可以编写和运行 Robot Framework 脚本。 这里之所以没有介绍 RIDE 的安装，
+主要原因是因为它目前还不并支持 Python3， 我想， 之所以还不支持 Python3 的原因之一是因为 RIDE 是基于
+wxPython（该库是 Python 下非常有名的 GUI 库） 开发的， 而 wxPython 目前并不支持 Python3， 所以， RIDE
+想支持 Python3 就变得比较困难。<br>
+&emsp;&emsp;那么除了 RIDE 之外， 还可以用什么工具来编写 Robot Framework 脚本？ Robot Framework 目前提供了各
+种主流编辑器的插件支持。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.23.PNG)<br>
+&emsp;&emsp;读者可以选择在自己熟悉的编辑器中安装相应的插件， 介于本书第一章中介绍了 Sublime Text2， 所以，
+这里我们选择 Sublime assistant 插件安装。<br>
+&emsp;&emsp;Github 地址： https://github.com/andriyko/sublime-robot-framework-assistant<br>
+&emsp;&emsp;同样的方式克隆或下载插件代码到本地， 将解压目录放到 Sublime Text2 的 Packages\目录下， 重启动
+Sublimt Text2。<br>
+&emsp;&emsp;在 Sublimt Text2 菜单栏“查看”-->“语法”-->“Botot Framework syntax highlighting”，选择 Robot Framework
+类型的语法。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.24.PNG)<br>
+### 9.3.2、 基本概念与用法
+&emsp;&emsp;在 Robot Framework 中创建测试项目和单元测试框架（unittest） 中基本一致。<br>
+![image](https://github.com/15529343201/guest/blob/chapter9/image/9.25.PNG)<br>
+&emsp;&emsp;回忆一下， 当我们用单元测试框架 unittest 创建测试用例的过程， 首先创建一个.py 文件。 在文件中当创
+建测试类并继承 unittest.TestCase 类， 再接下来就是在测试类下面创建以“test” 开头的方法， 称之为一个一个
+的用例。 如果创建的测试文件（.py） 多了， 可以把这些文件放到一个目录下， 或者一个目录的子目录下面，
+最后通过 discover()方法指定这个目录来运行测试用例。 <br>
+&emsp;&emsp;Robot Framework 框架测试用例的创建相似， 首先， 如果你的用例很少， 可以只创建一个文件。 一般后缀
+名为.robot 或 .txt， 也可以将后缀名命名为.tsv 或.html。 在文件中编写一个一个的用例。 如果创建了多用例文
+件， 也可以将这些文件放到一个测试目录下， 通过“pybot” 命令指定对该目录下的所有用例运行。<br>
+&emsp;&emsp;接下来练习一下 Robot Framework 用例的创建与运行。<br>
+&emsp;&emsp;首先创建测试目录 rf_test/ ， 在该目录下创建 test.robot 文件。 通过 Sublime Text2 打开文件， 编写如下内
+容。<br>
 
 
 
