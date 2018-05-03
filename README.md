@@ -3429,5 +3429,27 @@ ${r}= Post Request event /add_event/ data=${payload}
 &emsp;&emsp;5、 Readability counts.（重要的是可读性）<br>
 &emsp;&emsp;官方网站： http://docs.python-requests.org/en/master/<br>
 &emsp;&emsp;中文文档： http://cn.python-requests.org/zh_CN/latest/<br>
-
-
+### 10.3.1、 安装与例子
+&emsp;&emsp;通过 pip 安装 Requests：<br>
+&emsp;&emsp;`> python3 -m pip install requests`<br>
+&emsp;&emsp;`> git clone git://github.com/kennethreitz/requests.git`<br>
+&emsp;&emsp;通过 Requests 官方文档所提供的第一个例子来体会它的使用。<br>
+```
+Python 3.5.0 (v3.5.0:374f501f4567, Sep 13 2015, 02:27:37) [MSC v.1900 64 bit (AMD64)]
+on win32
+Type "copyright", "credits" or "license()" for more information.
+>>> import requests
+>>> r = requests.get('https://api.github.com/user', auth=('user', 'pass'))
+>>> r.status_code
+200
+>>> r.headers['content-type']
+'application/json; charset=utf-8'
+>>> r.encoding
+'utf-8'
+>>> r.text
+'{"login":"user","id":1000588,"avatar_url"……
+>>> r.json()
+{'public_gists': 0, 'id': 1000588, 'type': ……
+```
+&emsp;&emsp;不过， 要想尝试执行这个例子， 前提是你得有个 GitHub 账号， 因为“user” 和“pass” 需要使用具体的
+GitHub 账号密码才行。 建议读者申请 GitHub 帐号， 并将尝试将自己开发的项目通过 GitHub 托管<br>
