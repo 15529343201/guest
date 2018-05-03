@@ -3453,3 +3453,29 @@ Type "copyright", "credits" or "license()" for more information.
 ```
 &emsp;&emsp;不过， 要想尝试执行这个例子， 前提是你得有个 GitHub 账号， 因为“user” 和“pass” 需要使用具体的
 GitHub 账号密码才行。 建议读者申请 GitHub 帐号， 并将尝试将自己开发的项目通过 GitHub 托管<br>
+### 10.3.2、 接口测试
+&emsp;&emsp;通过上面的例子， 不难发现用代码方式去调用接口并不比工具复杂， 甚至更加简单。 只需要简单的几行
+代码就可以得到接口的返回值。 接下来编写一个完整的接口测试用例。<br>
+interface_test.py:<br>
+```Python
+import requests
+
+# 查询发布会接口
+url = "http://127.0.0.1:8000/api/get_event_list/"
+r = requests.get(url, params={'eid': '1'})
+result = r.json()
+print(result)
+assert result['status'] == 200
+assert result['message'] == "success"
+assert result['data']['name'] == "xx 产品发布会"
+assert result['data']['address'] == "北京林匹克公园水立方"
+assert result['data']['start_time'] == "2016-10-15T18:00:00"
+```
+&emsp;&emsp;因为“发布会查询接口” 是 GET 类型， 所以， 通过 requests 库的 get()方法调用， 第一个参数为调用接口
+的 URL 地址， params 设置接口的数， 参数以字典形式组织。<br>
+&emsp;&emsp;json()方法可以将接口返回的 json 格式的数据转化为字典。<br>
+&emsp;&emsp;接下来就是通过 assert 语句对接字典中的数据进行断言。分别断言 status、 message 和 data 的相关数据等。<br>
+
+
+
+
