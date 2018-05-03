@@ -3375,5 +3375,441 @@ ${r}= Post Request event /add_event/ data=${payload}
 &emsp;&emsp;最后， 关于 Robot Framework 框架的介绍就到此为止， 不得不说它是一个非常优秀的测试框架， 应用范
 围也很广泛。 另外， 关于 RequestsLibrary 中所提供的关键字， 可以在下面的文档中查看。<br>
 &emsp;&emsp;http://bulkan.github.io/robotframework-requests/<br>
+# chapter10 接口测试框架设计
+## 10.1、 接口测试工具的不足
+&emsp;&emsp;相信读者一定产生了疑问， 在第九章中通过各种接口测试工具来完成测试， 看上去简单方便， 为何还要
+学习编程的方式来做接口测试呢？ 工具虽然方便， 但也不足之处， 这里简单总结几条工具的不足。<br>
+&emsp;&emsp;测试数据不可控制<br>
+&emsp;&emsp;接口测试本质是对数据的测试， 调用接口， 输入一些数据， 随后， 接口返回一些数据。 验证接口返回数
+据的正确性。<br>
+&emsp;&emsp;假设有一个用户查询接口， 要输入用户名 username， 返回用户的年龄、 性别、 邮箱、 手机号等数据。 在
+测试该接口时传参 username=zhangsan。 首先， 数据库里一定要有一条 zhangsan 的数据， 否则接口返回为空。
+如果要想断言接口返回值， 如 assert age==22； 那么一定预先确定参数的返回数据。<br>
+&emsp;&emsp;要想接口测试用例可以正确的执行并断言通过，必须要事先插入测试数据（username=zhangsan ; age=22...），
+一般的接口测试工具并不具备数据插入的功能。 在用工具运行测试用例之前不得不手动向数据库中插入测试
+数据。 这样我们的接口测试是不是就没有那么“自动化了” 。<br>
+&emsp;&emsp;无法测试加密接口<br>
+&emsp;&emsp;这是接口测试工具的一大硬伤， 如我们前面开发的接口用工具测试完全没有问题， 但遇到需要对接口参
+数进行加密/解密的接口， 例如 md5、 base64、 AES 等常见加密方式。 本书第十一章会对加密接口进行介绍。
+又或者接口的参数需要使用时间戳， 也是工具很难模拟的。<br>
+&emsp;&emsp;扩展能力不足<br>
+&emsp;&emsp;当我们在享受工具所带来的便利的同时， 往往也会受制于工具所带来的局限。 例如， 我想将测试结果生
+成 HMTL 格式测试报告， 我想将测试报告发送到指定邮箱。 我想对接口测试做定时任务。 我想对接口测试做
+持续集成。 这些需求都是工具难以实现的。<br>
+&emsp;&emsp;备注： 关于上面的几点不足， 大多情况 Robot Framework 可以满足， 严格意义上来说 Robot Framework 并
+不属于“工具” ， 虽然我将其划分到了测试工具一章。 但 Robot Framework 有着与编程一样的扩展性， 前提是
+你需要熟悉 Python 语言， 并且可以为 Robot Framework 开发系统关键字。 然而， Robot Framework 的脚本难读
+在我看来是它的最大弱点。 既然都要开发系统关键字了， 为何不直接写 Python 脚本更加自由。<br>
+## 10.2、 接口自动化测试设计
+&emsp;&emsp;既然讨论了自动化接口测试工具的不足， 接下来介绍一下接口自动化项目的实现。<br>
+![image](https://github.com/15529343201/guest/blob/chapter10/image/10.1.PNG)<br>
+&emsp;&emsp;一般的接口工具测试过程：<br>
+&emsp;&emsp;1、 接口工具调用被测系统的接口（传参 username="zhangsan"） 。<br>
+&emsp;&emsp;2、 系统接口根据传参（username="zhangsan"） 向正式数据库中查询数据。<br>
+&emsp;&emsp;3、 将查询结果组装成一定格式的数据， 并返回给被调用者。<br>
+&emsp;&emsp;4、 人工或通过工具的断言功能检查接口测试的正确性。<br>
+&emsp;&emsp;而我们设计的接口自动化测试项目， 为了使接口测试对数据的变得可控， 测试过程如下：<br>
+&emsp;&emsp;1、 接口测试项目先向测试数据库中插入测试数据（zhangsan 的个人信息） 。<br>
+&emsp;&emsp;2、 调用被测系统接口（传参 username="zhangsan"） 。<br>
+&emsp;&emsp;3、 系统接口根据传参（username="zhangsan"） 向测试数据库中进行查询并得到 zhangsan 个人信息。<br>
+&emsp;&emsp;4、 将查询结果组装成一定格式的数据， 并返回给被调用者。<br>
+&emsp;&emsp;5、 通过单元测试框架断言接口返回的数据（zhangsan 的个人信息） ， 并生成测试报告。<br>
+&emsp;&emsp;为了使正式数据库的数据不被污染， 建议使用独立的测试数据库。 Web 项目配置数据库非常简单。 参考
+本书第四章。<br>
+## 10.3、 Request 库
+&emsp;&emsp;Requests 是使用 Apache2 Licensed 许可证的 HTTP 库。 用 Python 编写。<br>
+&emsp;&emsp;Requests 使用的是 urllib3， 因此继承了它的所有特性。 Requests 支持 HTTP 连接保持和连接池， 支持
+使用 cookie 保持会话， 支持文件上传， 支持自动确定响应内容的编码， 支持国际化的 URL 和 POST 数据
+自动编码。 现代、 国际化、 人性化。<br>
+&emsp;&emsp;Requests 以 PEP 20 的习语为中心开发：<br>
+&emsp;&emsp;1、 Beautiful is better than ugly.（美丽优于丑陋）<br>
+&emsp;&emsp;2、 Explicit is better than implicit.（清楚优于含糊）<br>
+&emsp;&emsp;3、 Simple is better than complex.（简单优于复杂）<br>
+&emsp;&emsp;4、 Complex is better than complicated.（复杂优于繁琐）<br>
+&emsp;&emsp;5、 Readability counts.（重要的是可读性）<br>
+&emsp;&emsp;官方网站： http://docs.python-requests.org/en/master/<br>
+&emsp;&emsp;中文文档： http://cn.python-requests.org/zh_CN/latest/<br>
+### 10.3.1、 安装与例子
+&emsp;&emsp;通过 pip 安装 Requests：<br>
+&emsp;&emsp;`> python3 -m pip install requests`<br>
+&emsp;&emsp;`> git clone git://github.com/kennethreitz/requests.git`<br>
+&emsp;&emsp;通过 Requests 官方文档所提供的第一个例子来体会它的使用。<br>
+```
+Python 3.5.0 (v3.5.0:374f501f4567, Sep 13 2015, 02:27:37) [MSC v.1900 64 bit (AMD64)]
+on win32
+Type "copyright", "credits" or "license()" for more information.
+>>> import requests
+>>> r = requests.get('https://api.github.com/user', auth=('user', 'pass'))
+>>> r.status_code
+200
+>>> r.headers['content-type']
+'application/json; charset=utf-8'
+>>> r.encoding
+'utf-8'
+>>> r.text
+'{"login":"user","id":1000588,"avatar_url"……
+>>> r.json()
+{'public_gists': 0, 'id': 1000588, 'type': ……
+```
+&emsp;&emsp;不过， 要想尝试执行这个例子， 前提是你得有个 GitHub 账号， 因为“user” 和“pass” 需要使用具体的
+GitHub 账号密码才行。 建议读者申请 GitHub 帐号， 并将尝试将自己开发的项目通过 GitHub 托管<br>
+### 10.3.2、 接口测试
+&emsp;&emsp;通过上面的例子， 不难发现用代码方式去调用接口并不比工具复杂， 甚至更加简单。 只需要简单的几行
+代码就可以得到接口的返回值。 接下来编写一个完整的接口测试用例。<br>
+interface_test.py:<br>
+```Python
+import requests
+
+# 查询发布会接口
+url = "http://127.0.0.1:8000/api/get_event_list/"
+r = requests.get(url, params={'eid': '1'})
+result = r.json()
+print(result)
+assert result['status'] == 200
+assert result['message'] == "success"
+assert result['data']['name'] == "xx 产品发布会"
+assert result['data']['address'] == "北京林匹克公园水立方"
+assert result['data']['start_time'] == "2016-10-15T18:00:00"
+```
+&emsp;&emsp;因为“发布会查询接口” 是 GET 类型， 所以， 通过 requests 库的 get()方法调用， 第一个参数为调用接口
+的 URL 地址， params 设置接口的数， 参数以字典形式组织。<br>
+&emsp;&emsp;json()方法可以将接口返回的 json 格式的数据转化为字典。<br>
+&emsp;&emsp;接下来就是通过 assert 语句对接字典中的数据进行断言。分别断言 status、 message 和 data 的相关数据等。<br>
+### 10.3.3、 接口自动化测试
+&emsp;&emsp;使用 unittest 单元测试框架开发接口测试用例.<br>
+```Python
+import requests
+import unittest
+
+class GetEventListTest(unittest.TestCase):
+    '''查询发布会接口测试'''
+
+    def setUp(self):
+        self.url="http://127.0.0.1:8000/api/get_event_list/"
+
+    def test_get_event_null(self):
+        '''发布会id为空'''
+        r=requests.get(self.url,params={'eid':''})
+        result=r.json()
+        print(result)
+        self.assertEqual(result['status'],10021)
+        self.assertEqual(result['message'],"parameter error")
+
+    def test_get_event_success(self):
+        '''发布会id为1,查询成功'''
+        r=requests.get(self.url,params={'eid':'1'})
+        result=r.json()
+        print(result)
+        self.assertEqual(result['status'],200)
+        self.assertEqual(result['message'],"success")
+        self.assertEqual(result['data']['name'], "xx 产品发布会")
+        self.assertEqual(result['data']['address'], "北京林匹克公园水立方")
+        self.assertEqual(result['data']['start_time'], "2016-10-15T18:00:00")
+
+if __name__ == '__main__':
+    unittest.main()
+```
+## 10.4 接口自动化测试框架实现
+&emsp;&emsp;关于接口自动化测试， unittest 已经帮我们做了大部分工作， 接下来只需要集成数据库操作， 以及
+HTMLTestRunner 测试报告生成扩展即可。<br>
+### 10.4.1、 框架结构介绍
+&emsp;&emsp;自动化测试框架目录结构如下：<br>
+![image](https://github.com/15529343201/guest/blob/chapter10/image/10.2.PNG)<br>
+&emsp;&emsp;`pyrequests` 框架：<br>
+&emsp;&emsp;`db_fixture/`： 初始化接口测试数据。<br>
+&emsp;&emsp;`interface/`： 用于编写接口自动化测试用例。<br>
+&emsp;&emsp;`report/`： 生成接口自动化测试报告。<br>
+&emsp;&emsp;`db_config.ini` ： 数据库配置文件。<br>
+&emsp;&emsp;`HTMLTestRunner.py` unittest 单元测试框架扩展， 生成 HTML 格式的测试报告。<br>
+&emsp;&emsp;`run_tests.py` ： 执行所有接口测试用例。<br>
+&emsp;&emsp;GitHub 项目地址： https://github.com/defnngj/pyrequest<br>
+### 10.4.2、 数据库配置
+&emsp;&emsp;首先， 需要修改被测系统将数据库指向测试数据库。 以 MySQL 数据库为例， 修改.../guest/settings.py 文
+件。 你可以在本机或虚拟中安装一个数据库； 或者在系统测试环境单独创建一个测试库。 这样做的目的是让
+接口测试的数据不会清空或污染到功能测试库的数据。<br>
+settings.py:<br>
+```Python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+        'NAME': 'guest_test',
+        'USER': 'root',
+        'PASSWORD': 'root',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+    }
+}
+```
+&emsp;&emsp;修改了数据库配置之后需要重新执行“python3 manage.py migrate” 生成数据库表结构， 参考本书第四章
+3.5 节， 或者读者也可以借助数据库管理工具的导出和导入功能， 将一个数据库的所有表结构导入到另一个数
+据库。<br>
+### 10.4.3、 代码实现
+&emsp;&emsp;首先， 创建数据库配置文件.../db_config.ini<br>
+db_config.ini:<br>
+```
+[mysqlconf]
+host=127.0.0.1
+port=3306
+user=root
+password=root
+db_name=guest_test
+```
+&emsp;&emsp;接下来简单封装数据库操作， 数据库表数据的插入和清除， `.../db_fixture/mysql_db.py`。<br>
+mysql_db.py:<br>
+```Python
+# coding=utf8
+import pymysql.cursors
+import os
+import configparser as cparser
+
+# ======== Reading db_config.ini setting ===========
+base_dir = str(os.path.dirname(os.path.dirname(__file__)))
+base_dir = base_dir.replace('\\', '/')
+file_path = base_dir + "/db_config.ini"
+
+cf = cparser.ConfigParser()
+
+cf.read(file_path)
+host = cf.get("mysqlconf", "host")
+port = cf.get("mysqlconf", "port")
+db = cf.get("mysqlconf", "db_name")
+user = cf.get("mysqlconf", "user")
+password = cf.get("mysqlconf", "password")
+
+
+# ======== MySql base operating ===================
+class DB:
+    def __init__(self):
+        try:
+            # Connect to the database
+            self.connection = pymysql.connect(host=host,
+                                              port=int(port),
+                                              user=user,
+                                              password=password,
+                                              db=db,
+                                              charset='utf8mb4',
+                                              cursorclass=pymysql.cursors.DictCursor)
+        except pymysql.err.OperationalError as e:
+            print("Mysql Error %d: %s" % (e.args[0], e.args[1]))
+
+    # clear table data
+    def clear(self, table_name):
+        # real_sql = "truncate table " + table_name + ";"
+        real_sql = "delete from " + table_name + ";"
+        with self.connection.cursor() as cursor:
+            cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+            cursor.execute(real_sql)
+        self.connection.commit()
+
+    # insert sql statement
+    def insert(self, table_name, table_data):
+        for key in table_data:
+            table_data[key] = "'" + str(table_data[key]) + "'"
+        key = ','.join(table_data.keys())
+        value = ','.join(table_data.values())
+        real_sql = "INSERT INTO " + table_name + " (" + key + ") VALUES (" + value + ")"
+        # print(real_sql)
+
+        with self.connection.cursor() as cursor:
+            cursor.execute(real_sql)
+
+        self.connection.commit()
+
+    # close database
+    def close(self):
+        self.connection.close()
+
+    # init data
+    def init_data(self, datas):
+        for table, data in datas.items():
+            self.clear(table)
+            for d in data:
+                self.insert(table, d)
+        self.close()
+
+
+if __name__ == '__main__':
+    db = DB()
+    table_name = "sign_event"
+    data = {'id': 1, 'name': '红米', '`limit`': 2000, 'status': 1, 'address': '北京会展中心',
+            'start_time': '2016-08-20 00:25:42'}
+    table_name2 = "sign_guest"
+    data2 = {'realname': 'alen', 'phone': 12312341234, 'email': 'alen@mail.com', 'sign': 0, 'event_id': 1}
+
+    db.clear(table_name)
+    db.insert(table_name, data)
+    db.close()
+```
+&emsp;&emsp;首先， 读取 db_config.ini 配置文件。<br>
+&emsp;&emsp;创建 DB 类， __init__()方法初始化， 通过 pymysql.connect()连接数据库。<br>
+&emsp;&emsp;因为这里只用到数据库表的清除和插入， 所以只创建 clear()和 insert()两个方法。 其中， insert()方法对数
+据的插入做了简单的格式转化， 可将字典转化成 SQL 插入语句， 这样格式转化了方便了数据库表数据的创建。<br>
+&emsp;&emsp;最后， 通过 close()方法用于关闭数据库连接。<br>
+&emsp;&emsp;接下来创建测试数据， .../db_fixture/test_data.py<br>
+test_data.py:<br>
+```Python
+import sys, time
+
+sys.path.append('../db_fixture')
+try:
+    from mysql_db import DB
+except ImportError:
+    from .mysql_db import DB
+
+# 定义过去时间
+past_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() - 100000))
+
+# 定义将来时间
+future_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() + 10000))
+
+# create data
+datas = {
+    'sign_event': [
+        {'id': 1, 'name': '红米Pro发布会', '`limit`': 2000, 'status': 1, 'address': '北京会展中心', 'start_time': future_time,'create_time':'2018-05-03 16:39:00'},
+        {'id': 2, 'name': '可参加人数为0', '`limit`': 0, 'status': 1, 'address': '北京会展中心', 'start_time': future_time,'create_time':'2018-05-03 16:39:00'},
+        {'id': 3, 'name': '当前状态为0关闭', '`limit`': 2000, 'status': 0, 'address': '北京会展中心', 'start_time': future_time,'create_time':'2018-05-03 16:39:00'},
+        {'id': 4, 'name': '发布会已结束', '`limit`': 2000, 'status': 1, 'address': '北京会展中心', 'start_time': past_time,'create_time':'2018-05-03 16:39:00'},
+        {'id': 5, 'name': '小米5发布会', '`limit`': 2000, 'status': 1, 'address': '北京国家会议中心', 'start_time': future_time,'create_time':'2018-05-03 16:39:00'},
+    ],
+    'sign_guest': [
+        {'id': 1, 'realname': 'alen', 'phone': 13511001100, 'email': 'alen@mail.com', 'sign': 0, 'create_time':'2018-05-03 16:39:00','event_id': 1},
+        {'id': 2, 'realname': 'has sign', 'phone': 13511001101, 'email': 'sign@mail.com', 'sign': 1, 'create_time':'2018-05-03 16:39:00','event_id': 1},
+        {'id': 3, 'realname': 'tom', 'phone': 13511001102, 'email': 'tom@mail.com', 'sign': 0, 'create_time':'2018-05-03 16:39:00','event_id': 5},
+    ],
+}
+
+
+# Inster table datas
+def init_data():
+    db = DB()
+    for table, data in datas.items():
+        db.clear(table)
+        for d in data:
+            db.insert(table, d)
+    db.close()
+
+
+
+if __name__ == '__main__':
+    init_data()
+```
+&emsp;&emsp;init_data()函数用于读取 datas 字典中的数据， 调用 DB 类中的 clear()方法清除数据库， 然后， 调用 insert()
+方法插入表数据。<br>
+&emsp;&emsp;编写接口测试用例。 创建添加发布会接口测试文件.../interface/add_event_test.py。<br>
+add_event_test.py:<br>
+```Python
+import unittest
+import requests
+import os, sys
+parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, parentdir)
+from ..db_fixture import test_data
+
+
+class AddEventTest(unittest.TestCase):
+    ''' 添加发布会 '''
+
+    def setUp(self):
+        self.base_url = "http://127.0.0.1:8000/api/add_event/"
+
+    def tearDown(self):
+        print(self.result)
+
+    def test_add_event_all_null(self):
+        ''' 所有参数为空 '''
+        payload = {'eid':'','':'','limit':'','address':"",'start_time':''}
+        r = requests.post(self.base_url, data=payload)
+        self.result = r.json()
+        self.assertEqual(self.result['status'], 10021)
+        self.assertEqual(self.result['message'], 'parameter error')
+
+    def test_add_event_eid_exist(self):
+        ''' id已经存在 '''
+        payload = {'eid':1,'name':'一加4发布会','limit':2000,'address':"深圳宝体",'start_time':'2017'}
+        r = requests.post(self.base_url, data=payload)
+        self.result = r.json()
+        self.assertEqual(self.result['status'], 10022)
+        self.assertEqual(self.result['message'], 'event id already exists')
+
+    def test_add_event_name_exist(self):
+        ''' 名称已经存在 '''
+        payload = {'eid':11,'name':'红米Pro发布会','limit':2000,'address':"深圳宝体",'start_time':'2017'}
+        r = requests.post(self.base_url,data=payload)
+        self.result = r.json()
+        self.assertEqual(self.result['status'], 10023)
+        self.assertEqual(self.result['message'], 'event name already exists')
+
+    def test_add_event_data_type_error(self):
+        ''' 日期格式错误 '''
+        payload = {'eid':11,'name':'一加4手机发布会','limit':2000,'address':"深圳宝体",'start_time':'2017'}
+        r = requests.post(self.base_url,data=payload)
+        self.result = r.json()
+        self.assertEqual(self.result['status'], 10024)
+        self.assertIn('start_time format error.', self.result['message'])
+
+    def test_add_event_success(self):
+        ''' 添加成功 '''
+        payload = {'eid':11,'name':'一加4手机发布会','limit':2000,'address':"深圳宝体",'start_time':'2017-05-10 12:00:00'}
+        r = requests.post(self.base_url,data=payload)
+        self.result = r.json()
+        self.assertEqual(self.result['status'], 200)
+        self.assertEqual(self.result['message'], 'add event success')
+
+
+if __name__ == '__main__':
+    test_data.init_data() # 初始化接口测试数据
+    unittest.main()
+```
+&emsp;&emsp;在测试接口之前， 调用 test_data.py 文件中的 init_data()方法初始化数据库中的测试数据。<br>
+&emsp;&emsp;创建 AddEventTest 测试类继承 unittest.TestCase 类， 通过创建测试用例， 调用相关接口， 并验证接口返回
+的数据。<br>
+&emsp;&emsp;当我们开发的接口达到一定数量后， 就需要考虑分文件分目录的来划分接口测试用例， 如何批量的执行
+不同文件目录下的用例呢？ unittest 单元测试框架提供的 discover()方法可以帮助我们做到这一点。 并使用
+HTMLTestRunner 扩展生成 HTML 格式的测试报告。<br>
+&emsp;&emsp;创建 run_tests.py 文件。<br>
+run_tests.py:<br>
+```Python
+import time, sys
+sys.path.append('./interface')
+sys.path.append('./db_fixture')
+from HTMLTestRunner import HTMLTestRunner
+from unittest import defaultTestLoader
+from db_fixture import test_data
+
+
+# 指定测试用例为当前文件夹下的 interface 目录
+test_dir = './interface'
+testsuit = defaultTestLoader.discover(test_dir, pattern='*_test.py')
+
+
+if __name__ == "__main__":
+    test_data.init_data() # 初始化接口测试数据
+
+    now = time.strftime("%Y-%m-%d %H_%M_%S")
+    filename = './report/' + now + '_result.html'
+    fp = open(filename, 'wb')
+    runner = HTMLTestRunner(stream=fp,
+                            title='发布会签到系统接口自动化测试',
+                            description='运行环境：MySQL(PyMySQL), Requests, unittest ')
+    runner.run(testsuit)
+    fp.close()
+```
+&emsp;&emsp;首先， 通过调用 test_data.py 文件中的 init_data()函数来初始化接口测试数据。<br>
+&emsp;&emsp;使用 unittest 框架所提供的 discover()方法， 查找 interface/ 目录下， 所有匹配*_test.py 的测试文件（*星
+号匹配任意字符） 。<br>
+&emsp;&emsp;HTMLTestRunner 为 unittest 单元测试框架的扩展， 利用它所提供的 HTMLTestRunner()类来替换 unittest
+单元测试框架的 TextTestRunner()类， 从而生成 HTML 格式的测试报告。<br>
+&emsp;&emsp;遗憾的是 HTMLTestRunner 并不支持 Python3.x， 我对其做了少量的修改， 其它可以在 Python3 下执行。<br>
+&emsp;&emsp;HTMLTestRunner for Python3：<br>
+&emsp;&emsp;https://github.com/defnngj/HTMLTestRunner<br>
+&emsp;&emsp;为了方便接口自动化测试的使用， 将其放到了 pyrequest 项目中， 当你然克隆 pyrequest 项目后， 不需要
+再单独安装 HTMLTestRunner 了。<br>
+&emsp;&emsp;通过 time 的 strftime()方法获取当前时间， 并且转化成一定的时间格式。 作为测试报告的名称。 这样做目
+的是是为了避免因为生成的报告的名称重名而造成报告的覆盖。 最终， 将测试报告存放于 report/目录下面。 如
+图 10.3， 一张完整的接口自动化测试报告。<br>
+![image](https://github.com/15529343201/guest/blob/chapter10/image/10.3.PNG)<br>
 
 
