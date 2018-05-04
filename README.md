@@ -5176,8 +5176,35 @@ class GroupViewSet(viewsets.ModelViewSet):
 &emsp;&emsp;在URL中会定义相应的规则到ViewSet。ViewSets则通过serializer_class找到对应的Serializers。这里
 将User和Group的所有对象赋予queryset,并返回这些值。在UserSerializer和GroupSerializer中定义要返回的字段。<br>
 &emsp;&emsp;打开/django_test/urls.py文件,添加api的路由配置。<br>
+urls.py:<br>
+```Python
+from django.conf.urls import url,include
+from django.contrib import admin
+from rest_framework import routers
+from api import views
 
+#Routers provide an easy way of automatically determining the URL conf.
+router = routers.DefaultRouter()
+router.register(r'users', views.UserViewSet)
+router.register(r'groups', views.GroupViewSet)
 
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+	url(r'^',include(router.urls)),
+	url(r'^api-auth/',include('rest_framework.urls',namespace='rest_framework')),
+]
+```
+&emsp;&emsp;因为我们使用的是 viewset， 所以我们可以使用 routers 类自动生成 URL conf。<br>
+&emsp;&emsp;通过"runserver"命令启动服务。<br>
+```Python
+...\django_rest>python3 manage.py runserver
+Performing system checks...
+System check identified no issues (0 silenced).
+November 21, 2016 - 21:50:18
+Django version 1.10.3, using settings 'django_rest.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+```
 
 
 
