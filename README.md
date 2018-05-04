@@ -4483,6 +4483,64 @@ return dict_data
 ```
 &emsp;&emsp;将解密后字符串通过 json.loads()方法转化成字典， 并将该字典做为 aes_encryption()函数的返回值。<br>
 &emsp;&emsp;在获取嘉宾例表的接口中调用 aes_encryption()函数进行 AES 加密字符串解密。<br>
+views_if_sec_example.py:<br>
+```Python
+# 嘉宾查询接口----AES 算法
+def get_guest_list(request):
+    dict_data = aes_encryption(request)
+
+    if dict_data == "error":
+        return JsonResponse({'status': 10011, 'message': 'request error'})
+
+    eid = dict_data['eid']
+    phone = dict_data['phone']
+
+    if eid == '':
+        return JsonResponse({'status': 10021, 'message': 'eid cannot be empty'})
+    if eid != '' and phone == '':
+        datas = []
+        results = Guest.objects.filter(event_id=eid)
+        if results:
+            for r in results:
+                guest = {}
+                guest['realname'] = r.realname
+                guest['phone'] = r.phone
+                guest['email'] = r.email
+                guest['sign'] = r.sign
+                datas.append(guest)
+            return JsonResponse({'status': 200, 'message': 'success', 'data': datas})
+        else:
+            return JsonResponse({'status': 10022, 'message': 'query result is empty'})
+    if eid != '' and phone != '':
+        guest = {}
+        try:
+            result = Guest.objects.get(phone=phone, event_id=eid)
+        except ObjectDoesNotExist:
+            return JsonResponse({'status': 10022, 'message': 'query result is empty'})
+        else:
+            guest['realname'] = result.realname
+            guest['phone'] = result.phone
+            guest['email'] = result.email
+            guest['sign'] = result.sign
+            return JsonResponse({'status': 200, 'message': 'success', 'data': guest})
+```
+&emsp;&emsp;在.../sign/urls.py 文件中添加新的安全接口指向。<br>
+```Python
+from sign import views_if,views_if_security
+urlpatterns = [
+    ......
+    # security interface:
+    # ex : /aip/sec_add_event/
+    url(r'^sec_get_guest_list/', views_if_sec_example.get_guest_list,name='get_guest_list'),
+]
+```
+### 11.3.3、 编写接口文档
+&emsp;&emsp;查询嘉宾接口文档：<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.7.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.8.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.9.PNG)<br>
+
+
 
 
 
