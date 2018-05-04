@@ -5205,6 +5205,18 @@ Django version 1.10.3, using settings 'django_rest.settings'
 Starting development server at http://127.0.0.1:8000/
 Quit the server with CTRL-BREAK.
 ```
+&emsp;&emsp;通过浏览器打开： http://127.0.0.1:8000/， 图 13.2<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.2.PNG)<br>
+### 13.2.2、 添加接口数据
+&emsp;&emsp;现在， 点击页面右上角“Log in” 登录系统， 账号为刚刚创建的超级管理员帐号登录。<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.3.PNG)<br>
+&emsp;&emsp;点击： http://127.0.0.1:8000/groups/ 链接， 添加用户组。 图 13.4。 添加“test” 组和“developer” 组。<br>
+&emsp;&emsp;点击： http://127.0.0.1:8000/users/链接， 添加用户。 图 13.5。 添加用户“tom” 和“jack” 。<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.4.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.5.PNG)<br>
+### 13.2.3、 测试接口
+&emsp;&emsp;关于 REST 风格实现的 API 并无特别之处， 我们通过同样可以使用 requests 库进其进行测试。 针对用户
+组与用户的查询编写测试用例。<br>
 
 
 
