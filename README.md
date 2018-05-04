@@ -5029,6 +5029,38 @@ print(result)
 Data 填写 XML 格式的 SOAP 请求数据。<br>
 &emsp;&emsp;运行测试， 查看结果树， 如图 12.8。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter12/image/12.8.PNG)<br>
+# chapter13 REST
+&emsp;&emsp;关于 Web Service 技术， 关于上一章中介绍的并不完整， REST 同样属于 Web Service 技术。 REST 定义
+了一组体系架构原则， 您可以根据这些原则设计以系统资源为中心的 Web 服务， 包括使用不同语言编写的客
+户端如何通过 HTTP 处理和传输资源状态。 如果考虑使用它的 Web 服务的数量， REST 近年来已经成为最主
+要的 Web 服务设计模型。 事实上， REST 对 Web 的影响非常大， 由于其使用相当方便， 已经普遍地取代了基
+于 SOAP 和 WSDL 的接口设计。<br>
+## 13.1 RPC 与 REST
+### RPC
+&emsp;&emsp;RPC 即 Remote Procedure Call 的缩写，远程过程调用。它是 Web Service 领域广为流行的一个种开发风格。<br>
+&emsp;&emsp;RPC 风格的开发关注于服务器/客户端之间的方法调用， 而并不关注基于哪个网络层的哪种协议。 RPC 风
+格的代表是 XML-RPC 和大 Web 服务。<br>
+&emsp;&emsp;（1） XML-RPC<br>
+&emsp;&emsp;XML-RPC 是一种使用 XML 格式封装方法调用， 并使用 HTTP 协议作为传送机制的 RPC 风格的实现。
+XML-RPC 的请求方法都是 HTTP 协议的 POST 方法， 请求和响应的数据格式均为 XML。<br>
+&emsp;&emsp;XML-RPC 是一种遗留技术， 已经被 SOAP 取代。 著名的测试用例管理系统 TestLink 的对外接口就是使
+用 PHP 开发的 XML-RPC。<br>
+&emsp;&emsp;（2） 大 Web 服务<br>
+&emsp;&emsp;大 Web 服务（Big Web Service） 是对基于 SOAP+WSDL+UDDI 等技术实现 RPC 风格的大型 Web 服务的
+统称。 本书第十二章介绍就是该项技术。<br>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
