@@ -4409,7 +4409,80 @@ def encryptBase64(self,src):
 &emsp;&emsp;`r = requests.post(self.base_url, data={"data": encoded})`<br>
 &emsp;&emsp;将加密后的字符串作为接口的 data 参数发送给接口。<br>
 &emsp;&emsp;当服务器接收到字符串之后， 如何对加密串进行解密处理呢？ 下接来开发服务器端的处理。<br>
+views_if_sec_example.py:<br>
+```Python
+from Crypto.Cipher import AES
 
+# =======AES 加密算法===============
+BS = 16
+unpad = lambda s: s[0: - ord(s[-1])]
+
+
+def decryptBase64(src):
+    return base64.urlsafe_b64decode(src)
+
+
+def decryptAES(src, key):
+    """
+    解析 AES 密文
+    """
+    src = decryptBase64(src)
+    iv = b"1172311105789011"
+    cryptor = AES.new(key, AES.MODE_CBC, iv)
+    text = cryptor.decrypt(src).decode()
+    return unpad(text)
+
+
+def aes_encryption(request):
+    app_key = 'W7v4D60fds2Cmk2U'
+    if request.method == 'POST':
+        data = request.POST.get("data", "")
+    else:
+        return "error"
+    # 解密
+    decode = decryptAES(data, app_key)
+    # 转化为字典
+    dict_data = json.loads(decode)
+    return dict_data
+```
+&emsp;&emsp;`app_key = 'W7v4D60fds2Cmk2U'`<br>
+&emsp;&emsp;服务器端与合法客户端约定的密钥 app_key。<br>
+```Python
+if request.method == 'POST':
+    data = request.POST.get("data", "")
+else:
+    return "error"
+```
+&emsp;&emsp;判断客户端请求是否为 POST， 通过 POST.get()方法接收 data 参数。<br>
+&emsp;&emsp;`decode = decryptAES(data, app_key)`<br>
+&emsp;&emsp;调用解密函数 decryptAES() ， 传参加密字符串和 app_key。<br>
+```Python
+def decryptAES(src, key):
+    """解析 AES 密文 """
+    src = decryptBase64(src)
+    iv = b"1172311105789011"
+    cryptor = AES.new(key, AES.MODE_CBC, iv)
+    text = cryptor.decrypt(src).decode()
+    return unpad(text)
+```
+&emsp;&emsp;首先， 调用 decryptBase64()方法， 将 Base64 加密字符串解密为 AES 加密字符串。 然后， 通过 decrypt()
+对 AES 加密串进行解密。<br>
+```Python
+def decryptBase64(src):
+return base64.urlsafe_b64decode(src)
+```
+&emsp;&emsp;对 Base64 字符串解密。<br>
+```Python
+BS = 16
+unpad = lambda s : s[0: - ord(s[-1])]
+```
+&emsp;&emsp;最后， 通过 upad 匿名函数对字符串的长度还原。 到此， 解密过程结束。<br>
+```Python
+dict_data = json.loads(decode)
+return dict_data
+```
+&emsp;&emsp;将解密后字符串通过 json.loads()方法转化成字典， 并将该字典做为 aes_encryption()函数的返回值。<br>
+&emsp;&emsp;在获取嘉宾例表的接口中调用 aes_encryption()函数进行 AES 加密字符串解密。<br>
 
 
 
