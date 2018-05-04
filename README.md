@@ -5217,12 +5217,100 @@ Quit the server with CTRL-BREAK.
 ### 13.2.3、 测试接口
 &emsp;&emsp;关于 REST 风格实现的 API 并无特别之处， 我们通过同样可以使用 requests 库进其进行测试。 针对用户
 组与用户的查询编写测试用例。<br>
+rest_test.py:<br>
+```Python
+import unittest
+import requests
 
+class UserTest(unittest.TestCase):
+	'''用户查询测试'''
+	def setUp(self):
+		self.base_url = 'http://127.0.0.1:8000/users'
+		self.auth = ('admin', 'admin123456')
+		
+	def test_user1(self):
+		'''test user 1 '''
+		r = requests.get(self.base_url+'/1/', auth=self.auth)
+		result = r.json()
+		self.assertEqual(result['username'], 'admin')
+		self.assertEqual(result['email'], 'admin@mail.com')
+		
+	def test_user2(self):
+		'''test user 2 '''
+		r = requests.get(self.base_url+'/2/', auth=self.auth)
+		result = r.json()
+		self.assertEqual(result['username'], 'jack')
+		self.assertEqual(result['email'], 'jack@mail.com')
+		
+	def test_user3(self):
+		'''test user 3 '''
+		r = requests.get(self.base_url+'/3/', auth=self.auth)
+		result = r.json()
+		self.assertEqual(result['username'], 'tom')
+		self.assertEqual(result['email'], 'tom@mail.com')
+		
+class GroupsTest(unittest.TestCase):
+	'''用户组查询测试'''
+	
+	def setUp(self):
+		self.base_url = 'http://127.0.0.1:8000/groups'
+		self.auth = ('admin','admin123456')
+		
+	def test_groups1(self):
+		'''test groups 1 '''
+		r = requests.get(self.base_url+'/1/', auth=self.auth)
+		result = r.json()
+		self.assertEqual(result['name'], 'test')
+		
+	def test_groups2(self):
+		'''test groups 2 '''
+		r = requests.get(self.base_url+'/2/', auth=self.auth)
+		result = r.json()
+		self.assertEqual(result['name'], 'developer')
+		
+if __name__ == '__main__':
+	unittest.main()
+```
+&emsp;&emsp;需要注意的是,请求接口的资源不是通过接口参数(?user=1)访问,而是通过URI路径(/1/)访问。
+另外,接口的访问需要用户签名,在发送get()请求时需要指定auth参数。<br>
+## 13.3 集成发布会系统 API
+&emsp;&emsp;在本书的第八章， 根据发布会签到系统我们开发相关的接口， 通过 Django-REST-Framework 框架来实现
+接口要简单得多。<br>
+13.3.1、 添加发布会 API
+&emsp;&emsp;接下来在 django_rest 项目的基础上增加发布会和嘉宾管理的接口。<br>
+&emsp;&emsp;创建模型， 打开.../api/models.py 文件。<br>
+models.py:<br>
+```Python
+from django.db import models
 
+# Create your models here.
+# 发布会
+class Event(models.Model):
+	name = models.CharField(max_length=100)
+	limit = models.IntegerField()
+	status = models.BooleanField()
+	address = models.CharField(max_length=200)
+	start_time = models.DateTimeField('events time')
+	create_time = models.DateTimeField(auto_now=True)
+	def __str__(self):
+		return self.name
 
-
-
-
+# 嘉宾
+class Guest(models.Model):
+	event = models.ForeignKey(Event)
+	realname = models.CharField(max_length=64)
+	phone = models.CharField(max_length=16)
+	email = models.EmailField()
+	sign = models.BooleanField()
+	create_time = models.DateTimeField(auto_now=True)
+	class Meta:
+		unique_together = ('phone', 'event')
+	def __str__(self):
+		return self.realname
+```
+&emsp;&emsp;进行数据库迁移：<br>
+&emsp;&emsp;`python3 manage.py makemigrations api`<br>
+&emsp;&emsp;`python3 manage.py migrate`<br>
 
 
 
