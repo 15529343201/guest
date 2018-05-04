@@ -4653,7 +4653,93 @@ soap:encodingStyle="http://www.w3.org/2001/12/soap-encoding">
 或者认为 SOAP 是 HTTP post 请求的一个专用版本， 遵循一种特殊的 XML 消息格式。<br>
 &emsp;&emsp;虽然， 我们看到的情况确实如此， 但这并不是 SOAP 本质与全部。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter12/image/12.2.PNG)<br>
+&emsp;&emsp;如图 12.2， 为 SOAP 消息实例， 通过 SOAP 消息实例： 利用 HTTP 传输协议向手机号码查询服务请求的
+SOAP 消息。<br>
+### 5.WSDL
+&emsp;&emsp;Web Services Description Language， 网络服务描述语言， 简称 WSDL。 它是一门基于 XML 的语言， 用
+于描述 Web Services 以及如何对它们进行访问。<br>
+&emsp;&emsp;WSDL 文档主要使用以下几个元素来描述某个 Web Service：<br>
+&emsp;&emsp;<portType> web service 执行的操作。<br>
+&emsp;&emsp;<message> web service 使用的消息。<br>
+&emsp;&emsp;<types> web service 使用的数据类型。<br>
+&emsp;&emsp;<binding> web service 使用的通信协议。<br>
+```HTML
+<wsdl:definitions xmlns:wsa="http://schemas.xmlsoap.org/ws/2003/03/addressing"
+xmlns:tns="tns" xmlns:plink="http://schemas.xmlsoap.org/ws/2003/05/partner-li
+nk/" xmlns:xop="http://www.w3.org/2004/08/xop/include"xmlns:senc="http://schem
+as.xmlsoap.org/soap/encoding/" xmlns:s12env="http://www.w3.org/2003/05/soap-en
+velope/" xmlns:s12enc="http://www.w3.org/2003/05/soap-encoding/" xmlns:xs="htt
+p://www.w3.org/2001/XMLSchema"xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xm
+lns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:senv="http://schemas
+.xmlsoap.org/soap/envelope/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/
+"targetNamespace="tns" name="Application">
+<wsdl:types>
+<xs:schema targetNamespace="tns" elementFormDefault="qualified">
+<xs:import namespace="http://www.w3.org/2001/XMLSchema"/>
+<xs:complexType name="say_hello">
+<xs:sequence>
+<xs:element name="name" type="xs:string" minOccurs="0" nillable="true"
+/>
+</xs:sequence>
+</xs:complexType>
+<xs:complexType name="say_helloResponse">
+<xs:sequence>
+<xs:element name="say_helloResult" type="xs:string" minOccurs="0" nill
+able="true"/>
+</xs:sequence>
+</xs:complexType>
+<xs:element name="say_hello" type="tns:say_hello"/>
+<xs:element name="say_helloResponse" type="tns:say_helloResponse"/>
+</xs:schema>
+</wsdl:types>
+<wsdl:message name="say_hello">
+<wsdl:part name="say_hello" element="tns:say_hello"/>
+</wsdl:message>
+<wsdl:message name="say_helloResponse">
+<wsdl:part name="say_helloResponse" element="tns:say_helloResponse"/>
+</wsdl:message>
+<wsdl:portType name="Application">
+<wsdl:operation name="say_hello" parameterOrder="say_hello">
+<wsdl:input name="say_hello" message="tns:say_hello"/>
+<wsdl:output name="say_helloResponse" message="tns:say_helloResponse"/>
+</wsdl:operation>
+</wsdl:portType>
+<wsdl:binding name="Application" type="tns:Application">
+<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/h
+ttp"/>
+<wsdl:operation name="say_hello">
+<soap:operation soapAction="say_hello" style="document"/>
+<wsdl:input name="say_hello">
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output name="say_helloResponse">
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+</wsdl:binding>
+<wsdl:service name="Application">
+<wsdl:port name="Application" binding="tns:Application">
+<soap:address location="http://10.2.70.10:7789/SOAP/?wsdl"/>
+</wsdl:port>
+</wsdl:service>
+</wsdl:definitions>
+```
+- WSDL 端口
 
+&emsp;&emsp;<portType> 元素是最重要的 WSDL 元素。<br>
+&emsp;&emsp;它可描述一个 web service、 可被执行的操作， 以及相关的消息。 可以把 <portType> 元素比作传统编程
+语言中的一个函数库（或一个模块、 或一个类） 。<br>
+- WSDL 消息
 
+&emsp;&emsp;<message> 元素定义一个操作的数据元素。<br>
+&emsp;&emsp;每个消息均由一个或多个部件组成。 可以把这些部件比作传统编程语言中一个函数调用的参数。<br>
+- WSDL types
 
+&emsp;&emsp;<types> 元素定义 web service 使用的数据类型。<br>
+&emsp;&emsp;为了最大程度的平台中立性， WSDL 使用 XML Schema 语法来定义数据类型。<br>
+- WSDL Bindings
+
+&emsp;&emsp;<binding> 元素为每个端口定义消息格式和协议细节。<br>
+&emsp;&emsp;对于接口来说， 接口文档非常重要， 它描述如何访问接口。 那么 WSDL 就可以看作 Web Service 接口的
+一种标准格式的“文档” 。 我们通过阅读 WSDL 就知道如何调用 Web Service 接口了。<br>
 
