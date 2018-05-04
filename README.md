@@ -4197,3 +4197,224 @@ PyCrypto 的强大之处。<br>
 &emsp;&emsp;哈希值用作表示大量数据的固定大小的唯一值。 两组数据的哈希值仅在相应数据也匹配时才应当匹配。
 数据的少量更改会在哈希值中产生不可预知的大量更改。<br>
 &emsp;&emsp;接下来的例子演示 SHA256 模块的使用。<br>
+SHA256_test.py:<br>
+```Python
+from Crypto.Hash import SHA256
+
+hash = SHA256.new()
+hash.update(b'message')
+h = hash.digest()
+# h= hash.hexdigest
+print(h)
+```
+&emsp;&emsp;执行程序：<br>
+```Python
+fnngj@fnngj-pc:~/pydj$ python3 SHA256_test.py
+b'\xabS\n\x13\xe4Y\x14\x98+y\xf9\xb7\xe3\xfb\xa9\x94\xcf\xd1\xf3\xfb"\xf7\x1c\x
+ea\x1a\xfb\xf0+F\x0cm\x1d'
+```
+&emsp;&emsp;该加密字符串就是通过将“message” 加密之后得到。 当然， 也可以将其转换为 16 进制的字符串。 只需
+要将 digest()方法替换为 hexdigest()方法即可。<br>
+&emsp;&emsp;再次执行程序：<br>
+```Python
+fnngj@fnngj-pc:~/pydj$ python3 SHA256_test.py
+ab530a13e45914982b79f9b7e3fba994cfd1f3fb22f71cea1afbf02b460c6d1d
+```
+例二：<br>
+&emsp;&emsp;AES 是 Advanced Encryption Standard 的缩写， 高级加密标准， 是目前非常流行的加密算法之一。<br>
+&emsp;&emsp;通过例子演示 AES 算法的加密与解密。<br>
+AES_test.py:<br>
+```Python
+from Crypto.Cipher import AES
+
+# 加密
+obj = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
+message = "The answer is no"
+ciphertext = obj.encrypt(message)
+print(ciphertext)
+
+# 解密
+obj2 = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
+s = obj2.decrypt(ciphertext)
+print(s)
+```
+&emsp;&emsp;加密：<br>
+&emsp;&emsp;`“This is a key123”` 为 key， 长度有着严格的要求， 必须为 16、 24 或 32 位， 否则将会看到下面的错误。<br>
+&emsp;&emsp;`ValueError: AES key must be either 16, 24, or 32 bytes long`<br>
+&emsp;&emsp;`“This is an IV456”` 为 VI， 长度要求更加严格， 只能为 16 位。 否则， 你将会看到下面的错误。<br>
+&emsp;&emsp;`ValueError: IV must be 16 bytes long`<br>
+&emsp;&emsp;然后， 通过 encrypt()方法对“message” 字符串进行加密。 然后， 通过打印将会得到：<br>
+```
+fnngj@fnngj-pc:~/pydj$ python3 crypto_demo.py
+b'\xd6\x83\x8dd!VT\x92\xaa`A\x05\xe0\x9b\x8b\xf1'
+```
+&emsp;&emsp;解密：<br>
+&emsp;&emsp;当接收到加密的字符串后， 解密者必须知道加密时所用的 key 和 VI 才能正能够解密。<br>
+&emsp;&emsp;通过 decrypt()方法对加密后的字符串进行解密。<br>
+```
+fnngj@fnngj-pc:~/pydj$ python3 crypto_demo.py
+b'The answer is no'
+```
+&emsp;&emsp;如果 key 和 VI 错误将无法得到正确的字符串。 例如， 把 key 修改为： 'This is a key888'， 解密失败， 我
+们将会得到另一个加密字符串：<br>
+```
+b'\xb1\xf7\xc2\x9d\xf7|&\x05\x89\\\xa7\x17\x16\x06\x9b\xf4'
+```
+例三：<br>
+&emsp;&emsp;除此之外， PyCrypto 还提供一个强大的随机算法。<br>
+random_test.py:<br>
+```Python
+from Crypto.Random import random
+
+r = random.choice(['dogs', 'cats', 'bears'])
+print(r)
+```
+### 11.3.2、 AES 加密接口开发
+&emsp;&emsp;按照管例， 既然对加密算法有了初步的了解， 接下来要让其应用到接口开发中。 嗯， 我们要开发一个用
+AES 加密算法的接口。<br>
+&emsp;&emsp;这一小节的例子最为复杂， 涉及到不少知识点。 为了实现这一节的例子， 我翻阅了不少资料， 做好准备
+和我一起实现它吧！<br>
+interface_AES_test.py:<br>
+```Python
+from Crypto.Cipher import AES
+import base64
+import requests
+import unittest
+import json
+
+
+class AESTest(unittest.TestCase):
+    def setUp(self):
+        BS = 16
+        self.pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
+
+        self.base_url = "http://127.0.0.1:8000/api/sec_get_guest_list/"
+        self.app_key = 'W7v4D60fds2Cmk2U'
+
+    def encryptBase64(self, src):
+        return base64.urlsafe_b64encode(src)
+
+    def encryptAES(self, src, key):
+        """
+        生成AES密文
+        """
+        iv = b"1172311105789011"
+        cryptor = AES.new(key, AES.MODE_CBC, iv)
+        ciphertext = cryptor.encrypt(self.pad(src))
+        return self.encryptBase64(ciphertext)
+
+    def test_aes_interface(self):
+        '''test aes interface'''
+        payload = {'eid': '1', 'phone': '13800138000'}
+        # 加密
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(result['message'], "success")
+
+    def test_get_guest_list_eid_null(self):
+        ''' eid 参数为空 '''
+        payload = {'eid': '', 'phone': ''}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 10021)
+        self.assertEqual(result['message'], 'eid cannot be empty')
+
+    def test_get_event_list_eid_error(self):
+        ''' 根据 eid 查询结果为空 '''
+        payload = {'eid': '901', 'phone': ''}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 10022)
+        self.assertEqual(result['message'], 'query result is empty')
+
+    def test_get_event_list_eid_success(self):
+        ''' 根据 eid 查询结果成功 '''
+        payload = {'eid': '1', 'phone': ''}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(result['message'], 'success')
+        self.assertEqual(result['data'][0]['realname'], '张三')
+        self.assertEqual(result['data'][0]['phone'], '13800138000')
+
+    def test_get_event_list_eid_phone_null(self):
+        ''' 根据 eid 和phone 查询结果为空 '''
+        payload = {'eid': 2, 'phone': '10000000000'}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 10022)
+        self.assertEqual(result['message'], 'query result is empty')
+
+    def test_get_event_list_eid_phone_success(self):
+        ''' 根据 eid 和phone 查询结果成功 '''
+        payload = {'eid': 1, 'phone': '18633003301'}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(result['message'], 'success')
+        self.assertEqual(result['data']['realname'], 'alen')
+        self.assertEqual(result['data']['phone'], '18633003301')
+
+
+if __name__ == '__main__':
+    unittest.main()
+```
+&emsp;&emsp;将上面的代码拆解后分别进行介绍。<br>
+&emsp;&emsp;`self.app_key = 'W7v4D60fds2Cmk2U'`<br>
+&emsp;&emsp;首先， 定义好 app_key 和接口参数， app_key 是密钥， 只有合法的调用者才知道， 这个一定要保密噢！ 这
+里同样选择使用字典格式来存放接口参数。<br>
+&emsp;&emsp;`payload = {'eid': '1', 'phone': '13800138000'}`<br>
+&emsp;&emsp;`encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()`<br>
+&emsp;&emsp;首先将 payload 参数转化为 json 格式， 然后将参数和 app_key 传参给 encryptAES()方法用于生成加密串。<br>
+```Python
+def encryptAES(self,src, key):
+    """生成 AES 密文"""
+    iv = b"1172311105789011"
+    cryptor = AES.new(key, AES.MODE_CBC, iv)
+    ciphertext = cryptor.encrypt(self.pad(src))
+    return self.encryptBase64(ciphertext)
+```
+&emsp;&emsp;IV 同样是保密的， 并且我们前面知道它必须是 16 位字节。 然后通过 encrypt()方法对 src 接口参数生成
+加密串， 但是这里会有问题。 encrypt()要加密的字符串有严格的长度要求， 长度必须是 16,24,32 位。 如果直接
+生成可能会提示：`ValueError: Input strings must be a multiple of 16 in length`<br>
+&emsp;&emsp;可是， 被加密字符串的长度是不可控。 接口参数的个数和长度可能会随意的变化。 所以， 为了解决这个
+问题， 还需要对参数字符串时行处理， 使其长度固定。<br>
+&emsp;&emsp;`self.pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)`<br>
+&emsp;&emsp;这是函数式编程的一种用法， 通过 lambda 定义匿名函数来对字符串进行补足， 使其长度为 16,24,32 位。
+再接下来生成的字符串是这样的：<br>
+&emsp;&emsp;`b'>_\x80\x1fi\x97\x8f\x94~\xeaE\xectBm\x9d\xa9\xc5\x85<+e\xa5lW\xe1\x84}\xfa\x8b\xb9\xde\x1a\x10J\xcd\
+xc5\xa1A4Z\xff\x05x\xe3\xf1\x00Z'`<br>
+&emsp;&emsp;但这样的字符串太长， 并不太适合传输。<br>
+```Python
+def encryptBase64(self,src):
+    return base64.urlsafe_b64encode(src)
+```
+&emsp;&emsp;通过 base64 模块的 urlsafe_b64encode()方法对 AES 加密串进行二次加密。
+然后得到的字符串是这样的：<br>
+&emsp;&emsp;`b'gouBbuKWEeY5wWjMx-nNAYDTion0ADOysaLw1uzzGOpvTTASpQGJu5p0WuDhZMiM'`<br>
+&emsp;&emsp;到此， 加密过程结束。<br>
+&emsp;&emsp;`r = requests.post(self.base_url, data={"data": encoded})`<br>
+&emsp;&emsp;将加密后的字符串作为接口的 data 参数发送给接口。<br>
+&emsp;&emsp;当服务器接收到字符串之后， 如何对加密串进行解密处理呢？ 下接来开发服务器端的处理。<br>
+
+
+
+
+
+
+
+
+
