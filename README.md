@@ -5082,10 +5082,20 @@ GET、 POST、 PUT、 DELETE。 它们分别对应四种基本操作： GET 用�
 &emsp;&emsp;（1） 每一个 URI 代表一种资源；<br>
 &emsp;&emsp;（2） 客户端和服务器之间， 传递这种资源的某种表现层；<br>
 &emsp;&emsp;（3） 客户端通过四个 HTTP 动词， 对服务器端资源进行操作， 实现"表现层状态转化"。<br>
+&emsp;&emsp;引用资料:http://www.ruanyifeng.com/blog/2011/09/restful<br>
+&emsp;&emsp;关于 Web Service 相关的概念基本都做了介绍， 通过一个图来表明概念和技术的包含关系。<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.1.PNG)<br>
+## 13.2 Django-REST-Framework
+&emsp;&emsp;Django REST Framework,顾名思义,是一套基于Django的REST风格的框架。<br>
+&emsp;&emsp;它具有以下特点:<br>
+- 功能强大、灵活,可以帮助你快速开发Web API。
+- 支持认证策略,包括OAuth 1a和OAuth 2。
+- 支持ORM和非ORM数据源的序列化。
+- 丰富的文档以及良好的社区支持。
 
-
-
-
+&emsp;&emsp;`python3 -m pip install djangorestframework`<br>
+### 13.2.1、 创建简单的 API
+&emsp;&emsp;当Django REST Framework安装好之后,创建一个新的项目django_test,在项目下创建"api"应用。<br>
 
 
 
