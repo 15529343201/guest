@@ -4999,9 +4999,36 @@ print(result)
 		"Hello, bugmaster",
 }
 ```
-
-
-
+## 12.3 Jmeter 测试 SOAP 接口
+&emsp;&emsp;在本书的第九章中介绍了 Jmeter 工具的使用， 对于 SOAP 协议开发的 Web Service 接口。 Jmeter 同样支
+持 SOAP 接口的的测试。<br>
+&emsp;&emsp;打开 Jmeter 工具， 创建 SOAP 接口测试。 如图 12.5， 右键点击“线程组” -->“添加” -->“Sampler” -->
+“SOAP/XML-RPC Requests” 。<br>
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.5.PNG)<br>
+&emsp;&emsp;以查询手机号码归属地的接口为例：<br>
+&emsp;&emsp;http://ws.webxml.com.cn/WebServices/MobileCodeWS.asmx?wsdl<br>
+&emsp;&emsp;通过 Wireshark 抓包工具捕捉 SOAP 请求。<br>
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.6.PNG)<br>
+&emsp;&emsp;XML 格式的 SOAP 请求信息如下：<br>
+```
+<SOAP-ENV:Envelope
+	xmlns:ns0="http://schemas.xmlsoap.org/soap/envelope/"
+	xmlns:ns1="http://WebXml.com.cn/"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+	<SOAP-ENV:Header/>
+	<ns0:Body>
+		<ns1:getMobileCodeInfo>
+			<ns1:mobileCode>186xxxxxxxx</ns1:mobileCode>
+		</ns1:getMobileCodeInfo>
+	</ns0:Body>
+</SOAP-ENV:Envelope>
+```
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.7.PNG)<br>
+&emsp;&emsp;如图 12.7，配置SOAP/XML-RPC请求。URL填写查询手机号码归属地的Web Service地址。Soap/XML-PRC
+Data 填写 XML 格式的 SOAP 请求数据。<br>
+&emsp;&emsp;运行测试， 查看结果树， 如图 12.8。<br>
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.8.PNG)<br>
 
 
 
