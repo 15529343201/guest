@@ -3811,5 +3811,746 @@ if __name__ == "__main__":
 的是是为了避免因为生成的报告的名称重名而造成报告的覆盖。 最终， 将测试报告存放于 report/目录下面。 如
 图 10.3， 一张完整的接口自动化测试报告。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter10/image/10.3.PNG)<br>
+# chapter11 接口的安全机制
+&emsp;&emsp;一般在实际项目的接口开发中， 接口的安全机制是绕不开的一个话题。 不管理自己内部使用的接口也好，
+还是给第三方使用的接口也好。 如果毫无限制可以给任何人调用， 那么必然会带来诸多安全问题， 例如， 重
+要数据泄密， 系统瘫痪等。<br>
+&emsp;&emsp;这一章介绍在接口开发中常见的向种安全机制。<br>
+## 11.1 用户认证
+&emsp;&emsp;在测试 Web 接口时， 不管所用的接口工具还是 Requests 库都提供的 Auth 的选项/参数， 这个选项提供了
+username 和 password 的选项， 但这里 Auth 的用户名和密码与系统登录的用户名密码有所区别， 登录的用户名
+/密码是作为接口的参数来传输， 而 Auth 不是， 但它仍然包含在 request 请求中。<br>
+&emsp;&emsp;通过 Postman 填写 Auth（Authorization） 选项。<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.1.PNG)<br>
+&emsp;&emsp;通过 Fiddler 工具抓取请求。<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.2.PNG)<br>
+&emsp;&emsp;其实， 这个问题难点并不再测试上面。 你是否和我一样好奇， Django 如何来接收这个参数， 以及如何处
+理或验证。 为此我翻了很久的 Django 文档， 然而并没有找到想要的结果。 Django-REST-framwork 框架（后面
+章节会介绍该框架的使用） 自带的有这样的一个 Auth 的功能， 在接口调用的时候需要填写 Auth 认证。 通过
+查看 Django-REST-framwork 框架的源码， 找到了答案。<br>
+### 11.1.1、 开发带 Auth 接口
+&emsp;&emsp;相信学到这里关于 Django 的开发过程你已经比较熟悉了， 为了练习与安全有关的接口开发， 重新创
+建.../sign/views_if_sec.py 视图文件。<br>
+&emsp;&emsp;接口的处理逻辑主要由 views 层完成。 所以， 这里只提供 views 层的实现。<br>
+views_if_sec.py:<br>
+```Python
+from django.contrib import auth as django_auth
+import hashlib
+import base64
+
+
+# 用户认证
+def user_auth(request):
+    get_http_auth = request.META.get('HTTP_AUTHORIZATION', b'')
+    auth = get_http_auth.split()
+    try:
+        auth_parts = base64.b64decode(auth[1]).decode('iso-8859-1').partition(':')
+    except IndexError:
+        return "null"
+    userid, password = auth_parts[0], auth_parts[2]
+    user = django_auth.authenticate(username=userid, password=password)
+    if user is not None and user.id_active:
+        django_auth.login(request, user)
+        return "success"
+    else:
+        return "fail"
+```
+&emsp;&emsp;`get_http_auth = request.META.get('HTTP_AUTHORIZATION', b'')`<br>
+&emsp;&emsp;request.META 是一个 Python 字典， 包含了所有本次 HTTP 请求的 Header 信息， 比如用户认证、 IP 地址
+和用户 Agent（通常是浏览器的名称和版本号） 等。<br>
+&emsp;&emsp;`HTTP_AUTHORIZATION` 用于获取 `HTTP authorization`。如果为空,将得到一个空的bytes对象。<br>
+&emsp;&emsp;当客户端传输的认证数据为:admin/admin123456,这里得到的数据是:<br>
+&emsp;&emsp;`Basic YWRtaW46YWRtaW4xMjM0NTY=`<br>
+&emsp;&emsp;通过 split()方法将其拆分成 list。 拆分后的数据是这样的： `['Basic', 'YWRtaW46YWRtaW4xMjM0NTY=']`<br>
+&emsp;&emsp;`auth_parts = base64.b64decode(auth[1]).decode('iso-8859-1').partition(':')`<br>
+&emsp;&emsp;取出 list 中的加密串， 通过 base64 对加密串进行解码。 通过decode()方法以UTF-8编码对字符串进行解码。partition()方法以冒号":"为分隔符对字符串进行分割,得到的数据是： ('admin', ':', 'admin123456')<br>
+&emsp;&emsp;执行到这一行， 如果获取不到 Auth 信息， 将会抛 IndexError 异常， 通过 try...except...进行异常捕捉， 如
+果捕捉到异常将返回“null” 。<br>
+&emsp;&emsp;`userid, password = auth_parts[0], auth_parts[2]`<br>
+&emsp;&emsp;最后， 取出元组中对应的用户 id 和密码。 最终于数据： admin admin123456<br>
+&emsp;&emsp;再接来的处理过程我们就很熟悉了。 调用 Django 的认证模块， 对得到 Auth 信息进行认证。 成功将返回
+“success” ， 失败则返回“fail” 。<br>
+&emsp;&emsp;在发布会查询接口中调用刚开发的用户认证功能。<br>
+```Python
+# 发布会查询接口---增加用户认证
+def get_event_list(request):
+    auth_result = user_auth(request)  # 调用认证函数
+    if auth_result == "null":
+        return JsonResponse({'status': 10011, 'message': 'user auth null'})
+    if auth_result == "fail":
+        return JsonResponse({'status': 10012, 'message': 'user auth fail'})
+    eid = request.GET.get("eid", "")  # 发布会 id
+    name = request.GET.get("name", "")  # 发布会名称
+```
+&emsp;&emsp;在.../sign/urls.py 文件中添加新的安全接口指向。<br>
+```Python
+from sign import views_if,views_if_security
+urlpatterns = [
+......
+    # security interface:
+    # ex : /api/sec_get_event_list/
+    url(r'^sec_get_event_list/', views_if_sec.get_event_list,name='get_event_list'),
+]
+```
+&emsp;&emsp;需要说明的是， 这种认证方式是一种相对较弱的认证方式， 安全性较低。<br>
+### 11.1.2、 编写接口文档
+&emsp;&emsp;发布会查询接口文档：<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.3.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.4.PNG)<br>
+### 11.1.3、接口测试用例
+&emsp;&emsp;按照惯例,接下来需要针对开发的接口编写测试用例了,Requests库的get()和post()方法均提供有auth参数,用于设置用户签名。<br>
+sec_test_cast.py:<br>
+```Python
+import unittest
+import requests
+
+
+class GetEventListTest(unittest.TestCase):
+    ''' 查询发布会信息（带用户认证） '''
+
+    def setUp(self):
+        self.base_url = "http://127.0.0.1:8000/api/sec_get_event_list/"
+        self.auth_user = ('admin', 'admin123456')
+
+    def test_get_event_list_auth_null(self):
+        ''' auth 为空 '''
+        r = requests.get(self.base_url, params={'eid': ''})
+        result = r.json()
+        self.assertEqual(result['status'], 10011)
+        self.assertEqual(result['message'], 'user auth null')
+
+    def test_get_event_list_auth_error(self):
+        ''' auth 错误 '''
+        r = requests.get(self.base_url, auth=('abc', '123'), params={'eid': ''})
+        result = r.json()
+        self.assertEqual(result['status'], 10012)
+        self.assertEqual(result['message'], 'user auth fail')
+
+    def test_get_event_list_eid_null(self):
+        ''' eid 参数为空 '''
+        r = requests.get(self.base_url, auth=self.auth_user, params={'eid': ''})
+        result = r.json()
+        self.assertEqual(result['status'], 10021)
+        self.assertEqual(result['message'], 'parameter error')
+
+    def test_get_event_list_eid_success(self):
+        ''' 根据 eid 查询结果成功 '''
+        r = requests.get(self.base_url, auth=self.auth_user, params={'eid': 1})
+        result = r.json()
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(result['message'], 'success')
+        self.assertEqual(result['data']['name'], u'mx6 发布会')
+        self.assertEqual(result['data']['address'], u'北京国家会议中心')
+if __name__ == "__main__":
+    unittest.main()
+```
+## 11.2 数字签名
+&emsp;&emsp;在使用 HTTP/SOAP 协议传输数据的时候， 签名作为其中一个参数， 可以起到关键作用：<br>
+&emsp;&emsp;一、 鉴权： 通过客户的密钥， 服务端的密钥匹配；<br>
+&emsp;&emsp;这个很有好理解， 例如一个接口传参为：<br>
+&emsp;&emsp;http://127.0.0.1:8000/api/?a=1&b=2<br>
+&emsp;&emsp;假设签名的密钥为： @admin123<br>
+&emsp;&emsp;加上签名之后的接口参数为：<br>
+&emsp;&emsp;http://127.0.0.1:8000/sign/?a=1&b=2&sign=@admin123<br>
+&emsp;&emsp;显然， sign 参数明文传输是不安全的， 所以， 一般会通过加密算法进行加密。<br>
+mdt_test.py:<br>
+```Python
+import hashlib
+
+md5 = hashlib.md5()
+sign_str = "@admin123"
+sign_bytes_utf8 = sign_str.encode(encoding="utf-8")
+md5.update(sign_bytes_utf8)
+sign_md5 = md5.hexdigest()
+print(sign_md5)
+```
+&emsp;&emsp;执行程序将会得到： `4b9db269c5f978e1264480b0a7619eea`<br>
+&emsp;&emsp;所以， 单做为鉴权， 带签名的接口为：<br>
+&emsp;&emsp;http://127.0.0.1:8000/sign/?a=1&b=2&sign=4b9db269c5f978e1264480b0a7619eea<br>
+&emsp;&emsp;因为 MD5 算法是不可逆向的， 所以， 当服务器接收到请求后， 同样需要对“@admin123” 进行 MD5 加
+密， 然后， 比对与调用者传来的 sign 加密串是否一致， 从而来鉴别调用者是否有权限方位该接口。<br>
+&emsp;&emsp;什么是 MD5？<br>
+&emsp;&emsp;MD5 即 Message-Digest Algorithm 5（中文名为消息摘要算法第五版） ， 用于确保信息传输完整一致。
+是计算机广泛使用的杂凑算法之一， 主流编程语言普遍已有 MD5 实现。<br>
+&emsp;&emsp;二、 数据防篡改： 参数是明文传输， 将参数及密钥加密作为签名与服务器匹配；<br>
+&emsp;&emsp;同样是这样一个带参数的接口：<br>
+&emsp;&emsp;http://127.0.0.1:8000/sign/?a=1&b=2<br>
+&emsp;&emsp;加密方式比前者要复杂。<br>
+&emsp;&emsp;假设签名的密钥为： @admin123<br>
+&emsp;&emsp;签名的明文为： a=1&b=2&api_key=@admin123<br>
+&emsp;&emsp;再次通过上面的代码对整个接参与值生成 MD5 加密串： 786bfe32ae1d3764f208e03ca0bfaf13<br>
+&emsp;&emsp;所以， 带参数的接口串为：<br>
+&emsp;&emsp;http://127.0.0.1:8000/sign/?a=1&b=2&sign=786bfe32ae1d3764f208e03ca0bfaf13<br>
+&emsp;&emsp;因为整个接口的参数做了加密， 所以， 只要任意一个参数发改变， 那签名的验证就会失败。 从而起到了
+鉴权及数据完整性的保护。<br>
+&emsp;&emsp;不过， 接口全参数的加密签名也存在弊端， 因为 MD5 加密是不可逆的， 所以， 服务器端必须已知客户
+端的接口参数和值， 否则签名的验证就会失败。 但一般接口在设计时对客户端所请求的参数并不完全已知，
+例如， 嘉宾手机号查询， 服务器并不知道客户传的手机号具体是什么， 只是通过数据库来查询该号码是否存
+在。<br>
+### 11.2.1、 开发接口
+&emsp;&emsp;打开.../sign/views_if_security.py 视图文件， 实现接口签名代码。<br>
+views_if_security.py:<br>
+```Python
+import time, hashlib
+
+
+# 用户签名+时间戳
+def user_sign(request):
+    if request.method == 'POST':
+        client_time = request.POST.get('time', '')  # 客户端时间戳
+        client_sign = request.POST.get('sign', '')  # 客户端签名
+    else:
+        return "error"
+    if client_time == '' or client_sign == '':
+        return "sign null"
+    # 服务器时间
+    now_time = time.time()  # 1466426831
+    server_time = str(now_time).split('.')[0]
+    # 获取时间差
+    time_difference = int(server_time) - int(client_time)
+    if time_difference >= 60:
+        return "timeout"
+    # 签名检查
+    md5 = hashlib.md5()
+    sign_str = client_time + "&Guest-Bugmaster"
+    sign_bytes_utf8 = sign_str.encode(encoding="utf-8")
+    md5.update(sign_bytes_utf8)
+    sever_sign = md5.hexdigest()
+    if sever_sign != client_sign:
+        return "sign error"
+    else:
+        return "sign right"
+```
+&emsp;&emsp;实现的代码不多， 但过程有些复杂。 我们来解释一下过程。<br>
+&emsp;&emsp;首先，通过 POST 方法获取两个参数 time 和 sign 两个参数，并判断它们其中的任一一个为空，则返回“sign
+null” ， 这个逻辑很好理解。<br>
+&emsp;&emsp;接下来， 是判断时间戳。 需要客户端获取一个“当前时间戳” ， 取当前的时间。 （例如， 1466830935）<br>
+```Python
+import time
+
+# 当前时间戳
+now_time = time.time()
+print('当前时间戳:' + str(now_time))
+# 将时间戳转化为字符串类型,并截取小数点前的时间
+print(str(now_time).split('.')[0])
+# 转换成日期格式
+otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now_time))
+print('日期格式:' + str(otherStyleTime))
+"""
+D:\Python35\python3.exe C:/Users/Administrator/git/guest/sign/time_test.py
+当前时间戳:1525352026.589537
+1525352026
+日期格式:2018-05-03 20:53:46
+"""
+```
+&emsp;&emsp;Python3 生成的的时间戳精度太高， 我们只需要小数点前面的 10 位即可。 所以， 使用 split()函数截取小
+数点前面的时间。<br>
+&emsp;&emsp;同样， 当服务器端口拿到客户端传来的时间戳后， 服务器端也需要重新再获取一下当前时间戳。 如果服
+务器端的当前时间戳减法去客户端时间戳小于 60， 说明这个接口的请求时间是离现在最近的 60 秒之内。 那么
+允许接口访问， 如果超过 60 秒， 则返回“timeout” 。<br>
+&emsp;&emsp;这样就要求请求的客户端不断的获取当前戳作为接口参来访问接口。 所以， 一直用固定的参数访问接口
+是无效的。<br>
+&emsp;&emsp;关于是签名参数的生成。 需要将 api_key（密钥字符串： “&Guest-Bugmaster” ） 和客户端发来的时间戳，
+两者拼接成一个新的字符串。 并且通过 MD5 对其进行加密。 从而将加密后的字符串作为 sign 的字段的参数。<br>
+&emsp;&emsp;服务器端以同样的规则来生成这样一个加密后的字符串， 从而比较这个串是否相等， 如果相等说明签名
+验证通过； 如果不相等， 则返回“sign fail” 。<br>
+&emsp;&emsp;将签名功能应用到添加发布会接口中。<br>
+views_if_sec.py:<br>
+```Python
+# 添加发布会接口---增加签名+时间戳
+def add_event(request):
+    sign_result = user_sign(request)  # 调用签名函数
+    if sign_result == "error":
+        return JsonResponse({'status': 10011, 'message': 'request error'})
+    elif sign_result == "sign null":
+        return JsonResponse({'status': 10012, 'message': 'user sign null'})
+    elif sign_result == "timeout":
+        return JsonResponse({'status': 10013, 'message': 'user sign timeout'})
+    elif sign_result == "sign error":
+        return JsonResponse({'status': 10014, 'message': 'user sign error'})
+```
+urls.py:<br>
+```Python
+from sign import views_if,views_if_security
+urlpatterns = [
+    ......
+    # security interface:
+    # ex : /api/sec_add_event/
+    url(r'^sec_add_event/', views_if_security.add_event, name='add_event'),
+]
+```
+### 11.2.2、 编写接口文档
+&emsp;&emsp;添加发布会接口文档：<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.5.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.6.PNG)<br>
+### 11.2.3、 编写接口用例
+&emsp;&emsp;学会了带签名接口的实现， 参靠接口文档的描述。 接下来就是编写接口用例环节。 这个接口用现成的接
+口工具很难测试。 因为由时间戳和 MD5 加密就让很多接口工具无功为力了。 所以， 写代码才是万能的！<br>
+```Python
+# coding=utf-8
+import unittest
+import requests
+from time import time
+import hashlib
+
+
+class AddEventTest(unittest.TestCase):
+    def setUp(self):
+        self.base_url = "http://127.0.0.1:8000/api/sec_add_event/"
+        # app_key
+        self.api_key = "&Guest-Bugmaster"
+        # 当前时间
+        now_time = time()
+        self.client_time = str(now_time).split('.')[0]
+        # sign
+        md5 = hashlib.md5()
+        sign_str = self.client_time + self.api_key
+        sign_bytes_utf8 = sign_str.encode(encoding="utf-8")
+        md5.update(sign_bytes_utf8)
+        self.sign_md5 = md5.hexdigest()
+
+    def test_add_event_request_error(self):
+        '''请求方法错误'''
+        r=requests.get(self.base_url)
+        result=r.json()
+        self.assertEqual(result['status'],10011)
+        self.assertEqual(result['message'],'request error')
+
+    def test_add_event_sign_null(self):
+        ''' 签名参数为空 '''
+        payload = {'eid': 1, '': '', 'limit': '', 'address': '', 'start_time': '', 'time': '', 'sign': ''}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 10012)
+        self.assertEqual(result['message'], 'user sign null')
+
+    def test_add_event_time_out(self):
+        ''' 请求超时 '''
+        now_time = str(int(self.client_time) - 61)
+        payload = {'eid': 1, '': '', 'limit': '', 'address': '', 'start_time': '', 'time': now_time, 'sign': 'abc'}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 10013)
+        self.assertEqual(result['message'], 'user sign timeout')
+
+    def test_add_event_sign_error(self):
+        ''' 签名错误 '''
+        payload = {'eid': 1, '': '', 'limit': '', 'address': '', 'start_time': '', 'time': self.client_time,
+                   'sign': 'abc'}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 10014)
+        self.assertEqual(result['message'], 'user sign error')
+
+    def test_add_event_eid_exist(self):
+        ''' id已经存在 '''
+        payload = {'eid': 1, 'name': '一加4发布会', 'limit': 2000, 'address': "深圳宝体", 'start_time': '2017',
+                   'time': self.client_time, 'sign': self.sign_md5}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 10022)
+        self.assertEqual(result['message'], 'event id already exists')
+
+    def test_add_event_name_exist(self):
+        ''' 名称已经存在 '''
+        payload = {'eid': 11, 'name': '一加3手机发布会', 'limit': 2000, 'address': "深圳宝体", 'start_time': '2017',
+                   'time': self.client_time, 'sign': self.sign_md5}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 10023)
+        self.assertEqual(result['message'], 'event name already exists')
+
+    def test_add_event_data_type_error(self):
+        ''' 日期格式错误 '''
+        payload = {'eid': 11, 'name': '一加5手机发布会', 'limit': 2000, 'address': "深圳宝体", 'start_time': '2017',
+                   'time': self.client_time, 'sign': self.sign_md5}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 10024)
+        self.assertIn('start_time format error.', result['message'])
+
+    def test_add_event_success(self):
+        ''' 添加成功 '''
+        payload = {'eid': 11, 'name': '一加4手机发布会', 'limit': 2000, 'address': "深圳宝体", 'start_time': '2017-05-10 12:00:00',
+                   'time': self.client_time, 'sign': self.sign_md5}
+        r = requests.post(self.base_url, data=payload)
+        result = r.json()
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(result['message'], 'add event success')
+
+
+if __name__ == '__main__':
+    unittest.main()
+```
+## 11.3 接口加密
+&emsp;&emsp;PyCrypto 是一个免费的加密算法库， 支持常见的 DES、 AES 加密以及 MD5、 SHA 各种 HASH 运算。 我
+们可以在其官方网站下载最新版本： https://www.dlitz.net/software/pycrypto/<br>
+&emsp;&emsp;另外， 也可以在 PyPi 仓库中下载安装： https://pypi.python.org/pypi/pycrypto<br>
+&emsp;&emsp;目前来看只提供了.tar.gz 包， 所以只能下载安装了。<br>
+&emsp;&emsp;PyCrypto 在 Windows 下面安装需要依赖于“vcvarsall.bat”文件， 解决办法是需要安装庞大的 Visual Studio
+或者通过其它繁琐的安装才能成功。 所以， 建议读者切换到 Linux（Ubuntu） 下完成本小节的练习。<br>
+### 11.3.1、 PyCrypto 库
+&emsp;&emsp;PyCrypto 可以做什么？ 在 PyPi 的下载与介绍页面给出了几个简单例子。 接下来就通过这些例子演示
+PyCrypto 的强大之处。<br>
+例一：<br>
+&emsp;&emsp;SHA-256 算法属于密码 SHA-2 系列哈希。 它产生了一个消息的 256 位摘要。<br>
+&emsp;&emsp;哈希值用作表示大量数据的固定大小的唯一值。 两组数据的哈希值仅在相应数据也匹配时才应当匹配。
+数据的少量更改会在哈希值中产生不可预知的大量更改。<br>
+&emsp;&emsp;接下来的例子演示 SHA256 模块的使用。<br>
+SHA256_test.py:<br>
+```Python
+from Crypto.Hash import SHA256
+
+hash = SHA256.new()
+hash.update(b'message')
+h = hash.digest()
+# h= hash.hexdigest
+print(h)
+```
+&emsp;&emsp;执行程序：<br>
+```Python
+fnngj@fnngj-pc:~/pydj$ python3 SHA256_test.py
+b'\xabS\n\x13\xe4Y\x14\x98+y\xf9\xb7\xe3\xfb\xa9\x94\xcf\xd1\xf3\xfb"\xf7\x1c\x
+ea\x1a\xfb\xf0+F\x0cm\x1d'
+```
+&emsp;&emsp;该加密字符串就是通过将“message” 加密之后得到。 当然， 也可以将其转换为 16 进制的字符串。 只需
+要将 digest()方法替换为 hexdigest()方法即可。<br>
+&emsp;&emsp;再次执行程序：<br>
+```Python
+fnngj@fnngj-pc:~/pydj$ python3 SHA256_test.py
+ab530a13e45914982b79f9b7e3fba994cfd1f3fb22f71cea1afbf02b460c6d1d
+```
+例二：<br>
+&emsp;&emsp;AES 是 Advanced Encryption Standard 的缩写， 高级加密标准， 是目前非常流行的加密算法之一。<br>
+&emsp;&emsp;通过例子演示 AES 算法的加密与解密。<br>
+AES_test.py:<br>
+```Python
+from Crypto.Cipher import AES
+
+# 加密
+obj = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
+message = "The answer is no"
+ciphertext = obj.encrypt(message)
+print(ciphertext)
+
+# 解密
+obj2 = AES.new('This is a key123', AES.MODE_CBC, 'This is an IV456')
+s = obj2.decrypt(ciphertext)
+print(s)
+```
+&emsp;&emsp;加密：<br>
+&emsp;&emsp;`“This is a key123”` 为 key， 长度有着严格的要求， 必须为 16、 24 或 32 位， 否则将会看到下面的错误。<br>
+&emsp;&emsp;`ValueError: AES key must be either 16, 24, or 32 bytes long`<br>
+&emsp;&emsp;`“This is an IV456”` 为 VI， 长度要求更加严格， 只能为 16 位。 否则， 你将会看到下面的错误。<br>
+&emsp;&emsp;`ValueError: IV must be 16 bytes long`<br>
+&emsp;&emsp;然后， 通过 encrypt()方法对“message” 字符串进行加密。 然后， 通过打印将会得到：<br>
+```
+fnngj@fnngj-pc:~/pydj$ python3 crypto_demo.py
+b'\xd6\x83\x8dd!VT\x92\xaa`A\x05\xe0\x9b\x8b\xf1'
+```
+&emsp;&emsp;解密：<br>
+&emsp;&emsp;当接收到加密的字符串后， 解密者必须知道加密时所用的 key 和 VI 才能正能够解密。<br>
+&emsp;&emsp;通过 decrypt()方法对加密后的字符串进行解密。<br>
+```
+fnngj@fnngj-pc:~/pydj$ python3 crypto_demo.py
+b'The answer is no'
+```
+&emsp;&emsp;如果 key 和 VI 错误将无法得到正确的字符串。 例如， 把 key 修改为： 'This is a key888'， 解密失败， 我
+们将会得到另一个加密字符串：<br>
+```
+b'\xb1\xf7\xc2\x9d\xf7|&\x05\x89\\\xa7\x17\x16\x06\x9b\xf4'
+```
+例三：<br>
+&emsp;&emsp;除此之外， PyCrypto 还提供一个强大的随机算法。<br>
+random_test.py:<br>
+```Python
+from Crypto.Random import random
+
+r = random.choice(['dogs', 'cats', 'bears'])
+print(r)
+```
+### 11.3.2、 AES 加密接口开发
+&emsp;&emsp;按照管例， 既然对加密算法有了初步的了解， 接下来要让其应用到接口开发中。 嗯， 我们要开发一个用
+AES 加密算法的接口。<br>
+&emsp;&emsp;这一小节的例子最为复杂， 涉及到不少知识点。 为了实现这一节的例子， 我翻阅了不少资料， 做好准备
+和我一起实现它吧！<br>
+interface_AES_test.py:<br>
+```Python
+from Crypto.Cipher import AES
+import base64
+import requests
+import unittest
+import json
+
+
+class AESTest(unittest.TestCase):
+    def setUp(self):
+        BS = 16
+        self.pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
+
+        self.base_url = "http://127.0.0.1:8000/api/sec_get_guest_list/"
+        self.app_key = 'W7v4D60fds2Cmk2U'
+
+    def encryptBase64(self, src):
+        return base64.urlsafe_b64encode(src)
+
+    def encryptAES(self, src, key):
+        """
+        生成AES密文
+        """
+        iv = b"1172311105789011"
+        cryptor = AES.new(key, AES.MODE_CBC, iv)
+        ciphertext = cryptor.encrypt(self.pad(src))
+        return self.encryptBase64(ciphertext)
+
+    def test_aes_interface(self):
+        '''test aes interface'''
+        payload = {'eid': '1', 'phone': '13800138000'}
+        # 加密
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(result['message'], "success")
+
+if __name__ == '__main__':
+    unittest.main()
+```
+&emsp;&emsp;将上面的代码拆解后分别进行介绍。<br>
+&emsp;&emsp;`self.app_key = 'W7v4D60fds2Cmk2U'`<br>
+&emsp;&emsp;首先， 定义好 app_key 和接口参数， app_key 是密钥， 只有合法的调用者才知道， 这个一定要保密噢！ 这
+里同样选择使用字典格式来存放接口参数。<br>
+&emsp;&emsp;`payload = {'eid': '1', 'phone': '13800138000'}`<br>
+&emsp;&emsp;`encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()`<br>
+&emsp;&emsp;首先将 payload 参数转化为 json 格式， 然后将参数和 app_key 传参给 encryptAES()方法用于生成加密串。<br>
+```Python
+def encryptAES(self,src, key):
+    """生成 AES 密文"""
+    iv = b"1172311105789011"
+    cryptor = AES.new(key, AES.MODE_CBC, iv)
+    ciphertext = cryptor.encrypt(self.pad(src))
+    return self.encryptBase64(ciphertext)
+```
+&emsp;&emsp;IV 同样是保密的， 并且我们前面知道它必须是 16 位字节。 然后通过 encrypt()方法对 src 接口参数生成
+加密串， 但是这里会有问题。 encrypt()要加密的字符串有严格的长度要求， 长度必须是 16,24,32 位。 如果直接
+生成可能会提示：`ValueError: Input strings must be a multiple of 16 in length`<br>
+&emsp;&emsp;可是， 被加密字符串的长度是不可控。 接口参数的个数和长度可能会随意的变化。 所以， 为了解决这个
+问题， 还需要对参数字符串时行处理， 使其长度固定。<br>
+&emsp;&emsp;`self.pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)`<br>
+&emsp;&emsp;这是函数式编程的一种用法， 通过 lambda 定义匿名函数来对字符串进行补足， 使其长度为 16,24,32 位。
+再接下来生成的字符串是这样的：<br>
+&emsp;&emsp;`b'>_\x80\x1fi\x97\x8f\x94~\xeaE\xectBm\x9d\xa9\xc5\x85<+e\xa5lW\xe1\x84}\xfa\x8b\xb9\xde\x1a\x10J\xcd\
+xc5\xa1A4Z\xff\x05x\xe3\xf1\x00Z'`<br>
+&emsp;&emsp;但这样的字符串太长， 并不太适合传输。<br>
+```Python
+def encryptBase64(self,src):
+    return base64.urlsafe_b64encode(src)
+```
+&emsp;&emsp;通过 base64 模块的 urlsafe_b64encode()方法对 AES 加密串进行二次加密。
+然后得到的字符串是这样的：<br>
+&emsp;&emsp;`b'gouBbuKWEeY5wWjMx-nNAYDTion0ADOysaLw1uzzGOpvTTASpQGJu5p0WuDhZMiM'`<br>
+&emsp;&emsp;到此， 加密过程结束。<br>
+&emsp;&emsp;`r = requests.post(self.base_url, data={"data": encoded})`<br>
+&emsp;&emsp;将加密后的字符串作为接口的 data 参数发送给接口。<br>
+&emsp;&emsp;当服务器接收到字符串之后， 如何对加密串进行解密处理呢？ 下接来开发服务器端的处理。<br>
+views_if_sec_example.py:<br>
+```Python
+from Crypto.Cipher import AES
+
+# =======AES 加密算法===============
+BS = 16
+unpad = lambda s: s[0: - ord(s[-1])]
+
+
+def decryptBase64(src):
+    return base64.urlsafe_b64decode(src)
+
+
+def decryptAES(src, key):
+    """
+    解析 AES 密文
+    """
+    src = decryptBase64(src)
+    iv = b"1172311105789011"
+    cryptor = AES.new(key, AES.MODE_CBC, iv)
+    text = cryptor.decrypt(src).decode()
+    return unpad(text)
+
+
+def aes_encryption(request):
+    app_key = 'W7v4D60fds2Cmk2U'
+    if request.method == 'POST':
+        data = request.POST.get("data", "")
+    else:
+        return "error"
+    # 解密
+    decode = decryptAES(data, app_key)
+    # 转化为字典
+    dict_data = json.loads(decode)
+    return dict_data
+```
+&emsp;&emsp;`app_key = 'W7v4D60fds2Cmk2U'`<br>
+&emsp;&emsp;服务器端与合法客户端约定的密钥 app_key。<br>
+```Python
+if request.method == 'POST':
+    data = request.POST.get("data", "")
+else:
+    return "error"
+```
+&emsp;&emsp;判断客户端请求是否为 POST， 通过 POST.get()方法接收 data 参数。<br>
+&emsp;&emsp;`decode = decryptAES(data, app_key)`<br>
+&emsp;&emsp;调用解密函数 decryptAES() ， 传参加密字符串和 app_key。<br>
+```Python
+def decryptAES(src, key):
+    """解析 AES 密文 """
+    src = decryptBase64(src)
+    iv = b"1172311105789011"
+    cryptor = AES.new(key, AES.MODE_CBC, iv)
+    text = cryptor.decrypt(src).decode()
+    return unpad(text)
+```
+&emsp;&emsp;首先， 调用 decryptBase64()方法， 将 Base64 加密字符串解密为 AES 加密字符串。 然后， 通过 decrypt()
+对 AES 加密串进行解密。<br>
+```Python
+def decryptBase64(src):
+return base64.urlsafe_b64decode(src)
+```
+&emsp;&emsp;对 Base64 字符串解密。<br>
+```Python
+BS = 16
+unpad = lambda s : s[0: - ord(s[-1])]
+```
+&emsp;&emsp;最后， 通过 upad 匿名函数对字符串的长度还原。 到此， 解密过程结束。<br>
+```Python
+dict_data = json.loads(decode)
+return dict_data
+```
+&emsp;&emsp;将解密后字符串通过 json.loads()方法转化成字典， 并将该字典做为 aes_encryption()函数的返回值。<br>
+&emsp;&emsp;在获取嘉宾例表的接口中调用 aes_encryption()函数进行 AES 加密字符串解密。<br>
+views_if_sec_example.py:<br>
+```Python
+# 嘉宾查询接口----AES 算法
+def get_guest_list(request):
+    dict_data = aes_encryption(request)
+
+    if dict_data == "error":
+        return JsonResponse({'status': 10011, 'message': 'request error'})
+
+    eid = dict_data['eid']
+    phone = dict_data['phone']
+
+    if eid == '':
+        return JsonResponse({'status': 10021, 'message': 'eid cannot be empty'})
+    if eid != '' and phone == '':
+        datas = []
+        results = Guest.objects.filter(event_id=eid)
+        if results:
+            for r in results:
+                guest = {}
+                guest['realname'] = r.realname
+                guest['phone'] = r.phone
+                guest['email'] = r.email
+                guest['sign'] = r.sign
+                datas.append(guest)
+            return JsonResponse({'status': 200, 'message': 'success', 'data': datas})
+        else:
+            return JsonResponse({'status': 10022, 'message': 'query result is empty'})
+    if eid != '' and phone != '':
+        guest = {}
+        try:
+            result = Guest.objects.get(phone=phone, event_id=eid)
+        except ObjectDoesNotExist:
+            return JsonResponse({'status': 10022, 'message': 'query result is empty'})
+        else:
+            guest['realname'] = result.realname
+            guest['phone'] = result.phone
+            guest['email'] = result.email
+            guest['sign'] = result.sign
+            return JsonResponse({'status': 200, 'message': 'success', 'data': guest})
+```
+&emsp;&emsp;在.../sign/urls.py 文件中添加新的安全接口指向。<br>
+```Python
+from sign import views_if,views_if_security
+urlpatterns = [
+    ......
+    # security interface:
+    # ex : /aip/sec_add_event/
+    url(r'^sec_get_guest_list/', views_if_sec_example.get_guest_list,name='get_guest_list'),
+]
+```
+### 11.3.3、 编写接口文档
+&emsp;&emsp;查询嘉宾接口文档：<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.7.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.8.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter11/image/11.9.PNG)<br>
+### 11.3.4、 补充接口测试用例
+&emsp;&emsp;最后， 再来补充一些 AES 加密接口的测试用例。<br>
+```Python
+def test_get_guest_list_eid_null(self):
+        ''' eid 参数为空 '''
+        payload = {'eid': '', 'phone': ''}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 10021)
+        self.assertEqual(result['message'], 'eid cannot be empty')
+
+    def test_get_event_list_eid_error(self):
+        ''' 根据 eid 查询结果为空 '''
+        payload = {'eid': '901', 'phone': ''}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 10022)
+        self.assertEqual(result['message'], 'query result is empty')
+
+    def test_get_event_list_eid_success(self):
+        ''' 根据 eid 查询结果成功 '''
+        payload = {'eid': '1', 'phone': ''}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(result['message'], 'success')
+        self.assertEqual(result['data'][0]['realname'], '张三')
+        self.assertEqual(result['data'][0]['phone'], '13800138000')
+
+    def test_get_event_list_eid_phone_null(self):
+        ''' 根据 eid 和phone 查询结果为空 '''
+        payload = {'eid': 2, 'phone': '10000000000'}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 10022)
+        self.assertEqual(result['message'], 'query result is empty')
+
+    def test_get_event_list_eid_phone_success(self):
+        ''' 根据 eid 和phone 查询结果成功 '''
+        payload = {'eid': 1, 'phone': '18633003301'}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(result['message'], 'success')
+        self.assertEqual(result['data']['realname'], 'alen')
+        self.assertEqual(result['data']['phone'], '18633003301')
+
+
+if __name__ == '__main__':
+    unittest.main()
+```
+&emsp;&emsp;定义好 AES 算法的加密方法， 接口测试是需要调用即可， 过程并不复杂。<br>
+
+
+
+
+
+
 
 
