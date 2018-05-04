@@ -4610,7 +4610,49 @@ Service， Web Service 是目前最适合实现 SOA 的技术。 ”<br>
 &emsp;&emsp;Web Service 是一个平台独立的， 低耦合的， 自包含的、 基于可编程的 web 的应用程序， 可使用开放的
 XML（标准通用标记语言下的一个子集） 标准来描述、 发布、 发现、 协调和配置这些应用程序， 用于开发分
 布式的互操作的应用程序。<br>
-
+### 4.SOAP
+&emsp;&emsp;Simple Object Access Protocol， 中文为简单对象访问协议， 简称 SOAP。<br>
+&emsp;&emsp;SOAP 是基于 XML 在分散或分布式的环境中交换信息的简单的协议。允许服务提供者和服务客户经过防
+火墙在 INTERNET 进行通讯交互。<br>
+&emsp;&emsp;SOAP 的设计是为了在一个松散的、分布的环境中使用 XML 对等地交换结构化的和类型化的信息提供了
+一个简单且轻量级的机制。<br>
+&emsp;&emsp;XML 是可以扩展标记语言。<br>
+```HTML
+<bookstore>
+    <book category="COOKING">
+        <title lang="en">Everyday Italian</title>
+        <author>Giada De Laurentiis</author>
+        <year>2005</year>
+        <price>30.00</price>
+    </book>
+</bookstore>
+```
+&emsp;&emsp;SOAP 消息的基本结构<br>
+```HTML
+<?xml version="1.0"?>
+<soap:Envelope xmlns:soap="http://www.w3.org/2001/12/soap-envelope"
+soap:encodingStyle="http://www.w3.org/2001/12/soap-encoding">
+    <soap:Header>
+        ...
+        ...
+    </soap:Header>
+    <soap:Body>
+        ...
+        ...
+        <soap:Fault>
+        ...
+        ...
+        </soap:Fault>
+    </soap:Body>
+</soap:Envelope>
+```
+&emsp;&emsp;当 SOAP 消息真正需要在网络上实际传输的时候， SOAP 消息能够与不同的底层传输协议进行绑定， 同
+时， SOAP 消息可以在很多种消息传输模式中使用。包括超文本传输协议（HTTP）， 简单邮件传输协议（SMTP），
+多用途网际邮件扩充协议（MIME） 。 它还支持从消息系统到远程过程调用协议（RPC） 等大量的应用程序。<br>
+&emsp;&emsp;当然，最多的情况还是还是绑定在 HTTP 协议上面传输。所以，导致大多数人认为 SOAP 就是 HTTP + XML，
+或者认为 SOAP 是 HTTP post 请求的一个专用版本， 遵循一种特殊的 XML 消息格式。<br>
+&emsp;&emsp;虽然， 我们看到的情况确实如此， 但这并不是 SOAP 本质与全部。<br>
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.2.PNG)<br>
 
 
 
