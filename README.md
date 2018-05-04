@@ -5096,6 +5096,94 @@ GET、 POST、 PUT、 DELETE。 它们分别对应四种基本操作： GET 用�
 &emsp;&emsp;`python3 -m pip install djangorestframework`<br>
 ### 13.2.1、 创建简单的 API
 &emsp;&emsp;当Django REST Framework安装好之后,创建一个新的项目django_test,在项目下创建"api"应用。<br>
+```
+>django-admin startproject django_rest
+>cd django_rest
+\django_rest>python3 manage.py startapp api
+```
+&emsp;&emsp;打开 settings.py 文件添加应用：<br>
+settings.py:<br>
+```
+# Application definition
+INSTALLED_APPS = [
+	'django.contrib.admin',
+	'django.contrib.auth',
+	'django.contrib.contenttypes',
+	'django.contrib.sessions',
+	'django.contrib.messages',
+	'django.contrib.staticfiles',
+	'rest_framework',
+	'api',
+] 
+
+# 在文件末尾添加
+REST_FRAMEWORK = {
+	'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAdminUser',),
+	'PAGE_SIZE': 10
+}
+```
+&emsp;&emsp;"rest_framework"为Django RESTFramework应用,"api"为我们自己创建的应用。默认的权限策略可以设置
+在全局范围内,通过DEFAULT_PERMISSION_CLASSES设置。<br>
+&emsp;&emsp;通过"migrate"命令执行数据库迁移。<br>
+&emsp;&emsp;`\django_rest>python3 manage.py migrate`<br>
+&emsp;&emsp;创建超级管理员账户。<br>
+```Python
+\django_rest>python3 manage.py createsuperuser
+Username (leave blank to use 'fnngj'): admin
+Email address: admin@mail.com
+Password:
+Password (again):
+Superuser created successfully.
+```
+&emsp;&emsp;创建数据序列化， 创建.../api/serializers.py 文件。<br>
+```Python
+from django.contrib.auth.models import User, Group
+from rest_framework import serializers
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+	class Meta:
+		model = User
+		fields = ('url', 'username', 'email', 'groups')
+		
+class GroupSerializer(serializers.HyperlinkedModelSerializer):
+	class Meta:
+		model = Group
+		fields = ('url', 'name')
+```
+&emsp;&emsp;Serializers用于定义API的表现形式,如返回哪些字段,返回怎样的格式等.这里序列化Django自带的User和Group。<br>
+&emsp;&emsp;编写视图文件,打开api应用下的views.py文件,编写如下代码。<br>
+views.py:<br>
+```Python
+from django.contrib.auth.models import User, Group
+from rest_framework import viewsets
+from api.serializers import UserSerializer, GroupSerializer
+
+# ViewSets定义视图的展现形式
+class UserViewSet(viewsets.ModelViewSet):
+	"""
+	API endpoint that allows users to be viewed or edited.
+	"""
+	queryset = User.objects.all().order_by('-date_joined')
+	serializer_class = UserSerializer
+class GroupViewSet(viewsets.ModelViewSet):
+	"""
+	API endpoint that allows groups to be viewed or edited.
+	"""
+	queryset = Group.objects.all()
+	serializer_class = GroupSerializer
+```
+&emsp;&emsp;在Django REST Framework中,ViewSets用于定义视图的展现形式,例如返回哪些内容,需要做哪些权限处理。<br>
+&emsp;&emsp;在URL中会定义相应的规则到ViewSet。ViewSets则通过serializer_class找到对应的Serializers。这里
+将User和Group的所有对象赋予queryset,并返回这些值。在UserSerializer和GroupSerializer中定义要返回的字段。<br>
+&emsp;&emsp;打开/django_test/urls.py文件,添加api的路由配置。<br>
+
+
+
+
+
+
+
+
 
 
 
