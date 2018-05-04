@@ -4766,7 +4766,7 @@ ttp"/>
 
 &emsp;&emsp;可以发布 Web Service， 并且对使用自身服务的请求进行响应， Web Service 的拥有者， 它会等待其他的服
 务或者是应用程序访问自己。<br>
--Web Service 请求者：
+- Web Service 请求者：
 
 &emsp;&emsp;也就是 Web Service 功能的使用者，它通过服务注册中心也就是 Web Service 中介者查找到所需要的服务，
 再利用 SOAP 消息向 Web Service 提供者发送请求以获得服务。<br>
@@ -4786,6 +4786,162 @@ ttp"/>
 &emsp;&emsp;4.代码中不用多次声明认证（账号， 密码） 参数。<br>
 &emsp;&emsp;5.传递参数可以为数组， 对象等。<br>
 &emsp;&emsp;那么， 第二个问题， Web Service 能被 HTTP 替代么？ 答案是肯定的。<br>
+## 12.2 Web Service 开发与调用
+&emsp;&emsp;开发 Web Service 接口并非 Python 语言所擅长的， 而且开发出来的 Web Service 接口的性能也不敢恭维，
+好在， 谁让 Python 简单呢。 能找不少相关的开发和测试类库。<br>
+### 12.2.1、 suds-jurko 调用接口
+&emsp;&emsp;Suds 是 Web Service 客户端是一个轻量级的基于 SOAP 的 python 客户端。<br>
+&emsp;&emsp;Suds 项目在 pypi 仓库的地址： https://pypi.python.org/pypi/suds/<br>
+&emsp;&emsp;然后， 2010 年 9 月之后， 该项目就不再更新了， 虽然， 在 Python2.x 下面仍然可以使用该项目， 但是我们
+更希望能用到较新的库。<br>
+&emsp;&emsp;于是， 我又在 Python 仓库中找到了 Suds-jurko， Suds-jurko 基于 Suds， 它的目的是希望是原有的 Suds 项
+目继续得到发展。<br>
+&emsp;&emsp;Suds-jurko 项目在 pypi 仓库的地址： https://pypi.python.org/pypi/suds-jurko<br>
+&emsp;&emsp;然而， 该项目的更新只持续到 2014 年 1 月， 好在， 它支持了 Python3.x， 我们将 zip 包下载并解压， 然后
+进入解压目录执行以下命令进行安装。<br>
+```Python
+...\suds-jurko-0.6> python3 setup.py install
+……
+Installed c:\python35\lib\site-packages\suds_jurko-0.6-py3.5.egg
+Processing dependencies for suds-jurko==0.6
+Finished processing dependencies for suds-jurko==0.6
+```
+&emsp;&emsp;`python3 -m pip install suds-jurko`<br>
+&emsp;&emsp;下来就 Web Service 接口的调用了， 前提是得先有 Web Service 接口才行， 别着急， wexml.com.cn 网站提
+供了一些发布的 Web Service 接口， 例如， 天气的查询、 电话号码归属地查询、 以及国内飞机航班的查询等服
+务。<br>
+&emsp;&emsp;网站地址： http://www.webxml.com.cn/zh_cn/web_services.aspx<br>
+&emsp;&emsp;有了这些， 就可以给我们拿来练手了。<br>
+&emsp;&emsp;先以手机号码归属地的查询为例， 创建 soap_client.py 文件：<br>
+soap_client.py:<br>
+```Python
+# -*- coding=utf-8 -*-
+from suds.client import Client
+# 使用库 suds_jurko： https://bitbucket.org/jurko/suds
+# web service 查询： http://www.webxml.com.cn/zh_cn/web_services.aspx
+# 电话号码归属地查询
+url = 'http://webservice.webxml.com.cn/WebServices/MobileCodeWS.asmx?wsdl'
+client = Client(url)
+print(client)
+```
+&emsp;&emsp;执行程序， 得到如下结果：<br>
+```Python
+...\test> python3 soap_client.py
+Suds ( https://fedorahosted.org/suds/ ) version: 0.6
+Service ( MobileCodeWS ) tns="http://WebXml.com.cn/"
+	Prefixes (1)
+		ns0 = "http://WebXml.com.cn/"
+	Ports (2):
+		(MobileCodeWSSoap)
+			Methods (2):
+				getDatabaseInfo()
+				getMobileCodeInfo(xs:string mobileCode, xs:string userID)
+			Types (1):
+				ArrayOfString
+		(MobileCodeWSSoap12)
+			Methods (2):
+				getDatabaseInfo()
+				getMobileCodeInfo(xs:string mobileCode, xs:string userID)
+			Types (1):
+				ArrayOfString
+```
+&emsp;&emsp;通过打印信息， 我们知道该接口提供 getDatabaseInfo()方法用来查询号码归属地。 那么就可以在程序中调
+用该方法了。<br>
+soap_client.py:<br>
+```Python
+# 使用库 suds_jurko： https://bitbucket.org/jurko/suds
+# web service 查询： http://www.webxml.com.cn/zh_cn/web_services.aspx
+# 电话号码归属地查询
+url = 'http://webservice.webxml.com.cn/WebServices/MobileCodeWS.asmx?wsdl'
+client = Client(url)
+result = client.service.getMobileCodeInfo(186xxxxxxxx)
+print(result)
+```
+&emsp;&emsp;为了隐私， 我故意到将代码中的电话号码后 8 位用“x” 字母做了替换， 读者可以使用任意号码来替换。
+再次运行程序得到结果如下。<br>
+```
+...\test> python3 soap_client.py
+186xxxxxxxx： 河南 郑州 河南联通 GSM 卡
+```
+&emsp;&emsp;这么简单就可以实现调用了， 那我们再来调用一下首都北京的天气。<br>
+soap_client2.py:<br>
+```Python
+from suds.client import Client
+from suds.xsd.doctor import ImportDoctor, Import
+url = 'http://www.webxml.com.cn/WebServices/WeatherWebService.asmx?wsdl'
+imp = Import('http://www.w3.org/2001/XMLSchema',
+location='http://www.w3.org/2001/XMLSchema.xsd')
+imp.filter.add('http://WebXml.com.cn/')
+client = Client(url, plugins=[ImportDoctor(imp)])
+result = client.service.getWeatherbyCityName("北京")
+print(result)
+```
+```
+C:\Users\Administrator\git\guest>python3 soap_client2.py
+(ArrayOfString){
+   string[] =
+      "直辖市",
+      "北京",
+      "54511",
+      "54511.jpg",
+      "2018/5/4 12:47:49",
+      "16℃/27℃",
+      "5月4日 晴转多云",
+      "西南风转北风小于3级",
+      "0.gif",
+      "1.gif",
+      "今日天气实况：气温：23℃；风向/风力：南风 2级；湿度：34%；紫外线强度：强
+。空气质量：中。",
+      "紫外线指数：强，涂擦SPF大于15、PA+防晒护肤品。
+健臻·血糖指数：易波动，血糖易波动，注意监测。
+感冒指数：少发，无明显降温，感冒机率较低。
+穿衣指数：舒适，建议穿长袖衬衫单裤等服装。
+洗车指数：较适宜，无雨且风力较小，易保持清洁度。
+空气污染指数：中，易感人群应适当减少室外活动。
+",
+      "15℃/25℃",
+      "5月5日 多云",
+      "北风小于3级",
+      "1.gif",
+      "1.gif",
+      "13℃/27℃",
+      "5月6日 晴",
+      "西南风小于3级",
+      "0.gif",
+      "0.gif",
+      "北京位于华北平原西北边缘，市中心位于北纬39度，东经116度，四周被河北省围着
+，东南和天津市相接。全市面积一万六千多平方公里，辖12区6县，人口1100余万。北京为
+暖温带半湿润大陆性季风气候，夏季炎热多雨，冬季寒冷干燥，春、秋短促，年平均气温10
+-12摄氏度。北京是世界历史文化名城和古都之一。早在七十万年前，北京周口店地区就出
+现了原始人群部落“北京人”。而北京建城也已有两千多年的历史，最初见于记载的名字为
+“蓟”。公元前1045年北京成为蓟、燕等诸侯国的都城；公元前221年秦始皇统一中国以来
+，北京一直是中国北方重镇和地方中心；自公元938年以来，北京又先后成为辽陪都、金上
+都、元大都、明清国都。1949年10月1日正式定为中华人民共和国首都。北京具有丰富的旅
+游资源，对外开放的旅游景点达200多处，有世界上最大的皇宫紫禁城、祭天神庙天坛、皇
+家花园北海、皇家园林颐和园，还有八达岭、慕田峪、司马台长城以及世界上最大的四合院
+恭王府等各胜古迹。全市共有文物古迹7309项，其中国家文物保护单位42个，市级文物保护
+单位222个。北京的市树为国槐和侧柏，市花为月季和菊花。另外，北京出产的象牙雕刻、
+玉器雕刻、景泰蓝、地毯等传统手工艺品驰誉世界。",
+ }
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
