@@ -4742,4 +4742,50 @@ ttp"/>
 &emsp;&emsp;<binding> 元素为每个端口定义消息格式和协议细节。<br>
 &emsp;&emsp;对于接口来说， 接口文档非常重要， 它描述如何访问接口。 那么 WSDL 就可以看作 Web Service 接口的
 一种标准格式的“文档” 。 我们通过阅读 WSDL 就知道如何调用 Web Service 接口了。<br>
+### 6.UDDI
+&emsp;&emsp;Universal Description, Discovery and Integration"， 可译为“通用描述、 发现与集成服务”， 简称 UDDI。<br>
+&emsp;&emsp;WSDL 用来描述了访问特定的 Web Service 的一些相关的信息， 那么在互联网上， 或者是在企业的不同
+部门之间， 如何来发现我们所需要的 Web Service 呢？ 而 Web Service 提供商又如何将自己开发的 Web Serivce
+公布到因特网上呢？ 这就需要使用到 UDDI 了。<br>
+&emsp;&emsp;UDDI 是一个独立于平台的框架， 通过使用 Internet 来描述服务， 发现企业， 并对企业服务进行集成。<br>
+&emsp;&emsp;UDDI 指的是通用描述、 发现与集成服务。<br>
+&emsp;&emsp;UDDI 是一种用于存储有关 Web Services 的信息的目录。<br>
+&emsp;&emsp;UDDI 是一种由 WSDL 描述的 Web Services 界面的目录。<br>
+&emsp;&emsp;UDDI 经由 SOAP 进行通信。<br>
+&emsp;&emsp;UDDI 被构建入了微软的 .NET 平台<br>
+&emsp;&emsp;如图 12.3、 图 12.4， 为 UDDI 的安装与发布。<br>
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.3.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.4.PNG)<br>
+&emsp;&emsp;UDDI 可以帮助 Web 服务提供商在互联网上发布 Web Services 的信息。 UDDI 是一种目录服务， 企业可
+以通过 UDDI 来注册和搜索 Web Services。<br>
+&emsp;&emsp;通过上面的介绍， SOAP、 WSDL 和 UDDI 就构成了 Web Service 的三要素。<br>
+### 7.Web Services 体系结构
+在 Web Serivce 的体系结构中涉及到三个角色， 一个是 Web Service 提供者， 一个是 Web Service 中介， 还
+有一个就是 Web Service 请求者； 同时还涉及到三类动作， 即发布， 查找， 绑定。<br>
+- Web Service 提供者：
+
+&emsp;&emsp;可以发布 Web Service， 并且对使用自身服务的请求进行响应， Web Service 的拥有者， 它会等待其他的服
+务或者是应用程序访问自己。<br>
+-Web Service 请求者：
+
+&emsp;&emsp;也就是 Web Service 功能的使用者，它通过服务注册中心也就是 Web Service 中介者查找到所需要的服务，
+再利用 SOAP 消息向 Web Service 提供者发送请求以获得服务。<br>
+- Web Service 中介：
+
+&emsp;&emsp;也称为服务代理， 用来注册已经发布的 Web Service 提供者， 并对其进行分类， 同时提供搜索服务， 简单
+来说的话， Web Service 中介者的作用就是把一个 Web Service 请求者和合适的 Web Service 提供者联系在一起，
+充当一个管理者的角色， 一般是通过 UDDI 来实现。<br>
+&emsp;&emsp;发布： 通过发布操作， 可以使 Web Serivce 提供者向 Web Service 中介注册自己的功能以及访问的接口。<br>
+&emsp;&emsp;发现（查找）： 使得 Web Service 请求者可以通过 Web Service 中介者来查找到特定种类的 Web Service 接
+口。<br>
+&emsp;&emsp;绑定： 这里就是实现让 Web Serivce 请求者能够使用 Web Serivce 提供者提供的 Web Serivce 接口。<br>
+&emsp;&emsp;最后， 回答前面的问题， Web Service 相对于 HTTP 有何不同？<br>
+&emsp;&emsp;1.接口中实现的方法和要求参数一目了然。<br>
+&emsp;&emsp;2.不用担心大小写问题。<br>
+&emsp;&emsp;3.不用担心中文 urlencode 问题。<br>
+&emsp;&emsp;4.代码中不用多次声明认证（账号， 密码） 参数。<br>
+&emsp;&emsp;5.传递参数可以为数组， 对象等。<br>
+&emsp;&emsp;那么， 第二个问题， Web Service 能被 HTTP 替代么？ 答案是肯定的。<br>
+
+
 
