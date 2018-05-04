@@ -4314,61 +4314,6 @@ class AESTest(unittest.TestCase):
         self.assertEqual(result['status'], 200)
         self.assertEqual(result['message'], "success")
 
-    def test_get_guest_list_eid_null(self):
-        ''' eid 参数为空 '''
-        payload = {'eid': '', 'phone': ''}
-        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
-
-        r = requests.post(self.base_url, data={"data": encoded})
-        result = r.json()
-        self.assertEqual(result['status'], 10021)
-        self.assertEqual(result['message'], 'eid cannot be empty')
-
-    def test_get_event_list_eid_error(self):
-        ''' 根据 eid 查询结果为空 '''
-        payload = {'eid': '901', 'phone': ''}
-        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
-
-        r = requests.post(self.base_url, data={"data": encoded})
-        result = r.json()
-        self.assertEqual(result['status'], 10022)
-        self.assertEqual(result['message'], 'query result is empty')
-
-    def test_get_event_list_eid_success(self):
-        ''' 根据 eid 查询结果成功 '''
-        payload = {'eid': '1', 'phone': ''}
-        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
-
-        r = requests.post(self.base_url, data={"data": encoded})
-        result = r.json()
-        self.assertEqual(result['status'], 200)
-        self.assertEqual(result['message'], 'success')
-        self.assertEqual(result['data'][0]['realname'], '张三')
-        self.assertEqual(result['data'][0]['phone'], '13800138000')
-
-    def test_get_event_list_eid_phone_null(self):
-        ''' 根据 eid 和phone 查询结果为空 '''
-        payload = {'eid': 2, 'phone': '10000000000'}
-        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
-
-        r = requests.post(self.base_url, data={"data": encoded})
-        result = r.json()
-        self.assertEqual(result['status'], 10022)
-        self.assertEqual(result['message'], 'query result is empty')
-
-    def test_get_event_list_eid_phone_success(self):
-        ''' 根据 eid 和phone 查询结果成功 '''
-        payload = {'eid': 1, 'phone': '18633003301'}
-        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
-
-        r = requests.post(self.base_url, data={"data": encoded})
-        result = r.json()
-        self.assertEqual(result['status'], 200)
-        self.assertEqual(result['message'], 'success')
-        self.assertEqual(result['data']['realname'], 'alen')
-        self.assertEqual(result['data']['phone'], '18633003301')
-
-
 if __name__ == '__main__':
     unittest.main()
 ```
@@ -4539,8 +4484,68 @@ urlpatterns = [
 ![image](https://github.com/15529343201/guest/blob/chapter11/image/11.7.PNG)<br>
 ![image](https://github.com/15529343201/guest/blob/chapter11/image/11.8.PNG)<br>
 ![image](https://github.com/15529343201/guest/blob/chapter11/image/11.9.PNG)<br>
+### 11.3.4、 补充接口测试用例
+&emsp;&emsp;最后， 再来补充一些 AES 加密接口的测试用例。<br>
+```Python
+def test_get_guest_list_eid_null(self):
+        ''' eid 参数为空 '''
+        payload = {'eid': '', 'phone': ''}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 10021)
+        self.assertEqual(result['message'], 'eid cannot be empty')
+
+    def test_get_event_list_eid_error(self):
+        ''' 根据 eid 查询结果为空 '''
+        payload = {'eid': '901', 'phone': ''}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 10022)
+        self.assertEqual(result['message'], 'query result is empty')
+
+    def test_get_event_list_eid_success(self):
+        ''' 根据 eid 查询结果成功 '''
+        payload = {'eid': '1', 'phone': ''}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(result['message'], 'success')
+        self.assertEqual(result['data'][0]['realname'], '张三')
+        self.assertEqual(result['data'][0]['phone'], '13800138000')
+
+    def test_get_event_list_eid_phone_null(self):
+        ''' 根据 eid 和phone 查询结果为空 '''
+        payload = {'eid': 2, 'phone': '10000000000'}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 10022)
+        self.assertEqual(result['message'], 'query result is empty')
+
+    def test_get_event_list_eid_phone_success(self):
+        ''' 根据 eid 和phone 查询结果成功 '''
+        payload = {'eid': 1, 'phone': '18633003301'}
+        encoded = self.encryptAES(json.dumps(payload), self.app_key).decode()
+
+        r = requests.post(self.base_url, data={"data": encoded})
+        result = r.json()
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(result['message'], 'success')
+        self.assertEqual(result['data']['realname'], 'alen')
+        self.assertEqual(result['data']['phone'], '18633003301')
 
 
+if __name__ == '__main__':
+    unittest.main()
+```
+&emsp;&emsp;定义好 AES 算法的加密方法， 接口测试是需要调用即可， 过程并不复杂。<br>
 
 
 
