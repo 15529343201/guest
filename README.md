@@ -5311,12 +5311,93 @@ class Guest(models.Model):
 &emsp;&emsp;进行数据库迁移：<br>
 &emsp;&emsp;`python3 manage.py makemigrations api`<br>
 &emsp;&emsp;`python3 manage.py migrate`<br>
+&emsp;&emsp;添加发布会数据序列化， 打开.../api/serializers.py 文件， 添加。<br>
+serializers.py:<br>
+```Python
+from api.models import Event, Guest
+class EventSerializer(serializers.HyperlinkedModelSerializer):
+	class Meta:
+		model = Event
+		fields = ('url','name','address','start_time','limit','status')
+		
+class GuestSerializer(serializers.HyperlinkedModelSerializer):
+	class Meta:
+		model = Guest
+		fields = ('url','realname','phone','email','sign','event')
+```
+&emsp;&emsp;打开api应用下的views.py文件,定义发布会和嘉宾视图类<br>
+```Python
+from api.serializers import EventSerializer, GuestSerializer
+from api.models import Event, Guest
+class EventViewSet(viewsets.ModelViewSet):
+	"""
+	API endpoint that allows events to be viewed or edited.
+	"""
+	queryset = Event.objects.all()
+	serializer_class = EventSerializer
+	
+class GuestViewSet(viewsets.ModelViewSet):
+	"""
+	API endpoint that allows guests to be viewed or edited.
+	"""
+	queryset = Guest.objects.all()
+	serializer_class = GuestSerializer
+```
+&emsp;&emsp;打开.../django_rest/urls.py 文件， 添加 URL 配置.<br>
+urls.py:<br>
+```Python
+router.register(r'event', views.EventViewSet)
+router.register(r'guest', views.GuestViewSet)
+```
+&emsp;&emsp;重新启动项目,通过浏览器打开http://127.0.0.1:8000/,如图13.6所示。<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.6.PNG)<br>
+### 13.3.2、 测试接口
+&emsp;&emsp;使用Django REST Framework开发的接口,除了可以使用GET方法查询接口之外,还可以调用接口添加数据,
+并不需要关心接口插入数据的细节,只需将接口请求改为POST即可。使用Postman添加一条发布会数据,如图13.7所示<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.7.PNG)<br>
+&emsp;&emsp;Postman 接口配置参数如下：<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.8.PNG)<br>
+## 13.4 soapUI测试工具
+&emsp;&emsp;soapUI是一款针对REST和SOAP的功能和性能测试工具。<br>
+&emsp;&emsp;官方地址:https://www.soapui.org/<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.9.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.10.PNG)<br>
+### 13.4.1 创建SOAP测试项目
+&emsp;&emsp;创建一个 SOAP 项目， 左侧项目列表， 右键“Projects” --->“New SOAP Project” 。<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.11.PNG)<br>
+&emsp;&emsp;以查询号码归属地为例：<br>
+&emsp;&emsp;Project Name： MobileCodeWS 为项目名称。<br>
+&emsp;&emsp;Initial WSDL： http://ws.webxml.com.cn/WebServices/MobileCodeWS.asmx?wsdl 为接口地址。<br>
+&emsp;&emsp;点击“OK” 按钮， 创建项目完成。<br>
+&emsp;&emsp;依次展开 MobileCodeWS-->MobileCodeWSSoap-->getMobileCodeInfo/， 双击“Request 1” ， 如下图 13.11。<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.12.PNG)<br>
+&emsp;&emsp;点击 Request 1 窗口左上角的运行按钮， 发送 SOAP 请求。 右侧窗口将会显示接口返回结果。<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.13.PNG)<br>
+### 13.4.2、 创建 REST 测试项目
+&emsp;&emsp;创建一个 SOAP 项目， 左侧项目列表， 右键“Projects” --->“New REST Project” 。<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.14.PNG)<br>
+&emsp;&emsp;URI： http://127.0.0.1:8000/users/ 为接口地址。<br>
+&emsp;&emsp;点击“OK” 按钮， 创建项目完成。<br>
+&emsp;&emsp;依次展开： REST Project 1-->User[/users/]-->Users-->Request 1。 如下图 13.11。<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.15.PNG)<br>
+&emsp;&emsp;单击"Request 1"窗口左下角的"Auth"按钮,在Authorization选项中选择"add New Authorization",在
+弹出的窗口中选择"Basic"选项,单击"OK"按钮,如图13.14所示。<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.16.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.17.PNG)<br>
+&emsp;&emsp;填写用户认证 Username 和 Password（admin/admin123456） ， 勾选“Authenticate pre-emptvely”
+选项。<br>
+- Username:用于填写基本认证的用户名。
+- Password:用于填写基本认证的密码。
+- Domain:域名是基本认证的可选项,设置为空。
+- Pre-emptive auth:设置定义认证的行为。
+- Use global preference:用于定义HTTP设置为全局首选项。
+- Authenticate pre-emptively:仅适用于此请求,不需要等待身份验证时才发送凭据。
 
-
-
-
-
-
+&emsp;&emsp;如果想要查询具体的某一条发布会信息,则可以在Resource输入框中指定发布会id.<br>
+&emsp;&emsp;随后， 点击 Request 1 窗口中左上角的运行按钮， 右则窗口显示接口查询结果。<br>
+![image](https://github.com/15529343201/guest/blob/chapter13/image/13.18.PNG)<br>
+&emsp;&emsp;关于 soapUI 工具就介绍到这里， 想了解该工具的更多使用， 请参考官方文档：<br>
+&emsp;&emsp;https://www.soapui.org/soapui-projects/soapui-projects.html<br>
 
 
 
