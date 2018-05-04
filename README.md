@@ -4922,7 +4922,82 @@ C:\Users\Administrator\git\guest>python3 soap_client2.py
 恭王府等各胜古迹。全市共有文物古迹7309项，其中国家文物保护单位42个，市级文物保护
 单位222个。北京的市树为国槐和侧柏，市花为月季和菊花。另外，北京出产的象牙雕刻、
 玉器雕刻、景泰蓝、地毯等传统手工艺品驰誉世界。",
- }
+}
+```
+### 12.2.2、 spyne 开发接口
+&emsp;&emsp;比起 Web Service 接口的调用， 我更好奇如何开发 Web Service 接口。 因为通过前面的概念介绍， 它看上
+去是个很复杂的技术。 万能的 Python， 我想应该能找到开发 Web Service 应用的库。 还真有。<br>
+&emsp;&emsp;soaplib 项目在 PyPi 仓库的地址： https://pypi.python.org/pypi/soaplib<br>
+&emsp;&emsp;然后， 这个项目到 2011 年 3 月就停止更新了。 Python2.x 的用户仍然可以使用该库开发 Web Service 接
+口， 然后， 它确实有点旧了。 于是， 我又找到了 spyne。<br>
+&emsp;&emsp;spyne 项目在 PyPi 仓库的地址： https://pypi.python.org/pypi/spyne<br>
+&emsp;&emsp;spyne官方网站:http://spyne.io/<br>
+&emsp;&emsp;用 spyne 开发 Web Service 应用和 soaplib 一样简单， 最主要的是它支持 Python3.x， 并且在持续更新。<br>
+&emsp;&emsp;spyne 支持使用 pip 命令安装（建议在 Linux 系统下安装） 。<br>
+&emsp;&emsp;`> python3 -m pip install spyne`<br>
+&emsp;&emsp;参考 spyne 官方文档， 开发一个简单的 Web Service 接口。<br>
+```Python
+from spyne import Application, rpc, ServiceBase, Iterable, Integer, Unicode
+from spyne.protocol.soap import Soap11
+from spyne.server.wsgi import WsgiApplication
+
+
+class HelloWorldService(ServiceBase):
+
+	@rpc(Unicode, Integer, _returns=Iterable(Unicode))
+	
+	def say_hello(ctx, name, times):
+		"""Docstrings for service methods appear as documentation in the wsdl.
+		<b>What fun!</b>
+		@param name the name to say hello to
+		@param times the number of times to say hello
+		@return the completed array
+		"""
+		for i in range(times):
+			yield u'Hello, %s' % name
+
+application = Application([HelloWorldService], 'spyne.examples.hello.soap',
+						   in_protocol=Soap11(validator='lxml'),
+						   out_protocol=Soap11())
+
+wsgi_application = WsgiApplication(application)
+
+
+
+if __name__ == '__main__':
+	import logging
+	from wsgiref.simple_server import make_server
+	logging.basicConfig(level=logging.DEBUG)
+	logging.getLogger('spyne.protocol.xml').setLevel(logging.DEBUG)
+	logging.info("listening to http://127.0.0.1:8000")
+	logging.info("wsdl is at: http://127.0.0.1:8000/?wsdl")
+	server = make_server('127.0.0.1', 8000, wsgi_application)
+server.serve_forever()
+```
+&emsp;&emsp;这里开发了一个 say_hello()的接口，它需要两个参数， name 和 times，接口会对 name 返回一定次数（itmes）
+的“hello, name” ， 相当简单。<br>
+```
+C:\Users\Administrator\git\guest>python3 soap_server.py
+INFO:root:listening to http://127.0.0.1:8000
+INFO:root:wsdl is at: http://127.0.0.1:8000/?wsdl
+```
+&emsp;&emsp;前面已经介绍了 Suds-jurko 的使用， 这里直接使用它来调用接口。<br>
+```Python
+from suds.client import Client
+url = "http://192.168.127.128:8000/?wsdl"
+client = Client(url)
+result = client.service.say_hello("bugmaster", 3)
+print(result)
+```
+&emsp;&emsp;执行结果：<br>
+```
+...\test> python3 soap_client3.py
+(stringArray){
+	string[] =
+		"Hello, bugmaster",
+		"Hello, bugmaster",
+		"Hello, bugmaster",
+}
 ```
 
 
