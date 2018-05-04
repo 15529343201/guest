@@ -4546,6 +4546,499 @@ if __name__ == '__main__':
     unittest.main()
 ```
 &emsp;&emsp;定义好 AES 算法的加密方法， 接口测试是需要调用即可， 过程并不复杂。<br>
+# chapter12 Web Service
+## 12.1 Web Service 相关概念
+### 1.SOA
+&emsp;&emsp;Service Oriented Ambiguity 中文一般理解为， 面向服务架构， 简称 SOA。<br>
+&emsp;&emsp;SOA 的提出是在企业计算领域， 就是要将紧耦合的系统， 划分为面向业务的， 粗粒度， 松耦合， 无状态
+的服务。 服务发布出来供其他服务调用， 一组互相依赖的服务就构成了 SOA 架构下的系统。<br>
+&emsp;&emsp;既然说是一种架构的话， 所以一般认为 SOA 是包含了运行环境， 编程模型， 架构风格和相关方法论等在
+内的一整套新的分布式软件系统构造方法和环境， 涵盖服务的整个生命周期。<br>
+&emsp;&emsp;Service-architecture.com 将 SOA 定义为：<br>
+&emsp;&emsp;本质上是服务的集合。 服务间彼此通信， 这种通信可能是简单的数据传送， 也可能是两个或更多的服务
+协调进行某些活动。 服务间需要某些方法进行连接。<br>
+&emsp;&emsp;所谓服务就是精确定义、 封装完善、 独立于其他服务所处环境和状态的函数。<br>
+&emsp;&emsp;虽然不同厂商或个人对 SOA 有着不同的理解， 但是我们仍然可以从上述的定义中看到 SOA 的几个关键
+特性：<br>
+&emsp;&emsp;一种粗粒度、 松耦合服务架构， 服务之间通过简单、 精确定义接口进行通讯， 不涉及底层编程接口和通
+讯模型。<br>
+&emsp;&emsp;对于 SOA 来说， 读者并不需要太过较真 SOA 到是一个怎样的架构。 只要符合它的定义和规范的软件系
+统都可以认为是 SOA 架构。<br>
+### 2.SOA 与 Web Service
+&emsp;&emsp;早在 1996 年 Gartner 就前瞻性地提出了面向服务架构的思想(SOA)， Web Service 不知为何物， SOA 还只
+是束之高阁的理论概念。 直到 2000 年以后， W3C 才成立了相关的委员会， 开始讨论 Web Service 的相关标准，
+各大厂商一边积极参与标准制定， 一边推出了一系列实实在在的产品。 新的技术和新的产品出现， SOA 找到
+了可以依托的凭借。 随着 Web Service 技术的推出和应用， SOA 的思想被一个个效益显著的信息系统建设项
+目不断的示范， 才逐渐成为现今的热门话题。<br>
+&emsp;&emsp;因为现在几乎所有的 SOA 应用场合都是和 Web Service 绑定的， 所以不免有时候这两个概念混用。 不可
+否认 Web Service 是现在最适合实现 SOA 的技术， SOA 的走红在很大程度上归功于 Web Service 标准的成熟和
+应用普及。 因为现在大家基本上认同 Web Service 技术在几方面体现了 SOA 的需要：<br>
+&emsp;&emsp;首先， 是基于标准访问的独立功能实体满足了松耦合要求： 在 Web Service 中所有的访问都通过 SOAP
+访问进行， 用 WSDL 定义的接口封装， 通过 UDDI 进行目录查找， 可以动态改变一个服务的提供方而无需影
+响客户端的配置， 外界客户端是根本不关心访问服务器端的实现。<br>
+&emsp;&emsp;其次， 适合大数据量低频率访问符合服务大颗粒度功能： 基于性能和效率平衡的要求， SOA 的服务提供
+的是大颗粒度的应用功能， 而且跨系统边界的访问频率也不会象程序间函数调用那么频繁。 通过使用 WSDL
+和基于文本(Literal)的 SOAP 请求， 可以实现能一次性接收处理大量数据。<br>
+&emsp;&emsp;最后， 基于标准的文本消息传递为异构系统提供通讯机制： Web Service 所有的通讯是通过 SOAP 进行的，
+而 SOAP 是基于 XML 的， XML 是结构化的文本消息。 从最早的 EDI 开始， 文本消息也许是异构系统间通讯
+最好的消息格式， 适用于 SOA 强调的服务对异构后天宿主系统的透明性。<br>
+&emsp;&emsp;综合上述观点， Web Service 不愧为当前 SOA 的最好选择。 然而， 就 SOA 思想本身而言， 并不一定要局
+限于 Web Service 方式的实现。 更应该看到的是 SOA 本身强调的是实现业务逻辑的敏捷性要求， 是从业务应
+用角度对信息系统实现和应用的抽象。 随着人们认识的提高， 还会有新技术不断的发明出来， 更好的来满足
+这个要求。<br>
+&emsp;&emsp;上面涉及的名词太多， 我们等一下还会单一的来介绍， 用一句话总结它们之间的关系。 “SOA 不是 Web
+Service， Web Service 是目前最适合实现 SOA 的技术。 ”<br>
+### 3.Web Service
+&emsp;&emsp;在解释 Web Service 之前， 先抛出一个问题。 有没有一种办法可以实现跨应用程序进行通信和跨平台进
+行通信呢？<br>
+&emsp;&emsp;跨应用程序， 主要是指开发的 A 系统和开发的 B 系统之间是否可以通信。<br>
+&emsp;&emsp;跨平台， 主要是指用 Java 开发的系统和用.NET 开发的系统是否可以通信。<br>
+&emsp;&emsp;这样的需求有很多， 例如腾讯 QQ 上面自带的天气功能。<br>
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.1.PNG)<br>
+&emsp;&emsp;腾讯要想获得实时的天气信息怎么办呢？ 有一种办法， 那就是腾讯公司放个卫星上天， 并且在公司中成
+立一个气象部门， 实时的收集天气信息， 然后实时为腾讯 QQ 提供天气预报信息； 这显然不是一种明智的做法，
+腾讯 QQ 只是想获取一下天气信息， 居然要如此高的成本。<br>
+&emsp;&emsp;更简单的做法是由中国气象台提供实时的天气信息， 然后， 通过提供接口的方式给腾讯 QQ 调用。 那么
+这就遇到我上面所说的问题， 如何跨应用与跨平台调用接口。<br>
+&emsp;&emsp;这个时候有聪明的读者会跳出来说， 你傻啊！ 用 HTTP 协议啊， 主流的编程语言都可以实现基于 HTTP
+协议的应用开发。 让中国气象台写个基于 HTTP 协议的天气接口给腾讯 QQ 调用就可以了。 嗯！ 这是完全可以
+的。 不过， Web Service 之所以在 HTTP 之后被提出自然有它的特点。<br>
+&emsp;&emsp;当然， 这里拿 Web Service 与 HTTP 进行比较是不太合适的。 因为 HTTP 是互联网上应用最为广泛的一
+种网络协议。 而 Web Service 是一种部署在 Web 上的对象或者是应用程序组件， Web Service 数据的传输同样
+需要借助 HTTP 协议。<br>
+&emsp;&emsp;Web Service 详细的描述：<br>
+&emsp;&emsp;Web Service 是一个平台独立的， 低耦合的， 自包含的、 基于可编程的 web 的应用程序， 可使用开放的
+XML（标准通用标记语言下的一个子集） 标准来描述、 发布、 发现、 协调和配置这些应用程序， 用于开发分
+布式的互操作的应用程序。<br>
+### 4.SOAP
+&emsp;&emsp;Simple Object Access Protocol， 中文为简单对象访问协议， 简称 SOAP。<br>
+&emsp;&emsp;SOAP 是基于 XML 在分散或分布式的环境中交换信息的简单的协议。允许服务提供者和服务客户经过防
+火墙在 INTERNET 进行通讯交互。<br>
+&emsp;&emsp;SOAP 的设计是为了在一个松散的、分布的环境中使用 XML 对等地交换结构化的和类型化的信息提供了
+一个简单且轻量级的机制。<br>
+&emsp;&emsp;XML 是可以扩展标记语言。<br>
+```HTML
+<bookstore>
+    <book category="COOKING">
+        <title lang="en">Everyday Italian</title>
+        <author>Giada De Laurentiis</author>
+        <year>2005</year>
+        <price>30.00</price>
+    </book>
+</bookstore>
+```
+&emsp;&emsp;SOAP 消息的基本结构<br>
+```HTML
+<?xml version="1.0"?>
+<soap:Envelope xmlns:soap="http://www.w3.org/2001/12/soap-envelope"
+soap:encodingStyle="http://www.w3.org/2001/12/soap-encoding">
+    <soap:Header>
+        ...
+        ...
+    </soap:Header>
+    <soap:Body>
+        ...
+        ...
+        <soap:Fault>
+        ...
+        ...
+        </soap:Fault>
+    </soap:Body>
+</soap:Envelope>
+```
+&emsp;&emsp;当 SOAP 消息真正需要在网络上实际传输的时候， SOAP 消息能够与不同的底层传输协议进行绑定， 同
+时， SOAP 消息可以在很多种消息传输模式中使用。包括超文本传输协议（HTTP）， 简单邮件传输协议（SMTP），
+多用途网际邮件扩充协议（MIME） 。 它还支持从消息系统到远程过程调用协议（RPC） 等大量的应用程序。<br>
+&emsp;&emsp;当然，最多的情况还是还是绑定在 HTTP 协议上面传输。所以，导致大多数人认为 SOAP 就是 HTTP + XML，
+或者认为 SOAP 是 HTTP post 请求的一个专用版本， 遵循一种特殊的 XML 消息格式。<br>
+&emsp;&emsp;虽然， 我们看到的情况确实如此， 但这并不是 SOAP 本质与全部。<br>
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.2.PNG)<br>
+&emsp;&emsp;如图 12.2， 为 SOAP 消息实例， 通过 SOAP 消息实例： 利用 HTTP 传输协议向手机号码查询服务请求的
+SOAP 消息。<br>
+### 5.WSDL
+&emsp;&emsp;Web Services Description Language， 网络服务描述语言， 简称 WSDL。 它是一门基于 XML 的语言， 用
+于描述 Web Services 以及如何对它们进行访问。<br>
+&emsp;&emsp;WSDL 文档主要使用以下几个元素来描述某个 Web Service：<br>
+&emsp;&emsp;<portType> web service 执行的操作。<br>
+&emsp;&emsp;<message> web service 使用的消息。<br>
+&emsp;&emsp;<types> web service 使用的数据类型。<br>
+&emsp;&emsp;<binding> web service 使用的通信协议。<br>
+```HTML
+<wsdl:definitions xmlns:wsa="http://schemas.xmlsoap.org/ws/2003/03/addressing"
+xmlns:tns="tns" xmlns:plink="http://schemas.xmlsoap.org/ws/2003/05/partner-li
+nk/" xmlns:xop="http://www.w3.org/2004/08/xop/include"xmlns:senc="http://schem
+as.xmlsoap.org/soap/encoding/" xmlns:s12env="http://www.w3.org/2003/05/soap-en
+velope/" xmlns:s12enc="http://www.w3.org/2003/05/soap-encoding/" xmlns:xs="htt
+p://www.w3.org/2001/XMLSchema"xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xm
+lns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:senv="http://schemas
+.xmlsoap.org/soap/envelope/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/
+"targetNamespace="tns" name="Application">
+<wsdl:types>
+<xs:schema targetNamespace="tns" elementFormDefault="qualified">
+<xs:import namespace="http://www.w3.org/2001/XMLSchema"/>
+<xs:complexType name="say_hello">
+<xs:sequence>
+<xs:element name="name" type="xs:string" minOccurs="0" nillable="true"
+/>
+</xs:sequence>
+</xs:complexType>
+<xs:complexType name="say_helloResponse">
+<xs:sequence>
+<xs:element name="say_helloResult" type="xs:string" minOccurs="0" nill
+able="true"/>
+</xs:sequence>
+</xs:complexType>
+<xs:element name="say_hello" type="tns:say_hello"/>
+<xs:element name="say_helloResponse" type="tns:say_helloResponse"/>
+</xs:schema>
+</wsdl:types>
+<wsdl:message name="say_hello">
+<wsdl:part name="say_hello" element="tns:say_hello"/>
+</wsdl:message>
+<wsdl:message name="say_helloResponse">
+<wsdl:part name="say_helloResponse" element="tns:say_helloResponse"/>
+</wsdl:message>
+<wsdl:portType name="Application">
+<wsdl:operation name="say_hello" parameterOrder="say_hello">
+<wsdl:input name="say_hello" message="tns:say_hello"/>
+<wsdl:output name="say_helloResponse" message="tns:say_helloResponse"/>
+</wsdl:operation>
+</wsdl:portType>
+<wsdl:binding name="Application" type="tns:Application">
+<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/h
+ttp"/>
+<wsdl:operation name="say_hello">
+<soap:operation soapAction="say_hello" style="document"/>
+<wsdl:input name="say_hello">
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output name="say_helloResponse">
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+</wsdl:binding>
+<wsdl:service name="Application">
+<wsdl:port name="Application" binding="tns:Application">
+<soap:address location="http://10.2.70.10:7789/SOAP/?wsdl"/>
+</wsdl:port>
+</wsdl:service>
+</wsdl:definitions>
+```
+- WSDL 端口
+
+&emsp;&emsp;<portType> 元素是最重要的 WSDL 元素。<br>
+&emsp;&emsp;它可描述一个 web service、 可被执行的操作， 以及相关的消息。 可以把 <portType> 元素比作传统编程
+语言中的一个函数库（或一个模块、 或一个类） 。<br>
+- WSDL 消息
+
+&emsp;&emsp;<message> 元素定义一个操作的数据元素。<br>
+&emsp;&emsp;每个消息均由一个或多个部件组成。 可以把这些部件比作传统编程语言中一个函数调用的参数。<br>
+- WSDL types
+
+&emsp;&emsp;<types> 元素定义 web service 使用的数据类型。<br>
+&emsp;&emsp;为了最大程度的平台中立性， WSDL 使用 XML Schema 语法来定义数据类型。<br>
+- WSDL Bindings
+
+&emsp;&emsp;<binding> 元素为每个端口定义消息格式和协议细节。<br>
+&emsp;&emsp;对于接口来说， 接口文档非常重要， 它描述如何访问接口。 那么 WSDL 就可以看作 Web Service 接口的
+一种标准格式的“文档” 。 我们通过阅读 WSDL 就知道如何调用 Web Service 接口了。<br>
+### 6.UDDI
+&emsp;&emsp;Universal Description, Discovery and Integration"， 可译为“通用描述、 发现与集成服务”， 简称 UDDI。<br>
+&emsp;&emsp;WSDL 用来描述了访问特定的 Web Service 的一些相关的信息， 那么在互联网上， 或者是在企业的不同
+部门之间， 如何来发现我们所需要的 Web Service 呢？ 而 Web Service 提供商又如何将自己开发的 Web Serivce
+公布到因特网上呢？ 这就需要使用到 UDDI 了。<br>
+&emsp;&emsp;UDDI 是一个独立于平台的框架， 通过使用 Internet 来描述服务， 发现企业， 并对企业服务进行集成。<br>
+&emsp;&emsp;UDDI 指的是通用描述、 发现与集成服务。<br>
+&emsp;&emsp;UDDI 是一种用于存储有关 Web Services 的信息的目录。<br>
+&emsp;&emsp;UDDI 是一种由 WSDL 描述的 Web Services 界面的目录。<br>
+&emsp;&emsp;UDDI 经由 SOAP 进行通信。<br>
+&emsp;&emsp;UDDI 被构建入了微软的 .NET 平台<br>
+&emsp;&emsp;如图 12.3、 图 12.4， 为 UDDI 的安装与发布。<br>
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.3.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.4.PNG)<br>
+&emsp;&emsp;UDDI 可以帮助 Web 服务提供商在互联网上发布 Web Services 的信息。 UDDI 是一种目录服务， 企业可
+以通过 UDDI 来注册和搜索 Web Services。<br>
+&emsp;&emsp;通过上面的介绍， SOAP、 WSDL 和 UDDI 就构成了 Web Service 的三要素。<br>
+### 7.Web Services 体系结构
+在 Web Serivce 的体系结构中涉及到三个角色， 一个是 Web Service 提供者， 一个是 Web Service 中介， 还
+有一个就是 Web Service 请求者； 同时还涉及到三类动作， 即发布， 查找， 绑定。<br>
+- Web Service 提供者：
+
+&emsp;&emsp;可以发布 Web Service， 并且对使用自身服务的请求进行响应， Web Service 的拥有者， 它会等待其他的服
+务或者是应用程序访问自己。<br>
+- Web Service 请求者：
+
+&emsp;&emsp;也就是 Web Service 功能的使用者，它通过服务注册中心也就是 Web Service 中介者查找到所需要的服务，
+再利用 SOAP 消息向 Web Service 提供者发送请求以获得服务。<br>
+- Web Service 中介：
+
+&emsp;&emsp;也称为服务代理， 用来注册已经发布的 Web Service 提供者， 并对其进行分类， 同时提供搜索服务， 简单
+来说的话， Web Service 中介者的作用就是把一个 Web Service 请求者和合适的 Web Service 提供者联系在一起，
+充当一个管理者的角色， 一般是通过 UDDI 来实现。<br>
+&emsp;&emsp;发布： 通过发布操作， 可以使 Web Serivce 提供者向 Web Service 中介注册自己的功能以及访问的接口。<br>
+&emsp;&emsp;发现（查找）： 使得 Web Service 请求者可以通过 Web Service 中介者来查找到特定种类的 Web Service 接
+口。<br>
+&emsp;&emsp;绑定： 这里就是实现让 Web Serivce 请求者能够使用 Web Serivce 提供者提供的 Web Serivce 接口。<br>
+&emsp;&emsp;最后， 回答前面的问题， Web Service 相对于 HTTP 有何不同？<br>
+&emsp;&emsp;1.接口中实现的方法和要求参数一目了然。<br>
+&emsp;&emsp;2.不用担心大小写问题。<br>
+&emsp;&emsp;3.不用担心中文 urlencode 问题。<br>
+&emsp;&emsp;4.代码中不用多次声明认证（账号， 密码） 参数。<br>
+&emsp;&emsp;5.传递参数可以为数组， 对象等。<br>
+&emsp;&emsp;那么， 第二个问题， Web Service 能被 HTTP 替代么？ 答案是肯定的。<br>
+## 12.2 Web Service 开发与调用
+&emsp;&emsp;开发 Web Service 接口并非 Python 语言所擅长的， 而且开发出来的 Web Service 接口的性能也不敢恭维，
+好在， 谁让 Python 简单呢。 能找不少相关的开发和测试类库。<br>
+### 12.2.1、 suds-jurko 调用接口
+&emsp;&emsp;Suds 是 Web Service 客户端是一个轻量级的基于 SOAP 的 python 客户端。<br>
+&emsp;&emsp;Suds 项目在 pypi 仓库的地址： https://pypi.python.org/pypi/suds/<br>
+&emsp;&emsp;然后， 2010 年 9 月之后， 该项目就不再更新了， 虽然， 在 Python2.x 下面仍然可以使用该项目， 但是我们
+更希望能用到较新的库。<br>
+&emsp;&emsp;于是， 我又在 Python 仓库中找到了 Suds-jurko， Suds-jurko 基于 Suds， 它的目的是希望是原有的 Suds 项
+目继续得到发展。<br>
+&emsp;&emsp;Suds-jurko 项目在 pypi 仓库的地址： https://pypi.python.org/pypi/suds-jurko<br>
+&emsp;&emsp;然而， 该项目的更新只持续到 2014 年 1 月， 好在， 它支持了 Python3.x， 我们将 zip 包下载并解压， 然后
+进入解压目录执行以下命令进行安装。<br>
+```Python
+...\suds-jurko-0.6> python3 setup.py install
+……
+Installed c:\python35\lib\site-packages\suds_jurko-0.6-py3.5.egg
+Processing dependencies for suds-jurko==0.6
+Finished processing dependencies for suds-jurko==0.6
+```
+&emsp;&emsp;`python3 -m pip install suds-jurko`<br>
+&emsp;&emsp;下来就 Web Service 接口的调用了， 前提是得先有 Web Service 接口才行， 别着急， wexml.com.cn 网站提
+供了一些发布的 Web Service 接口， 例如， 天气的查询、 电话号码归属地查询、 以及国内飞机航班的查询等服
+务。<br>
+&emsp;&emsp;网站地址： http://www.webxml.com.cn/zh_cn/web_services.aspx<br>
+&emsp;&emsp;有了这些， 就可以给我们拿来练手了。<br>
+&emsp;&emsp;先以手机号码归属地的查询为例， 创建 soap_client.py 文件：<br>
+soap_client.py:<br>
+```Python
+# -*- coding=utf-8 -*-
+from suds.client import Client
+# 使用库 suds_jurko： https://bitbucket.org/jurko/suds
+# web service 查询： http://www.webxml.com.cn/zh_cn/web_services.aspx
+# 电话号码归属地查询
+url = 'http://webservice.webxml.com.cn/WebServices/MobileCodeWS.asmx?wsdl'
+client = Client(url)
+print(client)
+```
+&emsp;&emsp;执行程序， 得到如下结果：<br>
+```Python
+...\test> python3 soap_client.py
+Suds ( https://fedorahosted.org/suds/ ) version: 0.6
+Service ( MobileCodeWS ) tns="http://WebXml.com.cn/"
+	Prefixes (1)
+		ns0 = "http://WebXml.com.cn/"
+	Ports (2):
+		(MobileCodeWSSoap)
+			Methods (2):
+				getDatabaseInfo()
+				getMobileCodeInfo(xs:string mobileCode, xs:string userID)
+			Types (1):
+				ArrayOfString
+		(MobileCodeWSSoap12)
+			Methods (2):
+				getDatabaseInfo()
+				getMobileCodeInfo(xs:string mobileCode, xs:string userID)
+			Types (1):
+				ArrayOfString
+```
+&emsp;&emsp;通过打印信息， 我们知道该接口提供 getDatabaseInfo()方法用来查询号码归属地。 那么就可以在程序中调
+用该方法了。<br>
+soap_client.py:<br>
+```Python
+# 使用库 suds_jurko： https://bitbucket.org/jurko/suds
+# web service 查询： http://www.webxml.com.cn/zh_cn/web_services.aspx
+# 电话号码归属地查询
+url = 'http://webservice.webxml.com.cn/WebServices/MobileCodeWS.asmx?wsdl'
+client = Client(url)
+result = client.service.getMobileCodeInfo(186xxxxxxxx)
+print(result)
+```
+&emsp;&emsp;为了隐私， 我故意到将代码中的电话号码后 8 位用“x” 字母做了替换， 读者可以使用任意号码来替换。
+再次运行程序得到结果如下。<br>
+```
+...\test> python3 soap_client.py
+186xxxxxxxx： 河南 郑州 河南联通 GSM 卡
+```
+&emsp;&emsp;这么简单就可以实现调用了， 那我们再来调用一下首都北京的天气。<br>
+soap_client2.py:<br>
+```Python
+from suds.client import Client
+from suds.xsd.doctor import ImportDoctor, Import
+url = 'http://www.webxml.com.cn/WebServices/WeatherWebService.asmx?wsdl'
+imp = Import('http://www.w3.org/2001/XMLSchema',
+location='http://www.w3.org/2001/XMLSchema.xsd')
+imp.filter.add('http://WebXml.com.cn/')
+client = Client(url, plugins=[ImportDoctor(imp)])
+result = client.service.getWeatherbyCityName("北京")
+print(result)
+```
+```
+C:\Users\Administrator\git\guest>python3 soap_client2.py
+(ArrayOfString){
+   string[] =
+      "直辖市",
+      "北京",
+      "54511",
+      "54511.jpg",
+      "2018/5/4 12:47:49",
+      "16℃/27℃",
+      "5月4日 晴转多云",
+      "西南风转北风小于3级",
+      "0.gif",
+      "1.gif",
+      "今日天气实况：气温：23℃；风向/风力：南风 2级；湿度：34%；紫外线强度：强
+。空气质量：中。",
+      "紫外线指数：强，涂擦SPF大于15、PA+防晒护肤品。
+健臻·血糖指数：易波动，血糖易波动，注意监测。
+感冒指数：少发，无明显降温，感冒机率较低。
+穿衣指数：舒适，建议穿长袖衬衫单裤等服装。
+洗车指数：较适宜，无雨且风力较小，易保持清洁度。
+空气污染指数：中，易感人群应适当减少室外活动。
+",
+      "15℃/25℃",
+      "5月5日 多云",
+      "北风小于3级",
+      "1.gif",
+      "1.gif",
+      "13℃/27℃",
+      "5月6日 晴",
+      "西南风小于3级",
+      "0.gif",
+      "0.gif",
+      "北京位于华北平原西北边缘，市中心位于北纬39度，东经116度，四周被河北省围着
+，东南和天津市相接。全市面积一万六千多平方公里，辖12区6县，人口1100余万。北京为
+暖温带半湿润大陆性季风气候，夏季炎热多雨，冬季寒冷干燥，春、秋短促，年平均气温10
+-12摄氏度。北京是世界历史文化名城和古都之一。早在七十万年前，北京周口店地区就出
+现了原始人群部落“北京人”。而北京建城也已有两千多年的历史，最初见于记载的名字为
+“蓟”。公元前1045年北京成为蓟、燕等诸侯国的都城；公元前221年秦始皇统一中国以来
+，北京一直是中国北方重镇和地方中心；自公元938年以来，北京又先后成为辽陪都、金上
+都、元大都、明清国都。1949年10月1日正式定为中华人民共和国首都。北京具有丰富的旅
+游资源，对外开放的旅游景点达200多处，有世界上最大的皇宫紫禁城、祭天神庙天坛、皇
+家花园北海、皇家园林颐和园，还有八达岭、慕田峪、司马台长城以及世界上最大的四合院
+恭王府等各胜古迹。全市共有文物古迹7309项，其中国家文物保护单位42个，市级文物保护
+单位222个。北京的市树为国槐和侧柏，市花为月季和菊花。另外，北京出产的象牙雕刻、
+玉器雕刻、景泰蓝、地毯等传统手工艺品驰誉世界。",
+}
+```
+### 12.2.2、 spyne 开发接口
+&emsp;&emsp;比起 Web Service 接口的调用， 我更好奇如何开发 Web Service 接口。 因为通过前面的概念介绍， 它看上
+去是个很复杂的技术。 万能的 Python， 我想应该能找到开发 Web Service 应用的库。 还真有。<br>
+&emsp;&emsp;soaplib 项目在 PyPi 仓库的地址： https://pypi.python.org/pypi/soaplib<br>
+&emsp;&emsp;然后， 这个项目到 2011 年 3 月就停止更新了。 Python2.x 的用户仍然可以使用该库开发 Web Service 接
+口， 然后， 它确实有点旧了。 于是， 我又找到了 spyne。<br>
+&emsp;&emsp;spyne 项目在 PyPi 仓库的地址： https://pypi.python.org/pypi/spyne<br>
+&emsp;&emsp;spyne官方网站:http://spyne.io/<br>
+&emsp;&emsp;用 spyne 开发 Web Service 应用和 soaplib 一样简单， 最主要的是它支持 Python3.x， 并且在持续更新。<br>
+&emsp;&emsp;spyne 支持使用 pip 命令安装（建议在 Linux 系统下安装） 。<br>
+&emsp;&emsp;`> python3 -m pip install spyne`<br>
+&emsp;&emsp;参考 spyne 官方文档， 开发一个简单的 Web Service 接口。<br>
+```Python
+from spyne import Application, rpc, ServiceBase, Iterable, Integer, Unicode
+from spyne.protocol.soap import Soap11
+from spyne.server.wsgi import WsgiApplication
+
+
+class HelloWorldService(ServiceBase):
+
+	@rpc(Unicode, Integer, _returns=Iterable(Unicode))
+	
+	def say_hello(ctx, name, times):
+		"""Docstrings for service methods appear as documentation in the wsdl.
+		<b>What fun!</b>
+		@param name the name to say hello to
+		@param times the number of times to say hello
+		@return the completed array
+		"""
+		for i in range(times):
+			yield u'Hello, %s' % name
+
+application = Application([HelloWorldService], 'spyne.examples.hello.soap',
+						   in_protocol=Soap11(validator='lxml'),
+						   out_protocol=Soap11())
+
+wsgi_application = WsgiApplication(application)
+
+
+
+if __name__ == '__main__':
+	import logging
+	from wsgiref.simple_server import make_server
+	logging.basicConfig(level=logging.DEBUG)
+	logging.getLogger('spyne.protocol.xml').setLevel(logging.DEBUG)
+	logging.info("listening to http://127.0.0.1:8000")
+	logging.info("wsdl is at: http://127.0.0.1:8000/?wsdl")
+	server = make_server('127.0.0.1', 8000, wsgi_application)
+server.serve_forever()
+```
+&emsp;&emsp;这里开发了一个 say_hello()的接口，它需要两个参数， name 和 times，接口会对 name 返回一定次数（itmes）
+的“hello, name” ， 相当简单。<br>
+```
+C:\Users\Administrator\git\guest>python3 soap_server.py
+INFO:root:listening to http://127.0.0.1:8000
+INFO:root:wsdl is at: http://127.0.0.1:8000/?wsdl
+```
+&emsp;&emsp;前面已经介绍了 Suds-jurko 的使用， 这里直接使用它来调用接口。<br>
+```Python
+from suds.client import Client
+url = "http://192.168.127.128:8000/?wsdl"
+client = Client(url)
+result = client.service.say_hello("bugmaster", 3)
+print(result)
+```
+&emsp;&emsp;执行结果：<br>
+```
+...\test> python3 soap_client3.py
+(stringArray){
+	string[] =
+		"Hello, bugmaster",
+		"Hello, bugmaster",
+		"Hello, bugmaster",
+}
+```
+## 12.3 Jmeter 测试 SOAP 接口
+&emsp;&emsp;在本书的第九章中介绍了 Jmeter 工具的使用， 对于 SOAP 协议开发的 Web Service 接口。 Jmeter 同样支
+持 SOAP 接口的的测试。<br>
+&emsp;&emsp;打开 Jmeter 工具， 创建 SOAP 接口测试。 如图 12.5， 右键点击“线程组” -->“添加” -->“Sampler” -->
+“SOAP/XML-RPC Requests” 。<br>
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.5.PNG)<br>
+&emsp;&emsp;以查询手机号码归属地的接口为例：<br>
+&emsp;&emsp;http://ws.webxml.com.cn/WebServices/MobileCodeWS.asmx?wsdl<br>
+&emsp;&emsp;通过 Wireshark 抓包工具捕捉 SOAP 请求。<br>
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.6.PNG)<br>
+&emsp;&emsp;XML 格式的 SOAP 请求信息如下：<br>
+```
+<SOAP-ENV:Envelope
+	xmlns:ns0="http://schemas.xmlsoap.org/soap/envelope/"
+	xmlns:ns1="http://WebXml.com.cn/"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+	<SOAP-ENV:Header/>
+	<ns0:Body>
+		<ns1:getMobileCodeInfo>
+			<ns1:mobileCode>186xxxxxxxx</ns1:mobileCode>
+		</ns1:getMobileCodeInfo>
+	</ns0:Body>
+</SOAP-ENV:Envelope>
+```
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.7.PNG)<br>
+&emsp;&emsp;如图 12.7，配置SOAP/XML-RPC请求。URL填写查询手机号码归属地的Web Service地址。Soap/XML-PRC
+Data 填写 XML 格式的 SOAP 请求数据。<br>
+&emsp;&emsp;运行测试， 查看结果树， 如图 12.8。<br>
+![image](https://github.com/15529343201/guest/blob/chapter12/image/12.8.PNG)<br>
+
+
+
+
+
+
+
+
+
+
 
 
 
