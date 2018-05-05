@@ -5582,6 +5582,179 @@ settings.py:<br>
 </body>
 </html>
 ```
+# chapter15 接口性能测试
+## 15.1 Locust性能测试工具
+&emsp;&emsp;谈到性能测试工具,我们首先想到的是LoadRunner或JMeter<br>
+&emsp;&emsp;LoadRunner是非常有名的商业性能测试工具,功能非常强大,使用也较为复杂,目前大多介绍性能测试
+的书籍都以该工具为基础,甚至有些书整本都在介绍LoadRunner的使用。<br>
+&emsp;&emsp;JMeter同样是非常有名的开源性能测试工具,功能也很完善,在本书中介绍它作为接口测试工具的使用。但实际上,
+它是一个标准的性能测试工具。JMeter相关的资料也非常丰富,它的官方文档也很完善。<br>
+&emsp;&emsp;Locust同样是性能测试工具,虽然官方这样来描述它:"An open source laod testing tool.",但他和前面两个工具有着较大
+的不同。与前面两个工具相比,他在功能上要差上很多,但也并非全无优点。<br>
+&emsp;&emsp;Locust完全基于Python编程语言,采用Pure Python描述测试脚本,并且HTTP请求完全基于Requests库。
+除了HTTP/HTTPS协议外,Locust还可以测试其他协议的系统,只需采用Python调用对应的库进行请求描述即可。<br>
+&emsp;&emsp;LoadRunner和JMeter这类采用进程和线程的测试工具,都很难在单机上模拟出较高的并发压力。Locust
+的并发机制摒弃了进程和线程,采用协程(gevent)的机制。协程避免了系统级资源调度,因此可以大幅度提高单机的并发能力。<br>
+&emsp;&emsp;正是基于这样的特点,我选择了使用Locust工具来做性能测试,另外一个原因是它可以让我们换一种方式认识性能测试,
+可以更容易的看清性能测试的本质。<br>
+&emsp;&emsp;Locust官方网址:http://locust.io<br>
+### 15.1.1 安装Locust
+&emsp;&emsp;虽然Locust仍然可以使用pip安装,但如果你使用的是Python3,那么建议你从GitHub克隆或下载项目进行安装。<br>
+&emsp;&emsp;GitHub地址:https://github.com/locustio/locust<br>
+&emsp;&emsp;这里不再介绍具体的安装过程。下面简单介绍Locust都基于了那些库。打开Locust安装目录下的setup.py
+文件,查看安装要求:<br>
+&emsp;&emsp;`install_requires=["gevent>=1.1.2","flask>=0.10.1","requests>=2.9.1","msgpack-python>=0.4.2","six>=1.10.0","pyzmq==15.2.0"]`<br>
+- gevent:在Python中实现协程的一个第三方库。协程,又称微线程(Coroutine)。使用gevent可以获得极高的并发性能。
+- flask:Python的一个Web开发框架,它与Django的地位相当。
+- requests:我们应该很熟悉了,本书中使用该库来做HTTP接口测试。
+- msgpack-python:一种快速、紧凑的二进制序列化格式,适用于类似JSON的数据。
+- six:它提供了一些简单的工具来封装Python2和Python3之间的差异性。
+- pyzmq:如果你打算把Locust运行在多个进程/机器,建议你安装pyzmq。
+
+&emsp;&emsp;当我们在安装时Locust时,它会检测我们当前的Python环境是否已经安装了这些库,如果没有安装,那么它会先把
+这些库一一装上。并且对这些库版本有要求,有些是必须等于某版本,有些是大于某版本。我们也可以把这些库全部按要求装好,
+这样在安装Locust时就会快上许多。<br>
+&emsp;&emsp;检测是否安装成功.打开Windows命令提示符,输入"locust --help"回车。<br>
+```
+D:\Python35\locust>locust --help
+Usage: locust [options] [LocustClass [LocustClass2 ... ]]
+
+Options:
+  -h, --help            show this help message and exit
+  -H HOST, --host=HOST  Host to load test in the following format:
+                        http://10.21.32.33
+  --web-host=WEB_HOST   Host to bind the web interface to. Defaults to '' (all
+                        interfaces)
+  -P PORT, --port=PORT, --web-port=PORT
+                        Port on which to run web host
+  -f LOCUSTFILE, --locustfile=LOCUSTFILE
+                        Python module file to import, e.g. '../other.py'.
+                        Default: locustfile
+  --csv=CSVFILEBASE, --csv-base-name=CSVFILEBASE
+                        Store current request stats to files in CSV format.
+  --master              Set locust to run in distributed mode with this
+                        process as master
+  --slave               Set locust to run in distributed mode with this
+                        process as slave
+  --master-host=MASTER_HOST
+                        Host or IP address of locust master for distributed
+                        load testing. Only used when running with --slave.
+                        Defaults to 127.0.0.1.
+  --master-port=MASTER_PORT
+                        The port to connect to that is used by the locust
+                        master for distributed load testing. Only used when
+                        running with --slave. Defaults to 5557. Note that
+                        slaves will also connect to the master node on this
+                        port + 1.
+  --master-bind-host=MASTER_BIND_HOST
+                        Interfaces (hostname, ip) that locust master should
+                        bind to. Only used when running with --master.
+                        Defaults to * (all available interfaces).
+  --master-bind-port=MASTER_BIND_PORT
+                        Port that locust master should bind to. Only used when
+                        running with --master. Defaults to 5557. Note that
+                        Locust will also use this port + 1, so by default the
+                        master node will bind to 5557 and 5558.
+  --expect-slaves=EXPECT_SLAVES
+                        How many slaves master should expect to connect before
+                        starting the test (only when --no-web used).
+  --no-web              Disable the web interface, and instead start running
+                        the test immediately. Requires -c and -r to be
+                        specified.
+  -c NUM_CLIENTS, --clients=NUM_CLIENTS
+                        Number of concurrent Locust users. Only used together
+                        with --no-web
+  -r HATCH_RATE, --hatch-rate=HATCH_RATE
+                        The rate per second in which clients are spawned. Only
+                        used together with --no-web
+  -t RUN_TIME, --run-time=RUN_TIME
+                        Stop after the specified amount of time, e.g. (300s,
+                        20m, 3h, 1h30m, etc.). Only used together with --no-
+                        web
+  -L LOGLEVEL, --loglevel=LOGLEVEL
+                        Choose between DEBUG/INFO/WARNING/ERROR/CRITICAL.
+                        Default is INFO.
+  --logfile=LOGFILE     Path to log file. If not set, log will go to
+                        stdout/stderr
+  --print-stats         Print stats in the console
+  --only-summary        Only print the summary stats
+  --no-reset-stats      [DEPRECATED] Do not reset statistics once hatching has
+                        been completed. This is now the default behavior. See
+                        --reset-stats to disable
+  --reset-stats         Reset statistics once hatching has been completed.
+                        Should be set on both master and slaves when running
+                        in distributed mode
+  -l, --list            Show list of possible locust classes and exit
+  --show-task-ratio     print table of the locust classes' task execution
+                        ratio
+  --show-task-ratio-json
+                        print json data of the locust classes' task execution
+                        ratio
+  -V, --version         show program's version number and exit
+```
+### 15.1.2 性能测试案例
+&emsp;&emsp;先来一个简单的案例热热身,熟悉一下Locust工具的基本使用流程。如果使用的是LoadRunner性能测试工具,
+那么首先想到的应该是怎样录制/编写性能测试脚本。其实,对于Web应用来说,它本质是由一个个的Web页面构成,一般我们可以通过
+不同的URL地址来得到不同的页面。<br>
+&emsp;&emsp;1.编写性能测试脚本<br>
+&emsp;&emsp;使用Locust编写一个简单性能测试行为表述脚本。<br>
+locustfile.py:<br>
+```Python
+from locust import HttpLocust,TaskSet,task
+# 定义用户行为
+class UserBehavior(TaskSet):
+
+	@task
+	def baidu_page(self):
+		self.client.get("/")
+		
+class WebsiteUser(HttpLocust):
+	task_set=UserBehavior
+	min_wait=3000
+	max_wait=6000
+```
+&emsp;&emsp;UserBehavior类继承TaskSet类,用于描述用户行为。<br>
+&emsp;&emsp;baidu_page()方法表示一个用户行为,访问百度首页。使用@task装饰该方法为一个事务。client.get()
+用于指定请求的路径"/",因为是百度首页,所以指定为根路径。<br>
+&emsp;&emsp;WebsiteUser类用于设置性能测试。<br>
+- task_set:指向一个定义的用户行为类
+- min_wait:执行事务之间用户等待时间的下界(单位:毫秒)
+- max_wait:执行事务之间用户等待时间的上界(单位:毫秒)
+
+&emsp;&emsp;2.执行性能测试<br>
+&emsp;&emsp;首先,启动性能测试。<br>
+```
+C:\Users\Administrator\git\guest>locust -f locustfile.py --host=https://www.baid
+u.com
+[2018-05-05 19:48:37,638] I0QZ95XPAAXLPJP/INFO/locust.main: Starting web monitor
+ at *:8089
+[2018-05-05 19:48:37,642] I0QZ95XPAAXLPJP/INFO/locust.main: Starting Locust 0.8.
+1
+```
+- -f:指定性能测试脚本文件
+- --host:指定被测试应用的URL地址,注意访问百度使用得HTTPS协议。
+
+&emsp;&emsp;通过浏览器访问,http://127.0.0.1:8089(Locust启动网络监控器,默认为端口号为8089)。显示如图15.1所示。<br>
+![image](https://github.com/15529343201/guest/blob/chapter15/image/15.1.PNG)<br>
+- Number of users to simulate是模拟用户的数量（虚拟用户数）
+- Hatch rate (users spawned/second）表示产生模拟用户的速度，(每秒产生启动的虚拟用户数)
+
+&emsp;&emsp;填写完成后点击“Start swarming”即可开始测试<br>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
