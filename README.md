@@ -5432,7 +5432,7 @@ def application(env, start_response):
 &emsp;&emsp;通过"uwsgi"命令运行test.py文件。<br>
 &emsp;&emsp;`root@ubuntu-virtual-machine:~/桌面/guest# uwsgi --http :8001 --wsgi-file test.py`<br>
 &emsp;&emsp;通过浏览器访问:http://127.0.0.1:8001/,如图14.1所示。<br>
-![image](https://github.com/15529343201/guest/blob/chapter14/image/14.1.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter14/image/14.1.png)<br>
 
 
 
