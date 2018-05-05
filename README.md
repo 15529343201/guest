@@ -5449,7 +5449,7 @@ def application(env, start_response):
 - --pidfile:指定pid文件的位置,记录主进程的PID号
 - --vacuum:当服务器退出时自动清理环境,删除Unix Socket文件和PID文件
 
-14.2 Nginx
+# 14.2 Nginx
 &emsp;&emsp;Nginx是一款轻量级的Web服务器/反向代理服务器及电子邮件(IMAP/POP3)代理服务器,并在一个BSD-like协议下进行。<br>
 &emsp;&emsp;采用Nginx+uWSGI的组合来部署Django是较为常见的部署方案之一.在这个方案中,通常的做法是将Nginx作为服务器
 最前端,用它来接受Web的所有请求,统一管理请求。Nginx可用来处理所有静态请求,这是Nginx的强项。然后,Nginx将所有非静态请求
@@ -5461,6 +5461,87 @@ def application(env, start_response):
 &emsp;&emsp;`/etc/init.d/nginx stop #关闭`<br>
 &emsp;&emsp;`/etc/init.d/nginx restart #重启`<br>
 &emsp;&emsp;`nginx -v # 查看版本`<br>
+&emsp;&emsp;修改Nginx默认端口号,打开/etc/nginx/sites-available/default配置文件,修改端口号<br>
+```
+server {
+	listen 8088 default_server;
+	listen [::]:8088 default_server ipv6only=on;
+```
+&emsp;&emsp;将默认的80端口号修改成其他端口号,如8088,因为默认的80端口号通常会被其他程序占用。然后,通过上面
+的命令重启Nginx。访问http://127.0.0.1:8088/<br>
+&emsp;&emsp;如图14.2所示,说明Nginx已经可以工作了。<br>
+![image](https://github.com/15529343201/guest/blob/chapter14/image/14.2.png)<br>
+### 14.2.2 Nginx+uWSGI+Django
+&emsp;&emsp;接下来,我们将Nginx、uWSGI和Django三者整合起来。发布会签到系统的目录结构如下。<br>
+```
+guest/
+|--manage.py
+|--guest/
+|  |--__init__.py
+|  |--settings.py
+|  |--urls.py
+|  |--wsgi.py
+|--django_uwsgi.ini
+```
+&emsp;&emsp;在创建guest项目时,在guest/目录下默认已经生成了wsgi.py文件。创建django_uwsgi.ini文件,配置uWSGI参数,
+uWSGI支持多种类型的配置文件,如xml、ini等。此处使用ini类型的配置。<br>
+django_uwsgi.ini:<br>
+```
+[uwsgi]
+# 请求方式与端口号
+socket = :8000
+# Django项目路径
+chdir = /home/ubuntu/桌面/guest
+# wsgi文件
+module = guest.wsgi
+# 允许主进程存在
+master = true
+# 开启进程数
+processes = 3
+# 当服务器退出时自动清理环境
+vacuum = true
+```
+&emsp;&emsp;这个配置文件,其实就相当于把"uwsgi"命令运行Django项目的参数给文件化了。<br>
+&emsp;&emsp;socket:指定请求的方式和端口号。这里要特别注意,如果想直接通过uWSGI访问Django项目,那么这里要配置为http;
+如果想要通过Nginx请求uWSGI来访问Django项目,那么这里就要配置为socket。<br>
+&emsp;&emsp;8000为通过uWSGI访问Django项目的端口号<br>
+&emsp;&emsp;chdir:指定Web项目的根目录<br>
+&emsp;&emsp;module:配置guest.wsgi.可以这样理解这个配置,对于django_uwsgi.ini文件来说,与它平级的有一个guest/目录,
+这个目录下有一个swgi.py文件。<br>
+&emsp;&emsp;另外几个参数,可以参考前面uWSGI的常用参数说明。<br>
+&emsp;&emsp;接下来切换到guest项目中,通过"uwsgi"命令读取django_uwsgi.ini文件启动Web项目。<br>
+&emsp;&emsp;`root@ubuntu-virtual-machine:~/桌面/guest# uwsgi --ini django_uwsgi.ini`<br>
+&emsp;&emsp;注意查看uWSGI的启动信息,如果有错,就要检查配置文件的的参数是否设置错误。<br>
+&emsp;&emsp;接下来修改Nginx配置文件。打开/etc/nginx/sites-available/default文件,在文件底部添加如下配置。<br>
+```
+server {
+	listen 8089;
+	listen [::]:8089;
+
+	server_name 127.0.0.1 192.168.240.137;
+
+	location / {
+		include /etc/nginx/uwsgi_params;
+		uwsgi_pass 127.0.0.1:8000;
+	}
+}
+```
+&emsp;&emsp;这是一个极简配置。<br>
+&emsp;&emsp;listen指定的是Nginx代理uWSGI对外的端口号。<br>
+&emsp;&emsp;server_name指定Nginx代理uWSGI对外的IP地址;可以指定多个IP或域名,127.0.0.1指向的是本机,192.168.240.137为本机的IP地址,配置这个IP地址是为了给局域网内的其他主机访问。<br>
+&emsp;&emsp;Nginx是如何将请求转发给uWSGI的呢?现在看来大概最主要的就是这两行配置:<br>
+```
+include /etc/nginx/uwsgi_params;
+uwsgi_pass 127.0.0.1:8000;
+```
+&emsp;&emsp;include必须指定为uwsgi_params文件,如果启动失败,则需要指定该文件的绝对路径,通常在/etc/nginx/目录下;而uwsgi_pass所指的本机IP端口号与guest_uwsgi.ini配置文件中的IP端口号必须一致。<br>
+&emsp;&emsp;配置完成后,保存退出default文件,重新启动Nginx。<br>
+&emsp;&emsp;访问http://127.0.0.1:8089/或http://192.168.240.137:8089/。<br>
+&emsp;&emsp;访问页面时,请求会先到Nginx,再由Nginx转到uWSGI Web容器来处理,如图14.3所示。<br>
+![image](https://github.com/15529343201/guest/blob/chapter14/image/14.3.PNG)<br>
+
+
+
 
 
 
