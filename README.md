@@ -5802,6 +5802,155 @@ f.close()
 ```
 - 将生成好的SQL语句，在SQL命令行中执行，生成测试数据。
 
+### 15.2.2 编写性能测试脚本
+&emsp;&emsp;当性能测试的准备工作完成之后,接下来根据业务分析的情况,使用Locust编写性能测试脚本。<br>
+locustfile.py:<br>
+```Python
+#! /usr/bin/python
+# -*- coding:utf-8 -*-
+
+from locust import HttpLocust, TaskSet, task
+
+# Web性能测试
+class UserBehavior(TaskSet):
+
+    def on_start(self):
+        """
+        on_start is called when a Locust start before any task is scheduled
+        """
+        self.login()
+
+    def login(self):
+        self.client.post("/login_action", {"username":"admin", "password":"admin123456"})
+
+    @task(2)
+    def event_manage(self):
+        self.client.get("/event_manage/")
+
+    @task(2)
+    def guest_manage(self):
+        self.client.get("/guest_manage/")
+
+    @task(1)
+    def search_manage(self):
+        self.client.get("/search_phone/", params={"phone":"13800112451"})
+
+class WebsiteUser(HttpLocust):
+    task_set = UserBehavior
+    min_wait = 3000
+    max_wait = 6000
+```
+- 通过@task()装饰的方法为一个事务，方法的参数用于指定该行为的执行权重。参数越大，每次被虚拟用户只需的概率越高，如果不设置，则默认为1，发布会管理页、嘉宾管理页和嘉宾搜索功能的执行权重比例为2:2:1。
+- min_wait、max_wait用于指定用户执行事务之间暂停的下限和上限，即3-6秒；
+- 每个事务的请求路径、是GET请求还是POST请求、是否需要传参数等，都可以根据Django项目中对视图函数的定义来决定，调用方法与Requests库基本相同。
+
+### 15.2.3 执行性能测试
+&esmp;&emsp;启动性能测试：<br>
+`locust -f locustfile.py --host=http://192.168.127.134:8089`<br>
+&esmp;&emsp;其中,http://192.168.127.134:8089为发布会签到系统的部署主机的IP地址和端口号。<br>
+- 通过浏览器访问Locust工具:http://127.0.0.1:8089
+- Number of users to simulate:设置模拟用户数为100.
+- Hatch rate(users spawned/second):每秒产生(启动)的用户数为10,即每秒启动10个模拟用户
+
+&emsp;&emsp;单击"Start swarming"按钮,运行性能测试。<br>
+## 15.3 接口性能测试
+&emsp;&emsp;接口性能测试相比系统性能测试来说要简单许多,当前系统处理能力场景和用户行为,只需模拟调用接口,
+验证接口的最大处理能力即可。<br>
+- 1.接口性能测试需求:考虑到嘉宾签到功能,发布会现场需要多通道并行对嘉宾进行签到,所以,需要充分验证签到接口的并发签到处理能力。
+- 2.接口性能测试环境
+- 3.接口性能测试数据准备
+
+### 15.3.1 编写接口性能测试脚本
+locustfile.py:<br>
+```Python
+!/usr/bin/python
+# -*- coding:utf-8 -*-
+
+from locust import HttpLocust, TaskSet, task
+from random import randint
+
+# Web接口测试
+class UserBehavior(TaskSet):
+
+    @task()
+    def user_sign(self):
+        number = randint(1, 3001)
+        phone = 13800110000 + number
+        str_phone = str(phone)
+        self.client.post("/api/user_sign/", data={"eid":"1", "phone":str_phone})
+
+class WebsiteUser(HttpLocust):
+    task_set = UserBehavior
+    min_wait = 0
+    max_wait = 0
+```
+### 15.3.2 执行接口性能测试
+&emsp;&emsp;`locust -f locustfile.py --host=http://127.0.0.1:8089 --no-web -c 10 -r 10 -n 3000`<br>
+- –no-web：表示不使用web界面运行测试
+- -c：设置虚拟用户数
+- -r：设置每秒启动虚拟用户数
+- -n：设置请求个数
+
+`update sign_guest set sign=0;`<br>
+### 15.3.3 多线程测试接口性能
+&emsp;&emsp;重复签到和签到失败是两个不同的服务器处理过程，注意不能混淆。<br>
+&emsp;&emsp;如果需要对3000个嘉宾计算多长时间内可以完成全部签到，那么可以使用Python的多线程技术来实现这个需求：<br>
+thread_if_test.py:<br>
+```Python
+#!/usr/bin/python
+# -*- coding:utf-8 -*-
+
+import requests
+import threading
+from time import time
+
+# 定义接口基本地址
+base_url = "http://127.0.0.1:8089"
+
+# 签到线程
+def sign_thread(start_user, end_user):
+    for i in range(start_user, end_user):
+        phone = 13800110000 + i
+        datas = {"eid":"1", "phone":phone}
+        r = requests.post(base_url+'/api/user_sing/', data=datas)
+        result = r.json()
+        try:
+            assert result['message'] == "sign success"
+        except AssertionError as e:
+            print "phone:" + str(phone) + ", user sign fail!"
+
+# 设置用户分组（即5个线程）
+lists = {1:601, 601:1201, 1201:1801, 1801:2401, 2401:3001}
+
+# 创建线程数组
+threads = []
+
+# 创建线程
+for start_user, end_user in lists.items():
+    t = threading.Thread(target=sign_thread, args=(start_user, end_user))
+    threads.append(t)
+
+if __name__ == '__main__':
+    # 开始时间
+    start_time = time()
+    # 启动线程
+    for i in range(len(lists)):
+        threads[i].start()
+    for i in range(len(lists)):
+        threads[i].join()
+    # 结束时间
+    end_time = time()
+    print "start time: " + str(start_time)
+    print "end time: " + str(end_time)
+    print "run time: " + str(end_time - start_time)
+```
+&emsp;&emsp;将3000个数平均分为5组，放到字典中，其中每一组数通过线程类Thread，调用sign_thread()函数生成一个线程。所以，是5个线程（可以理解为“虚拟用户数”）并发调用接口测试。<br>
+&emsp;&emsp;start()方法用于启动线程，join()方法用于守护线程。<br>
+&emsp;&emsp;相比专业性能测试工具，这个多线程测试程序要简陋得多，但是直接编程的灵活性也是工具所不具备的。<br>
+
+
+
+
 
 
 
