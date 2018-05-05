@@ -5769,7 +5769,38 @@ u.com
 &emsp;&emsp;业务分析： 根据发布会签到系统的应用场景，主要包括发布会管理页面、嘉宾管理页面、嘉宾查询功能和发布会签到功能；<br>
 &emsp;&emsp;性能测试环境： <br>
 ![image](https://github.com/15529343201/guest/blob/chapter15/image/15.3.PNG)<br>
+&emsp;&emsp;测试数据准备：<br>
+- 发布会数据：10条
+- 嘉宾数据：3000条
+- 待签到嘉宾：3000条
 
+&emsp;&emsp;测试数据构造：
+- 执行SQL语句，分别使sign_event、sign_guest两张表的create_time字段在插入数据时直接取当前时间：
+
+```
+ALTER TABLE `sign_event` CHANGE `create_time` `create_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE `sign_guest` CHANGE `create_time` `create_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+```
+- 先创建一条插入嘉宾信息的SQL语句
+
+&emsp;&emsp;`INSERT INTO sign_guest (realname,phone,email,sign,event_id) VALUES ("jack",13800110000,"jack@mail.com",0,1);`<br>
+- 通过Python脚本批量生成3000条插入数据的SQL语句：
+
+```Python
+f = open("guests.txt", 'w')
+
+for i in range(1, 3001):
+    str_i = str(i)
+    realname = "jack" + str_i
+    phone = 13800110000 + i
+    email = "jack" + str_i + "@mail.com"
+    sql = 'INSERT INTO sign_guest (realname, phone, email, sign, event_id) VALUES ("'+realname+'", '+str(phone)+', "'+email+'", 0, 1);'
+    f.write(sql)
+    f.write("\n")
+
+f.close()
+```
+- 将生成好的SQL语句，在SQL命令行中执行，生成测试数据。
 
 
 
