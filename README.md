@@ -5420,6 +5420,9 @@ router.register(r'guest', views.GuestViewSet)
 &emsp;&emsp;uwsgi协议是一个uWSGI服务器自带的协议,它用于定义传输信息的类型,每一个uwsgi packet的前4byte都为传输
 信息类型描述,它与WSGI相比是不同的两个协议。<br>
 &emsp;&emsp;uwsgi协议:http://uwsgi-docs.readthedocs.io/en/latest/Protocol.html<br>
+### 14.1.2 安装uWSGI
+&emsp;&emsp;PyPi仓库地址:https://pypi.python.org/pypi/uWSGI<br>
+&emsp;&emsp;测试uWSGI,创建test.py文件。<br>
 
 
 
