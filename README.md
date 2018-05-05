@@ -5433,6 +5433,35 @@ def application(env, start_response):
 &emsp;&emsp;`root@ubuntu-virtual-machine:~/桌面/guest# uwsgi --http :8001 --wsgi-file test.py`<br>
 &emsp;&emsp;通过浏览器访问:http://127.0.0.1:8001/,如图14.1所示。<br>
 ![image](https://github.com/15529343201/guest/blob/chapter14/image/14.1.png)<br>
+### 14.1.3 uWSGI运行Django
+&emsp;&emsp;接下来通过uWSGI运行Django项目,此处假定Django的项目路径为/home/fnngj/pydj/guest<br>
+`uwsgi --http :8000 --chdir /home/fnngj/pydj/guest/ --wsgi-file guest/wsgi.py --master --processes 4 --stats 127.0.0.1:9191`<br>
+&emsp;&emsp;uwsgi命令常用参数如下。<br>
+- --http:协议类型和端口号
+- --processes:开启的进程数量
+- --workers:开启的进程数量,等同于processes
+- --chdir:指定运行目录
+- --wsgi-file:载入wsgi-file(加载wsgi.py文件)
+- --stats:在指定的地址上开启状态服务
+- --threads:开启的线程数量
+- --master:允许主进程存在
+- --daemonize:使进程在后台运行,并将日志输出到指定的日志文件或者UDP服务器
+- --pidfile:指定pid文件的位置,记录主进程的PID号
+- --vacuum:当服务器退出时自动清理环境,删除Unix Socket文件和PID文件
+
+14.2 Nginx
+&emsp;&emsp;Nginx是一款轻量级的Web服务器/反向代理服务器及电子邮件(IMAP/POP3)代理服务器,并在一个BSD-like协议下进行。<br>
+&emsp;&emsp;采用Nginx+uWSGI的组合来部署Django是较为常见的部署方案之一.在这个方案中,通常的做法是将Nginx作为服务器
+最前端,用它来接受Web的所有请求,统一管理请求。Nginx可用来处理所有静态请求,这是Nginx的强项。然后,Nginx将所有非静态请求
+通过uWSGI传递给Django,由Django处理,从而完成一次Web请求。可见,uWSGI的作用类似于一个桥接器,起到链接Nginx和Django的作用。<br>
+&emsp;&emsp;Nginx官网:http://nginx.org/<br>
+### 14.2.1 安装Nginx
+&emsp;&emsp;`sudo apt-get install nginx #安装`<br>
+&emsp;&emsp;`/etc/init.d/nginx start #启动`<br>
+&emsp;&emsp;`/etc/init.d/nginx stop #关闭`<br>
+&emsp;&emsp;`/etc/init.d/nginx restart #重启`<br>
+&emsp;&emsp;`nginx -v # 查看版本`<br>
+
 
 
 
