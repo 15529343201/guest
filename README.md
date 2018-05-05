@@ -5538,7 +5538,50 @@ uwsgi_pass 127.0.0.1:8000;
 &emsp;&emsp;配置完成后,保存退出default文件,重新启动Nginx。<br>
 &emsp;&emsp;访问http://127.0.0.1:8089/或http://192.168.240.137:8089/。<br>
 &emsp;&emsp;访问页面时,请求会先到Nginx,再由Nginx转到uWSGI Web容器来处理,如图14.3所示。<br>
-![image](https://github.com/15529343201/guest/blob/chapter14/image/14.3.PNG)<br>
+![image](https://github.com/15529343201/guest/blob/chapter14/image/14.3.png)<br>
+### 14.2.3 处理静态资源
+&emsp;&emsp;当访问页面时,发现所有静态资源都无法访问了<br>
+&emsp;&emsp;打开/etc/nginx/sites-available/default文件,添加Web项目的静态资源。<br>
+```
+server {
+	listen 8089;
+	listen [::]:8089;
+
+	server_name 127.0.0.1 192.168.240.137;
+
+	location / {
+		include /etc/nginx/uwsgi_params;
+		uwsgi_pass 127.0.0.1:8000;
+	}
+	# 配置静态文件目录
+	location /static {
+		alias /home/ubuntu/桌面/guest/sign/static;
+	}
+}
+```
+&emsp;&emsp;guest项目的静态文件的存放目录为../sign/static/,所以配置如上。重启nginx,再来访问签到页面,样式文件即可正常引用了。<br>
+## 14.3 创建404页面
+settings.py:<br>
+`DEBUG = False`<br>
+&emsp;&emsp;把DEBUG设置为"False"。关闭DEGUG后,需要设置ALLOWED_HOSTS<br>
+&emsp;&emsp;ALLOWED_HOSTS是为了限定请求中的host值,以防止黑客构造包来发送请求。只有列表中的host才能访问。一般不建议使用"*"通配符去配置,当DEBUG设置为"Fasle"时必须设置这个配置,否则会抛出异常。<br>
+&emsp;&emsp;在.../guest/settings.py文件中,配置模板如下。<br>
+`ALLOWED_HOSTS = ['www.baidu.com']`<br>
+&emsp;&emsp;在.../sign/templates/目录下面创建404.html页面。<br>
+404.html:<br>
+```html
+</html>
+<html lang="zh-CN">
+<head>
+    <title>404</title>
+</head>
+<body>
+    <div>
+        <img src="/static/image/404error.jpg" />
+    </div>
+</body>
+</html>
+```
 
 
 
