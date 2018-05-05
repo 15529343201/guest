@@ -5398,6 +5398,35 @@ router.register(r'guest', views.GuestViewSet)
 ![image](https://github.com/15529343201/guest/blob/chapter13/image/13.18.PNG)<br>
 &emsp;&emsp;关于 soapUI 工具就介绍到这里， 想了解该工具的更多使用， 请参考官方文档：<br>
 &emsp;&emsp;https://www.soapui.org/soapui-projects/soapui-projects.html<br>
+# chapter14 Django项目部署
+&emsp;&emsp;VMware:http://www.vmware.com/cn.html<br>
+&emsp;&emsp;Ubuntu:https://www.ubuntu.com<br>
+## 14.1 uWSGI
+### 14.1.1 uWSGI介绍
+&emsp;&emsp;什么是WSGI?<br>
+&emsp;&emsp;WSGI,全称为Web Server Gateway Interface,是为Python语言定义的Web服务器和Web应用程序或框架之间的
+一种简单而通用的接口。<br>
+&emsp;&emsp;WSGI是Web服务器与Web应用程序或应用框架之间的一种低级别的接口,用以提升可移植Web应用开发的共同点。
+许多Python Web框架都自带WSGI服务,如Flask、webpy、Django等。但自带的WSGI服务性能一般,更多的是用来测试,在项目正式
+发布时,大多数情况使用生产环境的WSGI服务或者联合Nginx做uwsgi。<br>
+&emsp;&emsp;什么是uWSGI?<br>
+&emsp;&emsp;uWSGI是一个Web服务器,它实现了WSGI、uwsgi、HTTP等协议。在Nginx中ngx_http_uwsgi_module的作用
+是与uWSGI服务器进行交换。<br>
+&emsp;&emsp;关于WSGI、uwsgi、uWSGI三个概念的区分:<br>
+- WSGI是Web服务器与Web应用程序或应用框架之间的接口,也可以看做一个协议。
+- uwsgi是一种传输协议
+- uWSGI是实现了uwsgi和WSGI两种协议的Web服务器。
+
+&emsp;&emsp;uwsgi协议是一个uWSGI服务器自带的协议,它用于定义传输信息的类型,每一个uwsgi packet的前4byte都为传输
+信息类型描述,它与WSGI相比是不同的两个协议。<br>
+&emsp;&emsp;uwsgi协议:http://uwsgi-docs.readthedocs.io/en/latest/Protocol.html<br>
+
+
+
+
+
+
+
 
 
 
